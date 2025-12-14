@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
+import { ToastAction } from '@/components/ui/toast';
 
 export default function SignInPage() {
   const params = useParams();
@@ -59,8 +60,13 @@ export default function SignInPage() {
     } catch (error) {
       console.error('Sign in error:', error);
       let description = 'An unexpected error occurred. Please try again.';
+      let toastAction;
+
       if (error instanceof FirebaseError) {
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        if (error.code === 'auth/user-not-found') {
+          description = 'No account found with this email. Please sign up.';
+          toastAction = <ToastAction altText="Sign Up" onClick={() => router.push(`/auth/signup/${category}`)}>Sign Up</ToastAction>;
+        } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
           description = 'Invalid email or password. Please try again.';
         } else {
           description = error.message;
@@ -70,6 +76,7 @@ export default function SignInPage() {
         variant: 'destructive',
         title: 'Sign In Failed',
         description,
+        action: toastAction,
       });
     } finally {
       setIsLoading(false);
