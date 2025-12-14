@@ -5,12 +5,22 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 export default function SignInPage() {
   const params = useParams();
   const router = useRouter();
   const category = Array.isArray(params.category) ? params.category[0] : params.category;
   const categoryTitle = category.replace(/-/g, ' ');
+
+  const handleSignIn = () => {
+    // For now, we'll just redirect to the dashboard for students
+    if (category === 'student') {
+      router.push('/student/dashboard');
+    }
+    // We can add logic for other categories later
+  };
+
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
@@ -20,7 +30,7 @@ export default function SignInPage() {
           <CardDescription>Enter your credentials to access your account.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={(e) => { e.preventDefault(); handleSignIn(); }}>
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="userId">User ID</Label>
@@ -42,10 +52,10 @@ export default function SignInPage() {
                 </Link>
               </div>
             </div>
+            <Button type="submit" className="w-full mt-4 bg-gradient-to-r from-blue-500 to-sky-500 text-white hover:shadow-lg">Sign In</Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full bg-gradient-to-r from-blue-500 to-sky-500 text-white hover:shadow-lg">Sign In</Button>
+        <CardFooter className="flex flex-col gap-4 pt-4">
           <p className="text-sm text-center text-muted-foreground">
             Don't have an account?{' '}
             <Link href={`/auth/signup/${category}`} className="font-medium text-primary hover:underline">
