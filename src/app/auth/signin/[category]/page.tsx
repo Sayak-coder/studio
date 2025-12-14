@@ -1,80 +1,46 @@
 'use client';
-import { useParams, notFound } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
-
-const categoryMap: { [key: string]: string } = {
-  'student': 'Student',
-  'class-representative': 'Class Representative',
-  'senior': 'Senior'
-};
 
 export default function SignInPage() {
   const params = useParams();
   const category = Array.isArray(params.category) ? params.category[0] : params.category;
-  const categoryTitle = categoryMap[category];
-
-  if (!categoryTitle) {
-    notFound();
-  }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-secondary p-4 sm:p-8">
-      <div className="w-full max-w-md">
-        <div className="absolute top-4 left-4">
-          <Button asChild variant="ghost">
-            <Link href={`/help/${category}`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+    <div className="flex min-h-screen flex-col items-center justify-center p-24">
+      <h1 className="text-4xl font-bold mb-8">Sign In as {category.replace('-', ' ')}</h1>
+      <div className="w-full max-w-xs">
+        <form className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="userId">
+              User ID
+            </label>
+            <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="userId" type="text" placeholder="User ID" />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+              Password
+            </label>
+            <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" id="password" type="password" placeholder="******************" />
+            <Link href="#" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+              Forgot Password?
             </Link>
-          </Button>
-        </div>
-        <Card className="shadow-soft-lg bg-card/80 backdrop-blur-sm rounded-2xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold text-primary tracking-tight">
-              Sign In to {categoryTitle} Portal
-            </CardTitle>
-            <CardDescription>
-                Enter your credentials to access your account.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 p-6">
-            <div className="space-y-2">
-              <Label htmlFor="userId">User ID</Label>
-              <Input id="userId" placeholder="Enter your User ID" />
+          </div>
+           {category === 'class-representative' && (
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="crId">
+                Unique CR ID
+              </label>
+              <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="crId" type="text" placeholder="Unique CR ID" />
             </div>
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Link
-                        href="#"
-                        className="text-sm font-medium text-primary hover:underline"
-                    >
-                        Forgot password?
-                    </Link>
-                </div>
-              <Input id="password" type="password" placeholder="Enter your password" />
-            </div>
-            {category === 'class-representative' && (
-              <div className="space-y-2">
-                <Label htmlFor="crId">Unique CR ID</Label>
-                <Input id="crId" placeholder="Enter your Unique CR ID" />
-              </div>
-            )}
-            <Button className="w-full !mt-6">Sign In</Button>
-            <div className="text-center text-sm">
-                Don't have an account?{' '}
-                <Link href={`/auth/signup/${category}`} className="underline text-primary">
-                    Sign Up
-                </Link>
-            </div>
-          </CardContent>
-        </Card>
+          )}
+          <div className="flex items-center justify-between">
+            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
+              Sign In
+            </button>
+          </div>
+        </form>
       </div>
-    </main>
+    </div>
   );
 }
