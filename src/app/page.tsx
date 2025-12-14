@@ -13,8 +13,7 @@ export default function Home() {
       description: 'Access notes, PYQs, and important questions before exams.',
       cta: 'Enter as Student',
       href: '/help/student',
-      highlight: false,
-      hoverClass: 'hover:border-primary/50 hover:shadow-lg',
+      hoverClass: 'animated-gradient-border',
     },
     {
       name: 'Class Representative (CR) Portal',
@@ -22,7 +21,6 @@ export default function Home() {
       description: 'Manage, verify, and upload academic content for your class.',
       cta: 'Enter as CR',
       href: '/help/class-representative',
-      highlight: true,
       hoverClass: 'animated-gradient-border',
     },
     {
@@ -31,8 +29,7 @@ export default function Home() {
       description: 'Guide juniors with curated notes and exam-focused insights.',
       cta: 'Enter as Senior',
       href: '/help/senior',
-      highlight: false,
-      hoverClass: 'hover:border-primary/50 hover:shadow-lg',
+      hoverClass: 'animated-gradient-border',
     },
     {
       name: 'Official Portal',
@@ -40,8 +37,7 @@ export default function Home() {
       description: 'Access and manage all user data with administrative privileges.',
       cta: 'Enter as Official',
       href: '/auth/official',
-      highlight: false,
-      hoverClass: 'hover:border-primary/50 hover:shadow-lg',
+      hoverClass: 'animated-gradient-border',
     },
   ];
 
@@ -73,7 +69,7 @@ export default function Home() {
               {portals.map((portal, index) => (
                 <Card
                   key={portal.name}
-                  className={`flex flex-col text-center bg-card/80 backdrop-blur-sm rounded-xl shadow-md transition-all duration-300 transform hover:-translate-y-2 ${portal.hoverClass} ${portal.highlight ? 'border-primary/30' : ''} animate-fade-in-up`}
+                  className={`flex flex-col text-center bg-card/80 backdrop-blur-sm rounded-xl shadow-md transition-all duration-300 transform hover:-translate-y-2 ${portal.hoverClass} animate-fade-in-up`}
                   style={{ animationDelay: `${index * 0.15}s` }}
                 >
                   <CardHeader className="items-center">
