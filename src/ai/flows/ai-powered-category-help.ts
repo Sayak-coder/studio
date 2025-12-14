@@ -14,19 +14,23 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-export const CategoryHelpInput = z.object({
+const CategoryHelpInputSchema = z.object({
   category: z.string().describe('The category to get help with.'),
 });
+export type CategoryHelpInput = z.infer<typeof CategoryHelpInputSchema>;
 
-export const CategoryHelpOutput = z.object({
+
+const CategoryHelpOutputSchema = z.object({
   description: z.string().describe('A helpful description of the category.'),
   relatedTopics: z.array(z.string()).describe('A list of related topics.'),
 });
+export type CategoryHelpOutput = z.infer<typeof CategoryHelpOutputSchema>;
+
 
 const prompt = ai.definePrompt({
   name: 'categoryHelpPrompt',
-  input: { schema: CategoryHelpInput },
-  output: { schema: CategoryHelpOutput },
+  input: { schema: CategoryHelpInputSchema },
+  output: { schema: CategoryHelpOutputSchema },
   prompt: `
     You are an expert academic assistant. The user wants to learn about a topic.
     Provide a concise, helpful description of the topic: "{{category}}".
@@ -35,14 +39,18 @@ const prompt = ai.definePrompt({
   `,
 });
 
-export const categoryHelpFlow = ai.defineFlow(
+const categoryHelp = ai.defineFlow(
   {
     name: 'categoryHelpFlow',
-    inputSchema: CategoryHelpInput,
-    outputSchema: CategoryHelpOutput,
+    inputSchema: CategoryHelpInputSchema,
+    outputSchema: CategoryHelpOutputSchema,
   },
   async (input) => {
     const { output } = await prompt(input);
     return output!;
   },
 );
+
+export async function categoryHelpFlow(input: CategoryHelpInput): Promise<CategoryHelpOutput> {
+    return categoryHelp(input);
+}
