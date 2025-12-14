@@ -51,7 +51,7 @@ export default function OfficialLoginPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <Button onClick={handleLogin} className="w-full bg-gradient-to-r from-blue-500 to-sky-500 text-white hover:shadow-lg">
+          <Button onClick={handleLogin} className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-semibold hover:shadow-lg">
             Proceed
           </Button>
           <Button variant="link" onClick={() => router.push('/')} className="text-primary">

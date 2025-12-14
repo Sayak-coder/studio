@@ -76,7 +76,7 @@ export default function StudentDashboard() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-10 border-b bg-background/80 py-4 backdrop-blur-sm">
         <div className="container mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-sky-400">
+          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-600">
             Welcome, {user.displayName || 'Student'}!
           </h1>
           <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign Out">
