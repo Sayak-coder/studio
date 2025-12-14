@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, Users, GraduationCap } from 'lucide-react';
+import { BookOpen, Users, GraduationCap, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -32,6 +32,15 @@ export default function Home() {
       highlight: false,
       hoverClass: 'hover:border-primary/50 hover:shadow-lg',
     },
+    {
+      name: 'Official Portal',
+      icon: <Briefcase className="h-10 w-10 text-primary" />,
+      description: 'Access and manage all user data with administrative privileges.',
+      cta: 'Enter as Official',
+      href: '/auth/official',
+      highlight: false,
+      hoverClass: 'hover:border-primary/50 hover:shadow-lg',
+    },
   ];
 
   return (
@@ -52,12 +61,12 @@ export default function Home() {
         {/* Main Interaction Section */}
         <section className="py-12 md:py-24">
           <div className="container px-4 md:px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
-              {portals.map((portal) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-center">
+              {portals.map((portal, index) => (
                 <Card
                   key={portal.name}
                   className={`flex flex-col text-center bg-card/80 backdrop-blur-sm rounded-xl shadow-md transition-all duration-300 transform hover:-translate-y-2 ${portal.hoverClass} ${portal.highlight ? 'border-primary/30' : ''} animate-fade-in-up`}
-                  style={{ animationDelay: `${portals.indexOf(portal) * 0.15}s` }}
+                  style={{ animationDelay: `${index * 0.15}s` }}
                 >
                   <CardHeader className="items-center">
                     <div className="p-4 bg-primary/10 rounded-full mb-4 transition-transform duration-300 group-hover:scale-110">
