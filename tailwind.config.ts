@@ -68,8 +68,12 @@ export default {
       },
       borderRadius: {
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        md: 'calc(var(--radius) - 4px)',
+        sm: 'calc(var(--radius) - 8px)',
+      },
+      boxShadow: {
+        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+        'soft-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05)',
       },
       keyframes: {
         'accordion-down': {
@@ -88,10 +92,21 @@ export default {
             height: '0',
           },
         },
+        'glow': {
+          '0%, 100%': { borderColor: 'hsl(var(--primary) / 0.2)' },
+          '50%': { borderColor: 'hsl(var(--primary) / 0.8)' },
+        },
+        'gradient-slide': {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'glow': 'glow 2s linear infinite',
+        'gradient-slide': 'gradient-slide 3s ease infinite',
       },
     },
   },

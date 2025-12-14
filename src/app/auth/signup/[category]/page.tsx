@@ -23,7 +23,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-8">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-secondary p-4 sm:p-8">
       <div className="w-full max-w-md">
         <div className="absolute top-4 left-4">
           <Button asChild variant="ghost">
@@ -33,16 +33,16 @@ export default function SignUpPage() {
             </Link>
           </Button>
         </div>
-        <Card className="shadow-lg">
+        <Card className="shadow-soft-lg bg-card/80 backdrop-blur-sm rounded-2xl">
           <CardHeader className="text-center">
-            <CardTitle className="font-headline text-3xl font-bold text-primary tracking-tight">
-              Sign Up as {categoryTitle}
+            <CardTitle className="text-3xl font-bold text-primary tracking-tight">
+              Create {categoryTitle} Account
             </CardTitle>
              <CardDescription>
                 Create a new account to get started.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-6">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input id="name" placeholder="Enter your full name" />
@@ -69,7 +69,7 @@ export default function SignUpPage() {
                 <Input id="crId" placeholder="Enter your Unique CR ID" />
               </div>
             )}
-            <Button className="w-full">Sign Up</Button>
+            <Button className="w-full !mt-6">Sign Up</Button>
              <div className="text-center text-sm">
                 Already have an account?{' '}
                 <Link href={`/auth/signin/${category}`} className="underline text-primary">

@@ -23,7 +23,7 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-4 sm:p-8">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-background to-secondary p-4 sm:p-8">
       <div className="w-full max-w-md">
         <div className="absolute top-4 left-4">
           <Button asChild variant="ghost">
@@ -33,16 +33,16 @@ export default function SignInPage() {
             </Link>
           </Button>
         </div>
-        <Card className="shadow-lg">
+        <Card className="shadow-soft-lg bg-card/80 backdrop-blur-sm rounded-2xl">
           <CardHeader className="text-center">
-            <CardTitle className="font-headline text-3xl font-bold text-primary tracking-tight">
-              Sign In as {categoryTitle}
+            <CardTitle className="text-3xl font-bold text-primary tracking-tight">
+              Sign In to {categoryTitle} Portal
             </CardTitle>
             <CardDescription>
                 Enter your credentials to access your account.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-6">
             <div className="space-y-2">
               <Label htmlFor="userId">User ID</Label>
               <Input id="userId" placeholder="Enter your User ID" />
@@ -65,7 +65,7 @@ export default function SignInPage() {
                 <Input id="crId" placeholder="Enter your Unique CR ID" />
               </div>
             )}
-            <Button className="w-full">Sign In</Button>
+            <Button className="w-full !mt-6">Sign In</Button>
             <div className="text-center text-sm">
                 Don't have an account?{' '}
                 <Link href={`/auth/signup/${category}`} className="underline text-primary">
