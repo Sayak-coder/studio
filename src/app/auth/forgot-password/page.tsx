@@ -1,21 +1,23 @@
 'use client';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { FirebaseError } from 'firebase/app';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const category = searchParams.get('category') || 'student';
   const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleResetPassword = () => {
-    // Basic email validation
+  const handleResetPassword = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       toast({
         variant: 'destructive',
@@ -25,18 +27,37 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    // Placeholder for actual password reset logic (e.g., Firebase)
-    console.log(`Password reset requested for email: ${email}`);
+    setIsLoading(true);
+    try {
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email);
 
-    toast({
-      title: 'Check Your Email',
-      description: `If an account exists for ${email}, a password reset link has been sent.`,
-    });
+      toast({
+        title: 'Check Your Email',
+        description: `If an account exists for ${email}, a password reset link has been sent.`,
+      });
 
-    // Redirect back to the sign-in page after a short delay
-    setTimeout(() => {
-      router.push(`/auth/signin/${category}`);
-    }, 2000);
+      setTimeout(() => {
+        router.push(`/auth/signin/${category}`);
+      }, 3000);
+    } catch (error) {
+      console.error('Password reset error:', error);
+      let description = 'An unexpected error occurred. Please try again.';
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/user-not-found') {
+           description = 'No account found with this email address.';
+        } else {
+           description = error.message;
+        }
+      }
+       toast({
+        variant: 'destructive',
+        title: 'Reset Failed',
+        description,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,16 +77,17 @@ export default function ForgotPasswordPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleResetPassword()}
+                onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleResetPassword()}
+                disabled={isLoading}
               />
             </div>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <Button onClick={handleResetPassword} className="w-full bg-gradient-to-r from-blue-500 to-sky-500 text-white hover:shadow-lg">
-            Send Reset Link
+          <Button onClick={handleResetPassword} className="w-full bg-gradient-to-r from-blue-500 to-sky-500 text-white hover:shadow-lg" disabled={isLoading}>
+            {isLoading ? 'Sending...' : 'Send Reset Link'}
           </Button>
-          <Button variant="link" onClick={() => router.push(`/auth/signin/${category}`)} className="text-primary">
+          <Button variant="link" onClick={() => router.push(`/auth/signin/${category}`)} className="text-primary" disabled={isLoading}>
             &larr; Back to Sign In
           </Button>
         </CardFooter>
