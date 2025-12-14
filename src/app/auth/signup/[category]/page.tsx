@@ -52,6 +52,10 @@ export default function SignUpPage() {
               <Input id="rollNo" placeholder="Enter your class roll number" />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="Enter your email" />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="userId">User ID</Label>
               <Input id="userId" placeholder="Create a User ID" />
             </div>

@@ -51,10 +51,6 @@ export default function SignInPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" placeholder="Enter your password" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="Enter your email" />
-            </div>
             {category === 'class-representative' && (
               <div className="space-y-2">
                 <Label htmlFor="crId">Unique CR ID</Label>
