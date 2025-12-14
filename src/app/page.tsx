@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, Users, GraduationCap, Briefcase } from 'lucide-react';
+import { BookOpen, Users, GraduationCap, Briefcase, BrainCircuit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -49,9 +49,12 @@ export default function Home() {
         {/* Hero Section */}
         <section className="py-24 md:py-32 text-center animate-fade-in-down">
           <div className="container px-4 md:px-6">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-sky-400">
-              EduBot
-            </h1>
+            <div className="flex justify-center items-center gap-4">
+              <BrainCircuit className="h-12 w-12 md:h-16 md:w-16 text-primary" />
+              <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-sky-400">
+                EduBot
+              </h1>
+            </div>
             <p className="mt-4 text-lg md:text-xl text-muted-foreground animate-fade-in-up [animation-delay:0.2s]">
               Smarter exam preparation, powered by seniors.
             </p>
