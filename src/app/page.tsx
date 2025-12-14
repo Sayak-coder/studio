@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { GraduationCap, Users, UserCheck } from 'lucide-react';
+import { GraduationCap, Users, UserCheck, Briefcase } from 'lucide-react';
 
 const categories = [
   {
@@ -21,6 +21,12 @@ const categories = [
     icon: <UserCheck className="h-12 w-12 text-primary" />,
     description: 'Find resources for graduation, careers, and alumni services.',
   },
+  {
+    name: 'Officials',
+    slug: 'officials',
+    icon: <Briefcase className="h-12 w-12 text-primary" />,
+    description: 'Access administrative tools and view student data.',
+  }
 ];
 
 export default function Home() {
@@ -34,7 +40,7 @@ export default function Home() {
           Your AI-powered assistant for all things education. Choose your category to get started.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-12 max-w-6xl w-full">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4 md:gap-12 max-w-7xl w-full">
         {categories.map((category) => (
           <Link key={category.slug} href={`/help/${category.slug}`} passHref>
             <Card className="transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:border-accent cursor-pointer text-center h-full flex flex-col justify-start bg-card">
