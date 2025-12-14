@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { BookOpen, Users, GraduationCap, Briefcase, BrainCircuit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 
@@ -55,27 +54,12 @@ export default function Home() {
         {/* Hero Section */}
         <section className="py-24 md:py-32 text-center animate-fade-in-down">
           <div className="container px-4 md:px-6">
-            <Dialog>
-              <DialogTrigger asChild>
-                <div className="inline-flex justify-center items-center gap-4 cursor-pointer">
-                  <BrainCircuit className="h-12 w-12 md:h-16 md:w-16 text-primary" />
-                  <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-sky-400">
-                    EduBot
-                  </h1>
-                </div>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                     <BrainCircuit className="h-6 w-6 text-primary" />
-                    About EduBot
-                  </DialogTitle>
-                  <DialogDescription>
-                  EduBot is a collaborative platform designed to revolutionize exam preparation. It connects students, class representatives, and seniors to create a centralized hub for academic resources. Students can access curated notes, previous year questions (PYQs), and important topics, all verified and managed by their trusted class representatives and experienced seniors. Our mission is to make studying smarter, more efficient, and less stressful for everyone.
-                  </DialogDescription>
-                </DialogHeader>
-              </DialogContent>
-            </Dialog>
+            <a href="#about-edubot" className="inline-flex justify-center items-center gap-4 cursor-pointer">
+              <BrainCircuit className="h-12 w-12 md:h-16 md:w-16 text-primary" />
+              <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-sky-400">
+                EduBot
+              </h1>
+            </a>
             <p className="mt-4 text-lg md:text-xl text-muted-foreground animate-fade-in-up [animation-delay:0.2s]">
               Smarter exam preparation, powered by seniors.
             </p>
@@ -108,6 +92,18 @@ export default function Home() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* About Section */}
+        <section id="about-edubot" className="py-24 md:py-32 bg-secondary/30">
+          <div className="container px-4 md:px-6">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">About EduBot</h2>
+              <p className="text-lg text-muted-foreground">
+                EduBot is a collaborative platform designed to revolutionize exam preparation. It connects students, class representatives, and seniors to create a centralized hub for academic resources. Students can access curated notes, previous year questions (PYQs), and important topics, all verified and managed by their trusted class representatives and experienced seniors. Our mission is to make studying smarter, more efficient, and less stressful for everyone.
+              </p>
             </div>
           </div>
         </section>
