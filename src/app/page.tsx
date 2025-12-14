@@ -104,7 +104,7 @@ export default function Home() {
                 What is EduBot?
               </h2>
               <p className="text-lg text-muted-foreground">
-                EduBot is a collaborative platform designed to revolutionize exam preparation. It connects students, class representatives, and seniors to create a centralized hub for academic resources. Students can access curated notes, previous year questions (PYQs), and important topics, all verified and managed by their trusted class representatives and experienced seniors. Our mission is to make studying smarter, more efficient, and less stressful for everyone.
+                EduBot is your ultimate exam sidekick! It brings together students, class reps, and seniors to share curated notes, past papers (PYQs), and key topics. Everything is verified, so you can study smarter, not harder. Say goodbye to exam stress and hello to streamlined success.
               </p>
             </div>
           </div>
