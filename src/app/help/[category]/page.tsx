@@ -5,7 +5,7 @@ export default function AuthPage({ params }: { params: { category: string } }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
       <div className="w-full max-w-md text-center">
-        <h1 className="text-4xl font-bold mb-8 capitalize bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-600">{categoryTitle}</h1>
+        <h1 className="text-4xl font-bold mb-8 capitalize bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">{categoryTitle}</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link 
             href={`/auth/signin/${params.category}`} 

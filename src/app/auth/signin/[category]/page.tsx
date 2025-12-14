@@ -150,7 +150,7 @@ export default function SignInPage() {
             </div>
             <Button
               type="submit"
-              className="w-full mt-4 bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-semibold hover:shadow-lg"
+              className="w-full mt-4"
               disabled={isLoading}
             >
               {isLoading ? 'Signing In...' : 'Sign In'}

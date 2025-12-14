@@ -10,8 +10,8 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 48 96% 57%;
-    --primary-foreground: 45 100% 4%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
@@ -27,25 +27,25 @@
   }
  
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 48 96% 57%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 48 96% 57%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 48 96% 57%;
-    --primary: 45 93% 47%;
-    --primary-foreground: 45 100% 4%;
-    --secondary: 240 4% 10%;
-    --secondary-foreground: 48 96% 57%;
-    --muted: 240 4% 10%;
-    --muted-foreground: 240 4% 40%;
-    --accent: 240 4% 10%;
-    --accent-foreground: 48 96% 57%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 240 4% 15%;
-    --input: 240 4% 15%;
-    --ring: 45 93% 47%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 217.2 91.2% 59.8%;
   }
 }
  
@@ -71,7 +71,7 @@
     z-index: -1;
     margin: -2px;
     border-radius: inherit;
-    background: linear-gradient(to right, #facc15, #eab308, #d97706, #facc15);
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8), hsl(var(--primary) / 0.6), hsl(var(--primary)));
     background-size: 400% 400%;
     animation: gradient-animation 6s ease infinite;
     opacity: 0;

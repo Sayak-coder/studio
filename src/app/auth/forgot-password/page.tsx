@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <Button onClick={handleResetPassword} className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-semibold hover:shadow-lg" disabled={isLoading}>
+          <Button onClick={handleResetPassword} className="w-full" disabled={isLoading}>
             {isLoading ? 'Sending...' : 'Send Reset Link'}
           </Button>
           <Button variant="link" onClick={() => router.push(`/auth/signin/${category}`)} className="text-primary" disabled={isLoading}>

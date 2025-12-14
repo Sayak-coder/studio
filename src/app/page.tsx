@@ -52,7 +52,7 @@ export default function Home() {
           <div className="container px-4 md:px-6">
             <a href="#about-edubot" className="inline-flex justify-center items-center gap-4 cursor-pointer">
               <BrainCircuit className="h-12 w-12 md:h-16 md:w-16 text-primary" />
-              <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-600">
+              <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
                 EduBot
               </h1>
             </a>
@@ -81,7 +81,7 @@ export default function Home() {
                   <CardContent className="flex-grow flex flex-col justify-between">
                     <CardDescription className="mb-6 text-base">{portal.description}</CardDescription>
                     <Link href={portal.href} passHref>
-                      <Button className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-semibold hover:shadow-lg hover:shadow-yellow-500/50 transition-shadow">
+                      <Button className="w-full">
                         {portal.cta}
                       </Button>
                     </Link>
@@ -96,7 +96,7 @@ export default function Home() {
         <section id="about-edubot" className="py-24 md:py-32 bg-secondary/30">
           <div className="container px-4 md:px-6">
             <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-600">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
                 What is EduBot?
               </h2>
               <p className="text-lg text-muted-foreground">
