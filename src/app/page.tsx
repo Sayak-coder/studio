@@ -100,6 +100,9 @@ export default function Home() {
         <section id="about-edubot" className="py-24 md:py-32 bg-secondary/30">
           <div className="container px-4 md:px-6">
             <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-sky-400">
+                What is EduBot?
+              </h2>
               <p className="text-lg text-muted-foreground">
                 EduBot is a collaborative platform designed to revolutionize exam preparation. It connects students, class representatives, and seniors to create a centralized hub for academic resources. Students can access curated notes, previous year questions (PYQs), and important topics, all verified and managed by their trusted class representatives and experienced seniors. Our mission is to make studying smarter, more efficient, and less stressful for everyone.
               </p>
