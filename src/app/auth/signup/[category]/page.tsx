@@ -13,6 +13,14 @@ export default function SignUpPage() {
   const category = Array.isArray(params.category) ? params.category[0] : params.category;
   const categoryTitle = category.replace(/-/g, ' ');
 
+  const handleSignUp = () => {
+    // For now, we'll just redirect to the dashboard for students
+    if (category === 'student') {
+      router.push('/student/dashboard');
+    }
+    // We can add logic for other categories later
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-sm bg-card/80 backdrop-blur-sm">
@@ -21,7 +29,7 @@ export default function SignUpPage() {
           <CardDescription>Join the EduBot community. It's quick and easy.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={(e) => { e.preventDefault(); handleSignUp(); }}>
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="name">Full Name</Label>
@@ -50,10 +58,10 @@ export default function SignUpPage() {
                 </div>
               )}
             </div>
+             <Button type="submit" className="w-full mt-4 bg-gradient-to-r from-blue-500 to-sky-500 text-white hover:shadow-lg">Sign Up</Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Button className="w-full bg-gradient-to-r from-blue-500 to-sky-500 text-white hover:shadow-lg">Sign Up</Button>
+        <CardFooter className="flex flex-col gap-4 pt-4">
            <p className="text-sm text-center text-muted-foreground">
             Already have an account?{' '}
             <Link href={`/auth/signin/${category}`} className="font-medium text-primary hover:underline">
