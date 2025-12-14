@@ -113,6 +113,14 @@ export default function SignUpPage() {
                 />
               </div>
               <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  placeholder="Create a username"
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="rollNo">Class Roll No.</Label>
                 <Input id="rollNo" placeholder="e.g., 21CS01" />
               </div>
