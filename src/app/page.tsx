@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { BookOpen, Users, GraduationCap, Briefcase, BrainCircuit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ThemeToggle } from '@/components/theme-toggle';
+
 
 export default function Home() {
   const portals = [
@@ -44,17 +47,35 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-secondary to-background">
+    <div className="flex flex-col min-h-screen bg-background">
+       <header className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </header>
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="py-24 md:py-32 text-center animate-fade-in-down">
           <div className="container px-4 md:px-6">
-            <div className="flex justify-center items-center gap-4">
-              <BrainCircuit className="h-12 w-12 md:h-16 md:w-16 text-primary" />
-              <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-sky-400">
-                EduBot
-              </h1>
-            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <div className="inline-flex justify-center items-center gap-4 cursor-pointer">
+                  <BrainCircuit className="h-12 w-12 md:h-16 md:w-16 text-primary" />
+                  <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-sky-400">
+                    EduBot
+                  </h1>
+                </div>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                     <BrainCircuit className="h-6 w-6 text-primary" />
+                    About EduBot
+                  </DialogTitle>
+                  <DialogDescription>
+                  EduBot is a collaborative platform designed to revolutionize exam preparation. It connects students, class representatives, and seniors to create a centralized hub for academic resources. Students can access curated notes, previous year questions (PYQs), and important topics, all verified and managed by their trusted class representatives and experienced seniors. Our mission is to make studying smarter, more efficient, and less stressful for everyone.
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
             <p className="mt-4 text-lg md:text-xl text-muted-foreground animate-fade-in-up [animation-delay:0.2s]">
               Smarter exam preparation, powered by seniors.
             </p>
