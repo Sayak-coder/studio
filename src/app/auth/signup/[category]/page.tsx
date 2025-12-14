@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
+import { firebaseApp } from '@/firebase/config';
 
 
 export default function SignUpPage() {
@@ -45,7 +46,7 @@ export default function SignUpPage() {
     
     setIsLoading(true);
     try {
-      const auth = getAuth();
+      const auth = getAuth(firebaseApp);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
       await updateProfile(userCredential.user, { displayName: name });

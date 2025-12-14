@@ -17,6 +17,7 @@ import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersis
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { ToastAction } from '@/components/ui/toast';
+import { firebaseApp } from '@/firebase/config';
 
 export default function SignInPage() {
   const params = useParams();
@@ -44,7 +45,7 @@ export default function SignInPage() {
 
     setIsLoading(true);
     try {
-      const auth = getAuth();
+      const auth = getAuth(firebaseApp);
       await setPersistence(auth, browserLocalPersistence)
       await signInWithEmailAndPassword(auth, email, password);
       
@@ -63,10 +64,10 @@ export default function SignInPage() {
       let toastAction;
 
       if (error instanceof FirebaseError) {
-        if (error.code === 'auth/user-not-found') {
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
           description = 'No account found with this email. Please sign up.';
           toastAction = <ToastAction altText="Sign Up" onClick={() => router.push(`/auth/signup/${category}`)}>Sign Up</ToastAction>;
-        } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        } else if (error.code === 'auth/wrong-password') {
           description = 'Invalid email or password. Please try again.';
         } else {
           description = error.message;

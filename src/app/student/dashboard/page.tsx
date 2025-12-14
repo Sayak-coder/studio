@@ -1,5 +1,5 @@
 'use client';
-
+import React from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import AICategoryHelp from './category-help';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { firebaseApp } from '@/firebase/config';
 
 export default function StudentDashboard() {
   const router = useRouter();
   const { toast } = useToast();
-  const auth = getAuth();
+  const auth = getAuth(firebaseApp);
   
   // State for user and loading status
   const [user, setUser] = React.useState<User | null>(null);

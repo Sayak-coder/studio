@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
+import { firebaseApp } from '@/firebase/config';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function ForgotPasswordPage() {
 
     setIsLoading(true);
     try {
-      const auth = getAuth();
+      const auth = getAuth(firebaseApp);
       await sendPasswordResetEmail(auth, email);
 
       toast({
