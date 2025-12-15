@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Content, initialFormData } from './types';
 import { useFirestore } from '@/firebase';
-import { createContent, updateContent, uploadFileAndCreateContent } from '@/firebase/firestore/content';
+import { createOrUpdateContent, uploadFile } from '@/firebase/firestore/content';
 
 interface ContentFormProps {
   isOpen: boolean;
@@ -87,35 +87,36 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
     }
     
     setIsSubmitting(true);
-    setUploadProgress(0);
     
     try {
-      if (editingContent && !fileToUpload) {
-        // Update existing content without changing the file
-        const updateData = {
-            title: formData.title,
-            subject: formData.subject,
-            type: formData.type,
-            content: formData.content,
-        };
-        await updateContent(firestore, editingContent.id, updateData);
-        toast({ title: 'Success!', description: 'Your content has been updated.' });
-      } else {
-         const newContentBase = {
-          ...formData,
-          authorId: user.uid,
-          authorName: user.displayName || 'Anonymous',
-        };
-        await uploadFileAndCreateContent(
-            firestore,
-            user.uid,
-            newContentBase,
-            fileToUpload,
-            setUploadProgress // Pass the progress setter
+      let filePayload: { fileUrl?: string; fileType?: string } = {};
+      
+      if (fileToUpload) {
+        setUploadProgress(0);
+        const { downloadURL, fileType } = await uploadFile(
+          user.uid,
+          fileToUpload,
+          setUploadProgress
         );
-
-        toast({ title: 'Success!', description: 'Your contribution has been added.' });
+        filePayload = { fileUrl: downloadURL, fileType };
       }
+
+      const contentData = {
+        ...formData,
+        ...filePayload,
+        authorId: user.uid,
+        authorName: user.displayName || 'Anonymous',
+      };
+      
+      const documentId = editingContent?.id; // Will be undefined for new content
+
+      await createOrUpdateContent(firestore, contentData, documentId);
+
+      toast({
+        title: 'Success!',
+        description: `Your content has been ${documentId ? 'updated' : 'added'}.`,
+      });
+
       onClose();
     } catch (error) {
       console.error("Content submission error:", error);
@@ -175,6 +176,11 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
             </Label>
             <Input id="file" type="file" className="col-span-3" onChange={handleFileChange} accept="image/*,.pdf" />
           </div>
+           {formData.fileUrl && !fileToUpload && (
+              <div className="col-start-2 col-span-3 text-sm text-muted-foreground">
+                Current file: <a href={formData.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">{formData.fileUrl.split('%2F').pop()?.split('?')[0] || 'View File'}</a>
+              </div>
+            )}
            {uploadProgress !== null && (
              <div className="col-span-4 px-1">
                 <Progress value={uploadProgress} className="w-full" />

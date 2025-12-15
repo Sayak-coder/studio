@@ -5,6 +5,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  setDoc,
   serverTimestamp,
   type Firestore,
 } from 'firebase/firestore';
@@ -34,32 +35,19 @@ type ContentData = {
   fileType?: string;
 };
 
-// Type for content updates.
-type UpdateContentData = Partial<Omit<ContentData, 'authorId' | 'authorName'>>;
-
-
 /**
- * Uploads a file to Firebase Storage and then creates a new content document in Firestore.
- * @param firestore - The Firestore instance.
+ * Uploads a file to Firebase Storage.
  * @param userId - The ID of the user uploading the file.
- * @param data - The base data for the new content.
- * @param file - The file to upload (optional).
- * @param onProgress - Callback to report upload progress (optional).
+ * @param file - The file to upload.
+ * @param onProgress - Callback to report upload progress.
+ * @returns A promise that resolves with the download URL and file type.
  */
-export function uploadFileAndCreateContent(
-  firestore: Firestore,
+export function uploadFile(
   userId: string,
-  data: ContentData,
-  file: File | null,
-  onProgress?: (progress: number) => void
-): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    if (!file) {
-      // If no file, just create the document
-      createContent(firestore, data).then(() => resolve()).catch(reject);
-      return;
-    }
-
+  file: File,
+  onProgress: (progress: number) => void
+): Promise<{ downloadURL: string; fileType: string }> {
+  return new Promise((resolve, reject) => {
     const filePath = `content/${userId}/${Date.now()}-${file.name}`;
     const storageRef = ref(storage, filePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
@@ -67,78 +55,76 @@ export function uploadFileAndCreateContent(
     uploadTask.on(
       'state_changed',
       (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        if (onProgress) {
-          onProgress(progress);
-        }
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        onProgress(progress);
       },
       (error) => {
         console.error('Upload failed:', error);
-        // We can create a specific StoragePermissionError if needed,
-        // but for now, we'll use a generic error.
-        reject(error);
+        reject(error); // Reject the promise on error
       },
       () => {
         // Upload completed successfully, now get the download URL
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          const finalData = {
-            ...data,
-            fileUrl: downloadURL,
-            fileType: file.type,
-          };
-          createContent(firestore, finalData).then(() => resolve()).catch(reject);
-        }).catch(reject);
+        getDownloadURL(uploadTask.snapshot.ref)
+          .then((downloadURL) => {
+            resolve({ downloadURL, fileType: file.type });
+          })
+          .catch(reject);
       }
     );
   });
 }
 
-
 /**
- * Creates a new content document in Firestore.
+ * Creates or updates a content document in Firestore.
+ * If docId is provided, it updates; otherwise, it creates a new document.
  * @param firestore - The Firestore instance.
- * @param data - The data for the new content.
+ * @param data - The data for the content.
+ * @param docId - The ID of the document to update (optional).
  */
-export function createContent(firestore: Firestore, data: ContentData) {
-  const contentColRef = collection(firestore, CONTENT_COLLECTION);
-  
-  const payload = {
-    ...data,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
-
-  return addDoc(contentColRef, payload).catch((serverError) => {
-    errorEmitter.emit('permission-error', new FirestorePermissionError({
-      path: contentColRef.path,
-      operation: 'create',
-      requestResourceData: payload,
-    }));
-  });
+export function createOrUpdateContent(
+  firestore: Firestore,
+  data: ContentData,
+  docId?: string
+) {
+  if (docId) {
+    // Update existing document
+    const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
+    const payload = {
+      ...data,
+      updatedAt: serverTimestamp(),
+    };
+    return updateDoc(contentDocRef, payload).catch((serverError) => {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: contentDocRef.path,
+          operation: 'update',
+          requestResourceData: payload,
+        })
+      );
+    });
+  } else {
+    // Create new document
+    const contentColRef = collection(firestore, CONTENT_COLLECTION);
+    const payload = {
+      ...data,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    return addDoc(contentColRef, payload).catch((serverError) => {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: contentColRef.path,
+          operation: 'create',
+          requestResourceData: payload,
+        })
+      );
+    });
+  }
 }
 
-/**
- * Updates an existing content document in Firestore.
- * @param firestore - The Firestore instance.
- * @param contentId - The ID of the document to update.
- * @param data - The data to update.
- */
-export function updateContent(firestore: Firestore, contentId: string, data: UpdateContentData) {
-  const contentDocRef = doc(firestore, CONTENT_COLLECTION, contentId);
-
-  const payload = {
-    ...data,
-    updatedAt: serverTimestamp(),
-  };
-
-  return updateDoc(contentDocRef, payload).catch((serverError) => {
-    errorEmitter.emit('permission-error', new FirestorePermissionError({
-      path: contentDocRef.path,
-      operation: 'update',
-      requestResourceData: payload,
-    }));
-  });
-}
 
 /**
  * Deletes a content document from Firestore.
