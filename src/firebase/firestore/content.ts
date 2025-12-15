@@ -37,7 +37,7 @@ type UpdateContentData = {
  * @param firestore - The Firestore instance.
  * @param data - The data for the new content.
  */
-export async function createContent(firestore: Firestore, data: NewContentData) {
+export function createContent(firestore: Firestore, data: NewContentData) {
   const contentColRef = collection(firestore, CONTENT_COLLECTION);
   
   const payload = {
@@ -46,18 +46,16 @@ export async function createContent(firestore: Firestore, data: NewContentData) 
     updatedAt: serverTimestamp(),
   };
 
-  try {
-    await addDoc(contentColRef, payload);
-  } catch (error) {
-    console.error("Error creating content:", error);
+  return addDoc(contentColRef, payload).catch((serverError) => {
+    console.error("Error creating content:", serverError);
     errorEmitter.emit('permission-error', new FirestorePermissionError({
       path: contentColRef.path,
       operation: 'create',
       requestResourceData: payload,
     }));
-    // Re-throw to be caught by the calling component's try/catch
-    throw error;
-  }
+    // Propagate the error to be caught by the calling component's UI logic
+    throw serverError;
+  });
 }
 
 /**
@@ -66,7 +64,7 @@ export async function createContent(firestore: Firestore, data: NewContentData) 
  * @param contentId - The ID of the document to update.
  * @param data - The data to update.
  */
-export async function updateContent(firestore: Firestore, contentId: string, data: UpdateContentData) {
+export function updateContent(firestore: Firestore, contentId: string, data: UpdateContentData) {
   const contentDocRef = doc(firestore, CONTENT_COLLECTION, contentId);
 
   const payload = {
@@ -74,18 +72,16 @@ export async function updateContent(firestore: Firestore, contentId: string, dat
     updatedAt: serverTimestamp(),
   };
 
-  try {
-    await updateDoc(contentDocRef, payload);
-  } catch (error) {
-    console.error("Error updating content:", error);
+  return updateDoc(contentDocRef, payload).catch((serverError) => {
+    console.error("Error updating content:", serverError);
     errorEmitter.emit('permission-error', new FirestorePermissionError({
       path: contentDocRef.path,
       operation: 'update',
       requestResourceData: payload,
     }));
-    // Re-throw to be caught by the calling component's try/catch
-    throw error;
-  }
+    // Propagate the error to be caught by the calling component's UI logic
+    throw serverError;
+  });
 }
 
 /**
@@ -93,20 +89,16 @@ export async function updateContent(firestore: Firestore, contentId: string, dat
  * @param firestore - The Firestore instance.
  * @param contentId - The ID of the document to delete.
  */
-export async function deleteContent(firestore: Firestore, contentId: string) {
+export function deleteContent(firestore: Firestore, contentId: string) {
   const contentDocRef = doc(firestore, CONTENT_COLLECTION, contentId);
 
-  try {
-    await deleteDoc(contentDocRef);
-  } catch (error) {
-    console.error("Error deleting content:", error);
+  return deleteDoc(contentDocRef).catch((serverError) => {
+    console.error("Error deleting content:", serverError);
     errorEmitter.emit('permission-error', new FirestorePermissionError({
       path: contentDocRef.path,
       operation: 'delete',
     }));
-    // Re-throw to be caught by the calling component's try/catch
-    throw error;
-  }
+    // Propagate the error to be caught by the calling component's UI logic
+    throw serverError;
+  });
 }
-
-    

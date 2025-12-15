@@ -1,20 +1,21 @@
 'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   collection,
   query,
   where,
+  doc,
 } from 'firebase/firestore';
-import { PlusCircle, Book, Edit, LogOut, Trash2, Loader2, GripVertical, BrainCircuit, LayoutDashboard, FilePlus, HelpCircle, FileText } from 'lucide-react';
+import { PlusCircle, Book, Edit, LogOut, Trash2, Loader2, BrainCircuit, LayoutDashboard, FilePlus, HelpCircle, FileText } from 'lucide-react';
 import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { deleteContent } from '@/firebase/firestore/content';
 
-import { Content, initialFormData } from './types';
+import { Content } from './types';
 import ContentDisplay from './content-display';
 import ContentForm from './content-form';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -37,7 +38,7 @@ export default function SeniorDashboard() {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
@@ -83,10 +84,26 @@ export default function SeniorDashboard() {
     setIsFormOpen(true);
   };
   
-  const handleDelete = (id: string) => {
+  const openDeleteDialog = (id: string) => {
     setDeletingContentId(id);
     setIsDeleteDialogOpen(true);
   };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingContentId || !firestore) return;
+    setIsDeleting(true);
+    try {
+      await deleteContent(firestore, deletingContentId);
+      toast({ title: 'Content Deleted', description: 'The selected item has been successfully deleted.' });
+      setIsDeleteDialogOpen(false);
+      setDeletingContentId(null);
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast({ variant: 'destructive', title: 'Deletion Failed', description: 'Could not delete the content. Please try again.' });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   const closeForm = () => {
     setIsFormOpen(false);
@@ -156,7 +173,7 @@ export default function SeniorDashboard() {
             contents={contents}
             isLoading={isLoadingContent}
             onEdit={handleEdit}
-            onDelete={handleDelete}
+            onDelete={openDeleteDialog}
           />
         </div>
       </main>
@@ -180,27 +197,11 @@ export default function SeniorDashboard() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={async () => {
-                if (!deletingContentId || !firestore) return;
-                setIsSubmitting(true);
-                try {
-                  // Re-importing deleteContent to use it here.
-                  const { deleteContent } = await import('@/firebase/firestore/content');
-                  await deleteContent(firestore, deletingContentId);
-                  toast({ title: 'Content Deleted', description: 'The selected item has been successfully deleted.' });
-                  setIsDeleteDialogOpen(false);
-                  setDeletingContentId(null);
-                } catch (error) {
-                  console.error("Delete error:", error);
-                  toast({ variant: 'destructive', title: 'Deletion Failed', description: 'Could not delete the content. Please try again.' });
-                } finally {
-                  setIsSubmitting(false);
-                }
-              }}
-              disabled={isSubmitting}
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Yes, delete'}
+              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Yes, delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
