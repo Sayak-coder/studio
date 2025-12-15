@@ -112,7 +112,6 @@ export function createContent(firestore: Firestore, data: ContentData) {
       operation: 'create',
       requestResourceData: payload,
     }));
-    throw serverError; // Re-throw to be caught by the calling function's try/catch
   });
 }
 
@@ -136,7 +135,6 @@ export function updateContent(firestore: Firestore, contentId: string, data: Upd
       operation: 'update',
       requestResourceData: payload,
     }));
-    throw serverError;
   });
 }
 
@@ -153,6 +151,5 @@ export function deleteContent(firestore: Firestore, contentId: string) {
       path: contentDocRef.path,
       operation: 'delete',
     }));
-     throw serverError;
   });
 }
