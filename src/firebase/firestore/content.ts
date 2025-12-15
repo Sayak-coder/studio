@@ -52,7 +52,7 @@ export function uploadFileAndCreateContent(
   data: ContentData,
   file: File | null,
   onProgress?: (progress: number) => void
-) {
+): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (!file) {
       // If no file, just create the document
@@ -68,7 +68,9 @@ export function uploadFileAndCreateContent(
       'state_changed',
       (snapshot) => {
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        onProgress?.(progress);
+        if (onProgress) {
+          onProgress(progress);
+        }
       },
       (error) => {
         console.error('Upload failed:', error);
