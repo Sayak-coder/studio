@@ -56,6 +56,8 @@ export default function SignInPage() {
 
       if (category === 'student') {
         router.push('/student/dashboard');
+      } else if (category === 'senior') {
+        router.push('/senior/dashboard');
       }
       // Add logic for other categories later
     } catch (error) {

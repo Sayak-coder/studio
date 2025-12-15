@@ -58,6 +58,8 @@ export default function SignUpPage() {
 
       if (category === 'student') {
         router.push('/student/dashboard');
+      } else if (category === 'senior') {
+        router.push('/senior/dashboard');
       }
       // We can add logic for other categories later
     } catch (error) {
