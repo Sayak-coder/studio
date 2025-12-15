@@ -46,7 +46,8 @@ export default function SignInPage() {
     setIsLoading(true);
     try {
       const auth = getAuth(firebaseApp);
-      await setPersistence(auth, browserLocalPersistence)
+      // This is the key to keeping the user logged in.
+      await setPersistence(auth, browserLocalPersistence);
       await signInWithEmailAndPassword(auth, email, password);
       
       toast({
