@@ -52,8 +52,6 @@ export function createContent(firestore: Firestore, data: NewContentData) {
       operation: 'create',
       requestResourceData: payload,
     }));
-    // Do not re-throw the error, allow the UI to handle the failed promise if needed.
-    console.error("Error creating content:", serverError.message);
   });
 }
 
@@ -77,7 +75,6 @@ export function updateContent(firestore: Firestore, contentId: string, data: Upd
       operation: 'update',
       requestResourceData: payload,
     }));
-    console.error("Error updating content:", serverError.message);
   });
 }
 
@@ -94,6 +91,5 @@ export function deleteContent(firestore: Firestore, contentId: string) {
       path: contentDocRef.path,
       operation: 'delete',
     }));
-    console.error("Error deleting content:", serverError.message);
   });
 }
