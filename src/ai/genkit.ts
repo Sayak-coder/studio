@@ -8,5 +8,5 @@ export const ai = genkit({
     }),
   ],
   // A global model definition is required for ai.definePrompt to work correctly.
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-1.5-flash-001',
 });
