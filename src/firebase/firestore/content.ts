@@ -46,15 +46,14 @@ export function createContent(firestore: Firestore, data: NewContentData) {
     updatedAt: serverTimestamp(),
   };
 
-  return addDoc(contentColRef, payload).catch((serverError) => {
-    console.error("Error creating content:", serverError);
+  addDoc(contentColRef, payload).catch((serverError) => {
     errorEmitter.emit('permission-error', new FirestorePermissionError({
       path: contentColRef.path,
       operation: 'create',
       requestResourceData: payload,
     }));
-    // Propagate the error to be caught by the calling component's UI logic
-    throw serverError;
+    // Do not re-throw the error, allow the UI to handle the failed promise if needed.
+    console.error("Error creating content:", serverError.message);
   });
 }
 
@@ -72,15 +71,13 @@ export function updateContent(firestore: Firestore, contentId: string, data: Upd
     updatedAt: serverTimestamp(),
   };
 
-  return updateDoc(contentDocRef, payload).catch((serverError) => {
-    console.error("Error updating content:", serverError);
+  updateDoc(contentDocRef, payload).catch((serverError) => {
     errorEmitter.emit('permission-error', new FirestorePermissionError({
       path: contentDocRef.path,
       operation: 'update',
       requestResourceData: payload,
     }));
-    // Propagate the error to be caught by the calling component's UI logic
-    throw serverError;
+    console.error("Error updating content:", serverError.message);
   });
 }
 
@@ -92,13 +89,11 @@ export function updateContent(firestore: Firestore, contentId: string, data: Upd
 export function deleteContent(firestore: Firestore, contentId: string) {
   const contentDocRef = doc(firestore, CONTENT_COLLECTION, contentId);
 
-  return deleteDoc(contentDocRef).catch((serverError) => {
-    console.error("Error deleting content:", serverError);
+  deleteDoc(contentDocRef).catch((serverError) => {
     errorEmitter.emit('permission-error', new FirestorePermissionError({
       path: contentDocRef.path,
       operation: 'delete',
     }));
-    // Propagate the error to be caught by the calling component's UI logic
-    throw serverError;
+    console.error("Error deleting content:", serverError.message);
   });
 }
