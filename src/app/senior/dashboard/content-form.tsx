@@ -29,11 +29,13 @@ interface ContentFormProps {
   user: User;
 }
 
+type SubmissionState = 'idle' | 'uploading' | 'saving' | 'success' | 'error';
+
 export default function ContentForm({ isOpen, onClose, editingContent, user }: ContentFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [formData, setFormData] = useState(initialFormData);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionState, setSubmissionState] = useState<SubmissionState>('idle');
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
@@ -48,12 +50,12 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
         fileUrl: editingContent.fileUrl,
         fileType: editingContent.fileType,
       });
-      setFileToUpload(null);
     } else {
       setFormData(initialFormData);
-      setFileToUpload(null);
     }
+    setFileToUpload(null);
     setUploadProgress(null);
+    setSubmissionState('idle');
   }, [editingContent, isOpen]);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -71,6 +73,10 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
          return;
       }
       setFileToUpload(file);
+      // If editing, clear old fileUrl so the new file takes precedence
+      if(editingContent) {
+        setFormData(prev => ({...prev, fileUrl: '', fileType: ''}));
+      }
     }
   };
 
@@ -86,10 +92,13 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
       return;
     }
     
-    setIsSubmitting(true);
+    setSubmissionState('uploading');
     
     try {
-      let filePayload: { fileUrl?: string; fileType?: string } = {};
+      let filePayload: { fileUrl?: string; fileType?: string } = {
+        fileUrl: formData.fileUrl, // Keep existing file if not changed
+        fileType: formData.fileType,
+      };
       
       if (fileToUpload) {
         setUploadProgress(0);
@@ -101,6 +110,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
         filePayload = { fileUrl: downloadURL, fileType };
       }
 
+      setSubmissionState('saving');
       const contentData = {
         ...formData,
         ...filePayload,
@@ -112,6 +122,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
 
       await createOrUpdateContent(firestore, contentData, documentId);
 
+      setSubmissionState('success');
       toast({
         title: 'Success!',
         description: `Your content has been ${documentId ? 'updated' : 'added'}.`,
@@ -119,13 +130,26 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
 
       onClose();
     } catch (error) {
+      setSubmissionState('error');
       console.error("Content submission error:", error);
-      toast({ variant: 'destructive', title: 'Something went wrong', description: 'Could not save your content. Please try again.' });
+      toast({ variant: 'destructive', title: 'Something went wrong', description: 'Could not save your content. Check the console for details.' });
     } finally {
-      setIsSubmitting(false);
+      // The state will be reset on next open, but we can set it to idle if staying open
+      if(submissionState !== 'success') {
+         setSubmissionState('idle');
+      }
       setUploadProgress(null);
     }
   };
+  
+  const isSubmitting = submissionState === 'uploading' || submissionState === 'saving';
+
+  const getButtonText = () => {
+    if (submissionState === 'uploading') return 'Uploading File...';
+    if (submissionState === 'saving') return 'Saving Content...';
+    return editingContent ? 'Update' : 'Save Contribution';
+  }
+
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -141,19 +165,19 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
             <Label htmlFor="title" className="text-right">
               Title
             </Label>
-            <Input id="title" placeholder="e.g. Advanced Data Structures" className="col-span-3" value={formData.title} onChange={handleFormChange} />
+            <Input id="title" placeholder="e.g. Advanced Data Structures" className="col-span-3" value={formData.title} onChange={handleFormChange} disabled={isSubmitting}/>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="subject" className="text-right">
               Subject
             </Label>
-            <Input id="subject" placeholder="e.g. Computer Science" className="col-span-3" value={formData.subject} onChange={handleFormChange} />
+            <Input id="subject" placeholder="e.g. Computer Science" className="col-span-3" value={formData.subject} onChange={handleFormChange} disabled={isSubmitting}/>
           </div>
            <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="type" className="text-right">
               Type
             </Label>
-            <Select onValueChange={handleTypeChange} value={formData.type}>
+            <Select onValueChange={handleTypeChange} value={formData.type} disabled={isSubmitting}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select content type" />
               </SelectTrigger>
@@ -168,21 +192,21 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
             <Label htmlFor="content" className="text-right pt-2">
               Content
             </Label>
-            <Textarea id="content" placeholder="Start writing here... You can use Markdown for formatting." className="col-span-3 min-h-[150px]" value={formData.content} onChange={handleFormChange}/>
+            <Textarea id="content" placeholder="Start writing here... You can use Markdown for formatting." className="col-span-3 min-h-[150px]" value={formData.content} onChange={handleFormChange} disabled={isSubmitting}/>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
              <Label htmlFor="file" className="text-right">
-              File
+              Attachment
             </Label>
-            <Input id="file" type="file" className="col-span-3" onChange={handleFileChange} accept="image/*,.pdf" />
+            <Input id="file" type="file" className="col-span-3" onChange={handleFileChange} accept="image/*,.pdf" disabled={isSubmitting}/>
           </div>
            {formData.fileUrl && !fileToUpload && (
               <div className="col-start-2 col-span-3 text-sm text-muted-foreground">
                 Current file: <a href={formData.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">{formData.fileUrl.split('%2F').pop()?.split('?')[0] || 'View File'}</a>
               </div>
             )}
-           {uploadProgress !== null && (
-             <div className="col-span-4 px-1">
+           {uploadProgress !== null && submissionState === 'uploading' && (
+             <div className="col-start-2 col-span-2">
                 <Progress value={uploadProgress} className="w-full" />
                 <p className="text-sm text-muted-foreground mt-1 text-center">{Math.round(uploadProgress)}% uploaded</p>
              </div>
@@ -190,11 +214,11 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline" disabled={isSubmitting}>Cancel</Button>
           </DialogClose>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {editingContent ? 'Update' : 'Save Contribution'}
+            {getButtonText()}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -64,7 +64,6 @@ export function uploadFile(
         reject(error); // Reject the promise on error
       },
       () => {
-        // Upload completed successfully, now get the download URL
         getDownloadURL(uploadTask.snapshot.ref)
           .then((downloadURL) => {
             resolve({ downloadURL, fileType: file.type });
@@ -78,6 +77,7 @@ export function uploadFile(
 /**
  * Creates or updates a content document in Firestore.
  * If docId is provided, it updates; otherwise, it creates a new document.
+ * This function returns a promise that should be awaited.
  * @param firestore - The Firestore instance.
  * @param data - The data for the content.
  * @param docId - The ID of the document to update (optional).
@@ -86,7 +86,7 @@ export function createOrUpdateContent(
   firestore: Firestore,
   data: ContentData,
   docId?: string
-) {
+): Promise<void> {
   if (docId) {
     // Update existing document
     const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
@@ -94,6 +94,7 @@ export function createOrUpdateContent(
       ...data,
       updatedAt: serverTimestamp(),
     };
+    // updateDoc returns a promise
     return updateDoc(contentDocRef, payload).catch((serverError) => {
       errorEmitter.emit(
         'permission-error',
@@ -103,6 +104,8 @@ export function createOrUpdateContent(
           requestResourceData: payload,
         })
       );
+      // IMPORTANT: Re-throw the error to fail the promise in the UI
+      throw serverError;
     });
   } else {
     // Create new document
@@ -112,7 +115,8 @@ export function createOrUpdateContent(
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
-    return addDoc(contentColRef, payload).catch((serverError) => {
+    // addDoc returns a promise
+    return addDoc(contentColRef, payload).then(() => {}).catch((serverError) => { // .then(() => {}) to return Promise<void>
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
@@ -121,6 +125,8 @@ export function createOrUpdateContent(
           requestResourceData: payload,
         })
       );
+      // IMPORTANT: Re-throw the error to fail the promise in the UI
+      throw serverError;
     });
   }
 }
@@ -139,5 +145,6 @@ export function deleteContent(firestore: Firestore, contentId: string) {
       path: contentDocRef.path,
       operation: 'delete',
     }));
+     throw serverError;
   });
 }
