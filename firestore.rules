@@ -56,12 +56,17 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
 
       /**
-       * @description Only the original author of the content can update or delete it.
+       * @description Only the original author of the content can update it.
        *              The authorId and createdAt fields are immutable.
        */
-      allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid
-                            && request.resource.data.authorId == resource.data.authorId
-                            && request.resource.data.createdAt == resource.data.createdAt;
+      allow update: if isSignedIn() && resource.data.authorId == request.auth.uid
+                    && request.resource.data.authorId == resource.data.authorId
+                    && request.resource.data.createdAt == resource.data.createdAt;
+      
+      /**
+       * @description Only the original author of the content can delete it.
+       */
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
   }
 }
