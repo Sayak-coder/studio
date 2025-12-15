@@ -61,6 +61,14 @@
           "type": "string",
           "description": "The display name of the user who created this content."
         },
+        "fileUrl": {
+          "type": "string",
+          "description": "The URL of the uploaded image or PDF file."
+        },
+        "fileType": {
+          "type": "string",
+          "description": "The MIME type of the uploaded file (e.g., 'image/jpeg', 'application/pdf')."
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time",
@@ -126,5 +134,3 @@
     "reasoning": "This Firestore structure prioritizes security and scalability. User data is isolated under `/users/{userId}` with strict ownership rules. The top-level `/content` collection stores all academic materials. Security rules for `/content` will ensure that while any authenticated user can create content, only the original author (authorId) can update or delete their own contributions. This prevents one user from modifying another's work and provides a clear audit trail."
   }
 }
-
-    

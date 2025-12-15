@@ -5,6 +5,8 @@ export type Content = {
   type: 'Class Notes' | 'PYQ' | 'Important Question';
   content: string;
   authorId: string;
+  fileUrl?: string;
+  fileType?: string;
 };
 
 export const initialFormData: Omit<Content, 'id' | 'authorId'> = {
@@ -12,4 +14,6 @@ export const initialFormData: Omit<Content, 'id' | 'authorId'> = {
   subject: '',
   type: 'Class Notes',
   content: '',
+  fileUrl: '',
+  fileType: '',
 };

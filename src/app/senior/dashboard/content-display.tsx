@@ -4,7 +4,7 @@ import { Content } from './types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, FileSymlink } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ContentDisplayProps {
@@ -31,27 +31,38 @@ const ContentRow = ({ title, items, onEdit, onDelete }: { title: string, items: 
               <CardContent className="flex-grow">
                 <p className="text-sm text-muted-foreground line-clamp-3">{item.content}</p>
               </CardContent>
-              <CardFooter className="flex justify-end gap-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
-                        <Edit className="h-4 w-4" />
+              <CardFooter className="flex justify-between items-center">
+                 {item.fileUrl && (
+                    <a href={item.fileUrl} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm" className="gap-2">
+                         <FileSymlink className="h-4 w-4" />
+                         View Attachment
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Edit</p></TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => onDelete(item.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Delete</p></TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                    </a>
+                  )}
+
+                <div className="flex justify-end gap-2 ml-auto">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Edit</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => onDelete(item.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent><p>Delete</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </CardFooter>
             </Card>
           ))}

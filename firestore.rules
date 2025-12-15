@@ -11,16 +11,6 @@
  *   UID matches {userId}.
  * - /content/{contentId}: Stores user-generated academic content (notes, PYQs, etc.).
  *   Each document contains an 'authorId' field, which is used to grant write permissions.
- *
- * Key Security Decisions:
- * - User Isolation: A user can only access their own document in the `/users` collection.
- *   Listing all users is disabled to protect privacy.
- * - Content Ownership: Any authenticated user can create content. However, only the user
- *   whose UID matches the `authorId` field in a content document can update or delete it.
- * - Public Read on Content: All content is publicly readable by any authenticated user. This
- *   allows students and other users to access the notes shared by seniors.
- * - Data Integrity: Rules enforce that the `authorId` is correctly set on creation and is
- *   immutable, preventing ownership hijacking.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -67,6 +57,25 @@ service cloud.firestore {
        * @description Only the original author of the content can delete it.
        */
       allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+  }
+}
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow reads by anyone (e.g., for public images or files).
+    // In a real app, you'd likely restrict this further.
+    allow read: if true;
+
+    // Allow writes only for authenticated users.
+    // The file path must match the user's UID.
+    // This rule ensures users can only upload files to their own "folder".
+    // We also limit the file size to 5MB.
+    match /content/{userId}/{fileName} {
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*|application/pdf');
     }
   }
 }
