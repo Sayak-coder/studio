@@ -2,38 +2,27 @@
 import React from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { Book, Bot, FileText, LogOut } from 'lucide-react';
+
+import { useUser, useFirebase } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import AICategoryHelp from './category-help';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { firebaseApp } from '@/firebase/config';
 
 export default function StudentDashboard() {
   const router = useRouter();
   const { toast } = useToast();
-  const auth = getAuth(firebaseApp);
-  
-  // State for user and loading status
-  const [user, setUser] = React.useState<User | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const { auth } = useFirebase();
+  const { user, isUserLoading } = useUser();
 
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
-        router.push('/auth/signin/student');
-      }
-      setLoading(false);
-    });
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, [auth, router]);
+    if (!isUserLoading && !user) {
+      router.push('/auth/signin/student');
+    }
+  }, [user, isUserLoading, router]);
 
   const handleSignOut = async () => {
     try {
@@ -53,7 +42,7 @@ export default function StudentDashboard() {
     }
   };
   
-  if (loading) {
+  if (isUserLoading || !user) {
     return (
        <div className="container mx-auto p-4 md:p-8">
           <Skeleton className="h-8 w-1/4 mb-8" />
@@ -65,11 +54,6 @@ export default function StudentDashboard() {
           <Skeleton className="h-64 mt-12" />
       </div>
     )
-  }
-
-  if (!user) {
-    // This will be briefly visible before the redirect in useEffect kicks in.
-    return null;
   }
 
   return (
@@ -149,3 +133,5 @@ export default function StudentDashboard() {
     </div>
   );
 }
+
+    

@@ -15,6 +15,10 @@
           "description": "Email address of the user.",
           "format": "email"
         },
+        "name": {
+          "type": "string",
+          "description": "The display name of the user."
+        },
         "role": {
           "type": "string",
           "description": "The role of the user (Student, Class Representative, Senior)."
@@ -122,3 +126,5 @@
     "reasoning": "This Firestore structure prioritizes security and scalability. User data is isolated under `/users/{userId}` with strict ownership rules. The top-level `/content` collection stores all academic materials. Security rules for `/content` will ensure that while any authenticated user can create content, only the original author (authorId) can update or delete their own contributions. This prevents one user from modifying another's work and provides a clear audit trail."
   }
 }
+
+    

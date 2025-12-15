@@ -162,7 +162,6 @@ export default function SeniorDashboard() {
         // Update existing content
         const updatedData = {
           ...formData,
-          updatedAt: serverTimestamp(),
         };
         await updateContent(firestore, editingContent.id, updatedData);
         toast({ title: 'Success!', description: 'Your content has been updated.' });
@@ -172,14 +171,14 @@ export default function SeniorDashboard() {
           ...formData,
           authorId: user.uid,
           authorName: user.displayName || 'Anonymous',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
         };
         await createContent(firestore, newContent);
         toast({ title: 'Success!', description: 'Your contribution has been added.' });
       }
       handleDialogClose();
     } catch (error) {
+      // Errors are now globally handled by the error emitter in the content.ts functions
+      // We still show a generic toast here for user feedback.
       console.error("Content submission error:", error);
       toast({ variant: 'destructive', title: 'Something went wrong', description: 'Could not save your content. Please try again.' });
     } finally {
@@ -197,6 +196,7 @@ export default function SeniorDashboard() {
       setIsDeleteDialogOpen(false);
       setDeletingContentId(null);
     } catch (error) {
+       // Errors are globally handled
        console.error("Delete error:", error);
        toast({ variant: 'destructive', title: 'Deletion Failed', description: 'Could not delete the content. Please try again.' });
     } finally {
@@ -248,7 +248,7 @@ export default function SeniorDashboard() {
           {/* Add Notes Card */}
           <Dialog open={isDialogOpen} onOpenChange={ (isOpen) => isOpen ? setIsDialogOpen(true) : handleDialogClose() }>
             <DialogTrigger asChild>
-              <Card className="w-full cursor-pointer bg-card/80 backdrop-blur-sm transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1 animated-gradient-border">
+              <Card className="w-full cursor-pointer bg-card/80 backdrop-blur-sm transition-all duration-300 hover:shadow-primary/20 hover:shadow-lg hover:-translate-y-1 animated-gradient-border" onClick={() => setIsDialogOpen(true)}>
                 <CardHeader>
                   <div className="flex items-center gap-4">
                     <PlusCircle className="h-12 w-12 text-primary" />
@@ -304,7 +304,7 @@ export default function SeniorDashboard() {
               </div>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant="outline" onClick={handleDialogClose}>Cancel</Button>
+                  <Button variant="outline">Cancel</Button>
                 </DialogClose>
                 <Button onClick={handleSubmit} disabled={isSubmitting}>
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -340,7 +340,7 @@ export default function SeniorDashboard() {
                        <Card key={item.id} className="flex items-center justify-between p-4 transition-all hover:bg-secondary/50">
                         <div className="flex items-center gap-4">
                            <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                           <div className="w-16">
+                           <div className="w-32">
                             <p className="text-xs font-semibold text-primary uppercase tracking-wider">{item.type}</p>
                            </div>
                            <div className="border-l pl-4">
@@ -405,3 +405,5 @@ export default function SeniorDashboard() {
     </div>
   );
 }
+
+    
