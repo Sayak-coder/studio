@@ -17,6 +17,7 @@ import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 
 export default function SignUpPage() {
@@ -50,6 +51,16 @@ export default function SignUpPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
       await updateProfile(userCredential.user, { displayName: name });
+      
+      const firestore = getFirestore(firebaseApp);
+      const userRef = doc(firestore, 'users', userCredential.user.uid);
+      await setDoc(userRef, {
+        id: userCredential.user.uid,
+        email: userCredential.user.email,
+        name: name,
+        role: category,
+      });
+
 
       toast({
         title: 'Sign up successful!',
@@ -113,18 +124,6 @@ export default function SignUpPage() {
                   onChange={(e) => setName(e.target.value)}
                   disabled={isLoading}
                 />
-              </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  placeholder="Create a username"
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="rollNo">Class Roll No.</Label>
-                <Input id="rollNo" placeholder="e.g., 21CS01" />
               </div>
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="email">Email</Label>

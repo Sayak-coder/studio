@@ -25,6 +25,57 @@
         "email",
         "role"
       ]
+    },
+    "Content": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Content",
+      "type": "object",
+      "description": "Represents a piece of academic content like a note, PYQ, or important question.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the content."
+        },
+        "subject": {
+          "type": "string",
+          "description": "The academic subject this content belongs to."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of content.",
+          "enum": ["Class Notes", "PYQ", "Important Question"]
+        },
+        "content": {
+          "type": "string",
+          "description": "The main body of the academic content, can contain Markdown."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The UID of the user who created this content."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "The display name of the user who created this content."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the content was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the content was last updated."
+        }
+      },
+      "required": [
+        "title",
+        "subject",
+        "type",
+        "content",
+        "authorId",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -50,8 +101,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/content/{contentId}",
+        "definition": {
+          "entityName": "Content",
+          "schema": {
+            "$ref": "#/backend/entities/Content"
+          },
+          "description": "Stores academic content created by users. Write access is controlled by ownership.",
+          "params": [
+            {
+              "name": "contentId",
+              "description": "The unique identifier for the content document."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "This Firestore structure prioritizes security and scalability by adhering to the principles of Authorization Independence and Structural Segregation. Since the application involves user roles (Student, Class Representative, Senior), and user data, we will use path-based ownership for private user data and dedicated collections for global roles.\n\n1.  **Authorization Independence:** The structure avoids `get()` calls in security rules by relying on path-based authorization (`/users/{userId}`).\n2.  **Structural Segregation:** User data is stored under `/users/{userId}`, ensuring all documents in this subcollection share the same ownership-based security requirements.\n3.  **Access Modeling:** Path-based ownership is employed (`/users/{userId}`) for user profiles and related data. Global roles are managed implicitly through path-based existence checks in security rules.\n4. **QAPs (Rules are not Filters):** Since we're primarily dealing with user-owned data and roles are simple, the structure naturally supports secure `list` operations. Listing documents under `/users/{userId}` is implicitly restricted to the authenticated user.\n\nThis structure promotes clear, maintainable security rules focused on `request.auth.uid` and avoids complex hierarchical dependencies."
+    "reasoning": "This Firestore structure prioritizes security and scalability. User data is isolated under `/users/{userId}` with strict ownership rules. The top-level `/content` collection stores all academic materials. Security rules for `/content` will ensure that while any authenticated user can create content, only the original author (authorId) can update or delete their own contributions. This prevents one user from modifying another's work and provides a clear audit trail."
   }
 }
