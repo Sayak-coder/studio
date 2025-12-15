@@ -5,7 +5,6 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  setDoc,
   serverTimestamp,
   type Firestore,
 } from 'firebase/firestore';
@@ -94,7 +93,7 @@ export function createOrUpdateContent(
       ...data,
       updatedAt: serverTimestamp(),
     };
-    // updateDoc returns a promise
+    // updateDoc returns a promise that we will chain off of
     return updateDoc(contentDocRef, payload).catch((serverError) => {
       errorEmitter.emit(
         'permission-error',
@@ -115,8 +114,9 @@ export function createOrUpdateContent(
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
-    // addDoc returns a promise
-    return addDoc(contentColRef, payload).then(() => {}).catch((serverError) => { // .then(() => {}) to return Promise<void>
+    // addDoc returns a promise that resolves with the new doc ref.
+    // We chain a .then(() => {}) to convert it to a Promise<void>.
+    return addDoc(contentColRef, payload).then(() => {}).catch((serverError) => {
       errorEmitter.emit(
         'permission-error',
         new FirestorePermissionError({
@@ -145,6 +145,7 @@ export function deleteContent(firestore: Firestore, contentId: string) {
       path: contentDocRef.path,
       operation: 'delete',
     }));
-     throw serverError;
+    // IMPORTANT: Re-throw the error to fail the promise in the UI
+    throw serverError;
   });
 }

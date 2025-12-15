@@ -21,6 +21,7 @@ import { Loader2 } from 'lucide-react';
 import { Content, initialFormData } from './types';
 import { useFirestore } from '@/firebase';
 import { createOrUpdateContent, uploadFile } from '@/firebase/firestore/content';
+import { FirebaseError } from 'firebase/app';
 
 interface ContentFormProps {
   isOpen: boolean;
@@ -132,9 +133,10 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
     } catch (error) {
       setSubmissionState('error');
       console.error("Content submission error:", error);
-      toast({ variant: 'destructive', title: 'Something went wrong', description: 'Could not save your content. Check the console for details.' });
+      const errorMessage = error instanceof FirebaseError ? error.message : 'Could not save your content. Please try again.';
+      toast({ variant: 'destructive', title: 'Something went wrong', description: errorMessage });
     } finally {
-      // The state will be reset on next open, but we can set it to idle if staying open
+      // Reset state if not successful, otherwise let the useEffect handle it on next open
       if(submissionState !== 'success') {
          setSubmissionState('idle');
       }
