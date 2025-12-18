@@ -4,8 +4,8 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, query } from 'firebase/firestore';
-import { BrainCircuit, Loader2, Users } from 'lucide-react';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { BrainCircuit, Loader2, Users, ShieldAlert } from 'lucide-react';
+import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -37,23 +37,60 @@ export default function OfficialDashboard() {
     }
   }, [user, isUserLoading, router]);
 
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
+
+  const isAdmin = userProfile?.role === 'admin';
 
   const usersQuery = useMemoFirebase(() => {
-    // IMPORTANT: Only create the query if firestore and the user are available.
-    // This prevents the query from running before authentication is ready.
-    if (!firestore || !user) return null;
+    // CRITICAL: Only create the query if firestore is ready AND the user is confirmed as an admin.
+    // This prevents the query from running before the role is verified.
+    if (!firestore || !isAdmin) return null;
     return query(collection(firestore, 'users'));
-  }, [firestore, user]);
+  }, [firestore, isAdmin]);
 
   const { data: users, isLoading: isLoadingUsers, error } = useCollection<UserProfile>(usersQuery);
 
-  if (isUserLoading || (!users && isLoadingUsers)) {
-      return (
-       <div className="flex h-screen w-full items-center justify-center bg-background">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+  if (isUserLoading || isLoadingProfile) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-muted-foreground">Verifying credentials...</p>
       </div>
     );
   }
+
+  // A specific state for when user is authenticated but not an admin.
+  if (user && !isAdmin && !isLoadingProfile) {
+     return (
+       <div className="flex h-screen w-full items-center justify-center bg-background">
+         <Card className="w-full max-w-md text-center">
+            <CardHeader>
+                <CardTitle className="flex items-center justify-center gap-2 text-2xl text-destructive">
+                    <ShieldAlert className="h-8 w-8"/>
+                    Access Denied
+                </CardTitle>
+                <CardDescription>
+                    Your account does not have administrative privileges.
+                </CardDescription>
+            </CardHeader>
+             <CardContent>
+                <p className="text-sm text-muted-foreground">
+                    Please contact your system administrator if you believe this is a mistake.
+                </p>
+                <Button asChild variant="link" className="mt-4">
+                  <Link href="/">Return to Home</Link>
+                </Button>
+            </CardContent>
+         </Card>
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex min-h-screen bg-secondary/30 text-foreground">
