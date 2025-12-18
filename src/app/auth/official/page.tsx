@@ -3,33 +3,61 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useFirebase, useUser } from '@/firebase';
-import { signInAnonymously } from 'firebase/auth';
+import { signInAnonymously, type User } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 export default function OfficialLoginPage() {
   const router = useRouter();
-  const { auth } = useFirebase();
+  const { auth, firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const [isSigningIn, setIsSigningIn] = useState(false);
 
+  // Function to create an admin user document in Firestore
+  const createAdminUserDoc = async (user: User) => {
+    if (!firestore) return;
+    try {
+      const userRef = doc(firestore, 'users', user.uid);
+      await setDoc(userRef, {
+        id: user.uid,
+        email: 'official@edubot.com', // Placeholder email for anonymous admin
+        name: 'Official Admin',
+        role: 'admin',
+      });
+    } catch (error) {
+       console.error("Error creating admin user document:", error);
+       toast({
+          variant: "destructive",
+          title: "Setup Failed",
+          description: "Could not create the required admin user profile.",
+       });
+       // Sign out if setup fails to prevent being in a broken state
+       await auth.signOut();
+    }
+  };
+
   useEffect(() => {
-    // If user is already logged in (even anonymously), redirect to dashboard
+    // If user is already logged in, redirect to dashboard
     if (!isUserLoading && user) {
+      // Check if the user is an admin before redirecting
+      // This is a client-side check, the real security is in the rules
       router.push('/official/dashboard');
       return;
     }
 
     // If not loading and not signed in, attempt anonymous sign-in
-    if (!isUserLoading && !user && !isSigningIn) {
+    if (!isUserLoading && !user && !isSigningIn && auth) {
       setIsSigningIn(true);
       signInAnonymously(auth)
-        .then(() => {
+        .then(async (userCredential) => {
+          // After successful sign-in, create their admin document
+          await createAdminUserDoc(userCredential.user);
           toast({
             title: 'Official Access Granted',
             description: 'Redirecting to the dashboard.',
           });
-          // The onAuthStateChanged listener will trigger a re-render,
+          // The onAuthStateChanged listener in useUser will update the user state,
           // and the next useEffect run will handle the redirect.
         })
         .catch((error) => {
@@ -42,7 +70,7 @@ export default function OfficialLoginPage() {
           setIsSigningIn(false);
         });
     }
-  }, [user, isUserLoading, auth, router, toast, isSigningIn]);
+  }, [user, isUserLoading, auth, router, toast, isSigningIn, firestore]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">

@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, query } from 'firebase/firestore';
 import { BrainCircuit, Loader2, Users } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import {
   Table,
   TableBody,
@@ -21,18 +22,38 @@ type UserProfile = {
   id: string;
   name: string;
   email: string;
-  role: 'student' | 'senior' | 'class-representative';
+  role: 'student' | 'senior' | 'class-representative' | 'admin';
 };
 
 export default function OfficialDashboard() {
+  const router = useRouter();
   const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
+
+  // Redirect to login if user is not authenticated after loading
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/auth/official');
+    }
+  }, [user, isUserLoading, router]);
+
 
   const usersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // IMPORTANT: Only create the query if firestore and the user are available.
+    // This prevents the query from running before authentication is ready.
+    if (!firestore || !user) return null;
     return query(collection(firestore, 'users'));
-  }, [firestore]);
+  }, [firestore, user]);
 
-  const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
+  const { data: users, isLoading: isLoadingUsers, error } = useCollection<UserProfile>(usersQuery);
+
+  if (isUserLoading || (!users && isLoadingUsers)) {
+      return (
+       <div className="flex h-screen w-full items-center justify-center bg-background">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-secondary/30 text-foreground">
@@ -64,7 +85,7 @@ export default function OfficialDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoading &&
+                  {isLoadingUsers &&
                     [...Array(5)].map((_, i) => (
                       <TableRow key={i}>
                         <TableCell>
@@ -81,7 +102,15 @@ export default function OfficialDashboard() {
                         </TableCell>
                       </TableRow>
                     ))}
-                  {!isLoading && users && users.length === 0 && (
+                  {!isLoadingUsers && error && (
+                     <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center text-destructive">
+                          Error: You do not have permission to view users.
+                          <p className="text-xs text-muted-foreground mt-2">{error.message}</p>
+                        </TableCell>
+                      </TableRow>
+                  )}
+                  {!isLoadingUsers && !error && users && users.length === 0 && (
                      <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center">
                           No users found.
@@ -93,7 +122,7 @@ export default function OfficialDashboard() {
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className='capitalize'>{user.role}</Badge>
+                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className='capitalize'>{user.role}</Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground font-mono text-xs">
                         {user.id}
@@ -102,7 +131,7 @@ export default function OfficialDashboard() {
                   ))}
                 </TableBody>
               </Table>
-               {isLoading && (
+               {isLoadingUsers && (
                   <div className="flex items-center justify-center py-10">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>

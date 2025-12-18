@@ -21,7 +21,7 @@
         },
         "role": {
           "type": "string",
-          "description": "The role of the user (Student, Class Representative, Senior)."
+          "description": "The role of the user (Student, Class Representative, Senior, admin)."
         }
       },
       "required": [
