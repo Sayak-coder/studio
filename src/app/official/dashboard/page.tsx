@@ -53,6 +53,9 @@ export default function OfficialDashboard() {
   useEffect(() => {
     if (userProfile && (userProfile.role === 'official' || userProfile.role === 'admin')) {
       setIsRoleVerified(true);
+    } else if (userProfile) {
+      // If profile is loaded but not an official, explicitly deny access
+      setIsRoleVerified(false);
     }
   }, [userProfile]);
 
@@ -113,7 +116,7 @@ export default function OfficialDashboard() {
                 <p className="text-sm text-muted-foreground">
                     This dashboard is for authorized personnel only. If you believe this is a mistake, please contact your administrator.
                 </p>
-                <Button variant="link" className="mt-4" onClick={handleSignOut}>
+                <Button variant="link" className="mt-4" onClick={() => router.push('/')}>
                   Return to Home
                 </Button>
             </CardContent>
@@ -157,7 +160,7 @@ export default function OfficialDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoadingUsers && (
+                  {isLoadingUsers && isRoleVerified && (
                     <TableRow>
                       <TableCell colSpan={4}>
                         <div className="flex items-center justify-center py-10">
@@ -167,7 +170,7 @@ export default function OfficialDashboard() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {isRoleVerified && usersError && (
+                  {usersError && (
                      <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center text-destructive">
                           Error: Could not load user data.
@@ -175,14 +178,14 @@ export default function OfficialDashboard() {
                         </TableCell>
                       </TableRow>
                   )}
-                  {isRoleVerified && !isLoadingUsers && allUsers?.length === 0 && (
+                  {!isLoadingUsers && allUsers?.length === 0 && isRoleVerified &&(
                      <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center">
                           No users found in the system.
                         </TableCell>
                       </TableRow>
                   )}
-                  {isRoleVerified && allUsers?.map((u) => (
+                  {allUsers?.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium">{u.name}</TableCell>
                       <TableCell>{u.email}</TableCell>

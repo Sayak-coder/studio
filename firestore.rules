@@ -25,7 +25,8 @@ service cloud.firestore {
      * This is vulnerable to race conditions if not handled carefully on the client.
      */
     function hasRole(role) {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return isSignedIn() && (userRole == role);
     }
     
     function isAdmin() {
