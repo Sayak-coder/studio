@@ -4,7 +4,7 @@
  * Core Philosophy:
  * The default posture is deny-all. Access is granted explicitly.
  * - User Profiles (/users): Only the owner can read/write their own profile.
- * - User Listing (/users): Only users with an 'admin' role can list all users.
+ * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users.
  * - Content (/content): Any authenticated user can create/read. Only the author can update/delete.
  */
 rules_version = '2';
@@ -21,12 +21,15 @@ service cloud.firestore {
     }
     
     /**
-     * Checks if the currently authenticated user has the specified role.
+     * Checks if the currently authenticated user has a specific role.
      * This function reads the user's profile from the /users collection.
      */
     function isRole(role) {
-      return isSignedIn() 
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      if (role == 'admin') {
+        return isSignedIn() && (userRole == 'admin' || userRole == 'official');
+      }
+      return isSignedIn() && userRole == role;
     }
 
     // Rules for user profiles.
@@ -34,7 +37,6 @@ service cloud.firestore {
       // Allow a user to read, update, or delete their own profile.
       allow get, update, delete: if isOwner(userId);
       // Allow any authenticated user to create their own profile, ensuring the ID matches.
-      // This is necessary for both regular sign-up and the anonymous admin creation.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       // Allow users with the 'admin' role to list all users.
       allow list: if isRole('admin');

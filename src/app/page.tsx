@@ -36,7 +36,7 @@ export default function Home() {
       icon: <Briefcase className="h-10 w-10 text-primary" />,
       description: 'Access and manage all user data with administrative privileges.',
       cta: 'Enter as Official',
-      href: '/auth/official',
+      href: '/help/official',
       hoverClass: 'animated-gradient-border',
     },
   ];

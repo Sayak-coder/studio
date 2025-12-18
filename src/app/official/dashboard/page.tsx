@@ -4,8 +4,8 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, query, doc } from 'firebase/firestore';
-import { BrainCircuit, Loader2, Users, ShieldAlert } from 'lucide-react';
-import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc } from '@/firebase';
+import { BrainCircuit, Loader2, Users, ShieldAlert, LogOut } from 'lucide-react';
+import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc, useFirebase } from '@/firebase';
 import {
   Table,
   TableBody,
@@ -18,23 +18,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 type UserProfile = {
   id: string;
   name: string;
   email: string;
-  role: 'student' | 'senior' | 'class-representative' | 'admin';
+  role: 'student' | 'senior' | 'class-representative' | 'admin' | 'official';
 };
 
 export default function OfficialDashboard() {
   const router = useRouter();
   const firestore = useFirestore();
+  const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
 
   // Redirect to login if user is not authenticated after loading
   useEffect(() => {
     if (!isUserLoading && !user) {
-      router.push('/auth/official');
+      router.push('/help/official');
     }
   }, [user, isUserLoading, router]);
 
@@ -45,7 +48,7 @@ export default function OfficialDashboard() {
 
   const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
 
-  const isAdmin = userProfile?.role === 'admin';
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'official';
 
   const usersQuery = useMemoFirebase(() => {
     // CRITICAL: Only create the query if firestore is ready AND the user is confirmed as an admin.
@@ -55,6 +58,25 @@ export default function OfficialDashboard() {
   }, [firestore, isAdmin]);
 
   const { data: users, isLoading: isLoadingUsers, error } = useCollection<UserProfile>(usersQuery);
+
+  const handleSignOut = async () => {
+    try {
+      if(auth) await auth.signOut();
+      toast({
+        title: 'Signed Out',
+        description: 'You have been successfully signed out.',
+      });
+      router.push('/help/official');
+    } catch (error) {
+      console.error('Sign out error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Sign Out Failed',
+        description: 'Could not sign you out. Please try again.',
+      });
+    }
+  };
+
 
   if (isUserLoading || isLoadingProfile) {
     return (
@@ -102,15 +124,18 @@ export default function OfficialDashboard() {
             <span className="text-xl">EduBot Official Portal</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Users className="h-6 w-6 text-primary" />
-            <p className="text-lg font-semibold">User Management</p>
+            <p className="hidden sm:block">Welcome, {userProfile?.name || 'Official'}</p>
+            <Button variant="ghost" onClick={handleSignOut} className="gap-2">
+              <LogOut className="h-5 w-5" />
+              Sign Out
+            </Button>
           </div>
         </header>
 
         <div className="p-4 md:p-8">
           <Card>
             <CardHeader>
-              <CardTitle>All Registered Users</CardTitle>
+              <CardTitle className='flex items-center gap-2'><Users className="h-6 w-6" /> All Registered Users</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -160,7 +185,7 @@ export default function OfficialDashboard() {
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className='capitalize'>{user.role}</Badge>
+                        <Badge variant={(user.role === 'admin' || user.role === 'official') ? 'default' : 'secondary'} className='capitalize'>{user.role}</Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground font-mono text-xs">
                         {user.id}

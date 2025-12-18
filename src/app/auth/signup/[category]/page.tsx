@@ -71,6 +71,8 @@ export default function SignUpPage() {
         router.push('/student/dashboard');
       } else if (category === 'senior') {
         router.push('/senior/dashboard');
+      } else if (category === 'official') {
+        router.push('/official/dashboard');
       }
       // We can add logic for other categories later
     } catch (error) {
