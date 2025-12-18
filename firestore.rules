@@ -3,8 +3,8 @@
  *
  * Core Philosophy:
  * The default posture is deny-all. Access is granted explicitly.
- * - User Profiles (/users): Only the owner can read/write their own profile.
- * - User Listing (/users): Only users with an 'admin' custom claim can list all users.
+ * - User Profiles (/users): Only the owner can read/write their own profile. An admin/official can read any profile.
+ * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users.
  * - Content (/content): Any authenticated user can create/read. Only the author can update/delete.
  */
 rules_version = '2';
@@ -21,25 +21,25 @@ service cloud.firestore {
     }
     
     /**
-     * Checks if the authenticated user has an 'admin' custom claim.
-     * This is the preferred method for role-based access control as it's fast and secure.
+     * Checks if the currently authenticated user has a specific role stored in their user document.
+     * This is vulnerable to race conditions if not handled carefully on the client.
      */
-    function isAdminClaim() {
-      return isSignedIn() && request.auth.token.admin == true;
+    function hasRole(role) {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
     }
     
-    /**
-     * Checks if the currently authenticated user has a specific role stored in their user document.
-     * This is a fallback and can be subject to race conditions on initial user creation.
-     */
     function isRole(role) {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+      return hasRole(role);
+    }
+    
+    function isAdmin() {
+      return hasRole('admin') || hasRole('official');
     }
 
     // Rules for user profiles.
     match /users/{userId} {
-      // An admin can read any user profile. An owner can read their own.
-      allow get: if isAdminClaim() || isOwner(userId);
+      // An admin/official can read any user profile. An owner can read their own.
+      allow get: if isAdmin() || isOwner(userId);
       
       // Allow a user to update or delete their own profile.
       allow update, delete: if isOwner(userId);
@@ -47,8 +47,8 @@ service cloud.firestore {
       // Allow any authenticated user to create their own profile, ensuring the ID matches.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       
-      // Allow users with the 'admin' custom claim to list all users.
-      allow list: if isAdminClaim();
+      // Allow users with the 'admin' or 'official' role to list all users.
+      allow list: if isAdmin();
     }
 
     // Rules for academic content.

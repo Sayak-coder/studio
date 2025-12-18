@@ -65,6 +65,7 @@ export default function OfficialDashboard() {
     if (userProfile && (userProfile.role === 'official' || userProfile.role === 'admin')) {
       setIsRoleVerified(true);
     }
+    // This effect should only run when userProfile changes.
   }, [userProfile]);
 
   const handleSignOut = async () => {
@@ -95,7 +96,7 @@ export default function OfficialDashboard() {
     );
   }
 
-  // A specific state for when user is authenticated but not an admin.
+  // A specific state for when user is authenticated but not an admin/official, after their profile has loaded.
   if (user && !isLoadingProfile && !isRoleVerified) {
      return (
        <div className="flex h-screen w-full items-center justify-center bg-background">

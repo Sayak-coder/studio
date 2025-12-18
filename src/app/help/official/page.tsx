@@ -12,7 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInAnonymously } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { firebaseApp } from '@/firebase/config';
 import { Loader2 } from 'lucide-react';
@@ -21,17 +22,16 @@ import { FirebaseError } from 'firebase/app';
 export default function OfficialSignInPage() {
   const router = useRouter();
   const { toast } = useToast();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [officialId, setOfficialId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const SECRET_ID = 'catalyst2025';
 
   const handleSignIn = async () => {
-    if (!email || !password) {
+    if (officialId !== SECRET_ID) {
       toast({
         variant: 'destructive',
-        title: 'Fields Required',
-        description: 'Please enter both your Official Email and Password.',
+        title: 'Access Denied',
+        description: 'The Official ID you entered is incorrect.',
       });
       return;
     }
@@ -39,7 +39,21 @@ export default function OfficialSignInPage() {
     setIsLoading(true);
     try {
       const auth = getAuth(firebaseApp);
-      await signInWithEmailAndPassword(auth, email, password);
+      const firestore = getFirestore(firebaseApp);
+      
+      // Step 1: Sign in anonymously
+      const userCredential = await signInAnonymously(auth);
+      const user = userCredential.user;
+
+      // Step 2: Create a user profile with the 'official' role.
+      // This document is what the dashboard's security rules will check.
+      const userRef = doc(firestore, 'users', user.uid);
+      await setDoc(userRef, {
+        id: user.uid,
+        name: `Official-${user.uid.substring(0, 5)}`,
+        email: 'official@edubot.com', // Placeholder email
+        role: 'official',
+      });
 
       toast({
         title: 'Access Granted!',
@@ -52,11 +66,7 @@ export default function OfficialSignInPage() {
       console.error('Official sign-in error:', error);
       let description = 'An unexpected error occurred. Please try again.';
       if (error instanceof FirebaseError) {
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-          description = 'Invalid credentials. Please check your email and password.';
-        } else {
-          description = error.message;
-        }
+        description = error.message;
       }
       toast({
         variant: 'destructive',
@@ -75,7 +85,7 @@ export default function OfficialSignInPage() {
             Official Portal
           </CardTitle>
           <CardDescription>
-            Sign in to access the administrative dashboard.
+            Enter your unique ID to access the administrative dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -87,24 +97,13 @@ export default function OfficialSignInPage() {
           >
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="official-email">Official Email</Label>
+                <Label htmlFor="official-id">Unique Official ID</Label>
                 <Input
-                  id="official-email"
-                  type="email" 
-                  placeholder="admin@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
+                  id="official-id"
                   type="password" 
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your secret ID"
+                  value={officialId}
+                  onChange={(e) => setOfficialId(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
