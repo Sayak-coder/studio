@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, query, doc } from 'firebase/firestore';
@@ -41,6 +41,7 @@ export default function OfficialDashboard() {
     }
   }, [user, isUserLoading, router]);
 
+  // Step 1: Fetch the current user's profile to verify their role.
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
@@ -48,15 +49,17 @@ export default function OfficialDashboard() {
 
   const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
 
+  // Step 2: Determine if the user has admin-like privileges.
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'official';
 
+  // Step 3: Only create the query to fetch all users if the current user is confirmed to be an admin.
   const usersQuery = useMemoFirebase(() => {
-    // CRITICAL: Only create the query if firestore is ready AND the user is confirmed as an admin.
-    // This prevents the query from running before the role is verified.
+    // This is the critical change: do not create the query until isAdmin is true.
     if (!firestore || !isAdmin) return null;
     return query(collection(firestore, 'users'));
   }, [firestore, isAdmin]);
 
+  // The useCollection hook will now wait until usersQuery is not null.
   const { data: users, isLoading: isLoadingUsers, error } = useCollection<UserProfile>(usersQuery);
 
   const handleSignOut = async () => {
