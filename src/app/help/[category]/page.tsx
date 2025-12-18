@@ -11,7 +11,7 @@ export default function AuthPage() {
   const params = useParams();
   const { user, isUserLoading } = useUser();
 
-  const category = Array.isArray(params.category) ? params.category[0] : params.category;
+  const category = Array.isArray(params.category) ? params.category[0] : params.category as string;
   const categoryTitle = category.replace(/-/g, ' ') + ' Portal';
 
   useEffect(() => {
@@ -26,6 +26,8 @@ export default function AuthPage() {
         router.replace('/student/dashboard');
       } else if (category === 'senior') {
         router.replace('/senior/dashboard');
+      } else if (category === 'class-representative') {
+        router.replace('/class-representative/dashboard');
       }
       // Add other role-based redirects here if needed
       // For class-representative, it would be router.replace('/cr/dashboard');

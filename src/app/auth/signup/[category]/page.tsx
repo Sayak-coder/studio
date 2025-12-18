@@ -47,6 +47,8 @@ export default function SignUpPage() {
             router.replace('/senior/dashboard');
         } else if (category === 'official') {
             router.replace('/official/dashboard');
+        } else if (category === 'class-representative') {
+            router.replace('/class-representative/dashboard');
         }
         // Redirect logic for other roles can be added here
     }
