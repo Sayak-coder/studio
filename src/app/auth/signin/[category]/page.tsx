@@ -12,17 +12,19 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
-import { ToastAction } from '@/components/ui/toast';
 import { firebaseApp } from '@/firebase/config';
+import { useUser } from '@/firebase';
+import { Loader2 } from 'lucide-react';
 
 export default function SignInPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,6 +35,20 @@ export default function SignInPage() {
     ? params.category[0]
     : params.category;
   const categoryTitle = category.replace(/-/g, ' ');
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+        if (category === 'student') {
+            router.replace('/student/dashboard');
+        } else if (category === 'senior') {
+            router.replace('/senior/dashboard');
+        } else if (category === 'official') {
+            router.replace('/official/dashboard');
+        }
+        // Redirect logic for other roles can be added here
+    }
+  }, [user, isUserLoading, router, category]);
+
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -62,11 +78,9 @@ export default function SignInPage() {
       return;
     }
 
-
     setIsLoading(true);
     try {
       const auth = getAuth(firebaseApp);
-      // This is the key to keeping the user logged in.
       await setPersistence(auth, browserLocalPersistence);
       await signInWithEmailAndPassword(auth, email, password);
       
@@ -75,21 +89,12 @@ export default function SignInPage() {
         description: 'Redirecting to your dashboard...',
       });
 
-      if (category === 'student') {
-        router.push('/student/dashboard');
-      } else if (category === 'senior') {
-        router.push('/senior/dashboard');
-      } else if (category === 'official') {
-        router.push('/official/dashboard');
-      }
-      // Add logic for other categories later
+      // Redirection is now handled by the useEffect hook
     } catch (error) {
       console.error('Sign in error:', error);
       let description = 'An unexpected error occurred. Please try again.';
-      let toastAction;
 
       if (error instanceof FirebaseError) {
-        // auth/invalid-credential is the modern error for both user-not-found and wrong-password.
         if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
           description = 'Invalid email or password. Please try again.';
         } else {
@@ -100,12 +105,20 @@ export default function SignInPage() {
         variant: 'destructive',
         title: 'Sign In Failed',
         description,
-        action: toastAction,
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isUserLoading || user) {
+     return (
+       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Checking authentication...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">

@@ -12,18 +12,21 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { useUser } from '@/firebase';
+import { Loader2 } from 'lucide-react';
 
 
 export default function SignUpPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -35,6 +38,19 @@ export default function SignUpPage() {
     ? params.category[0]
     : params.category;
   const categoryTitle = category.replace(/-/g, ' ');
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+        if (category === 'student') {
+            router.replace('/student/dashboard');
+        } else if (category === 'senior') {
+            router.replace('/senior/dashboard');
+        } else if (category === 'official') {
+            router.replace('/official/dashboard');
+        }
+        // Redirect logic for other roles can be added here
+    }
+  }, [user, isUserLoading, router, category]);
 
   const handleSignUp = async () => {
     if (!name || !email || !password) {
@@ -80,20 +96,12 @@ export default function SignUpPage() {
         role: category,
       });
 
-
       toast({
         title: 'Sign up successful!',
         description: "We're redirecting you to your dashboard.",
       });
 
-      if (category === 'student') {
-        router.push('/student/dashboard');
-      } else if (category === 'senior') {
-        router.push('/senior/dashboard');
-      } else if (category === 'official') {
-        router.push('/official/dashboard');
-      }
-      // We can add logic for other categories later
+      // Redirection is now handled by the useEffect hook
     } catch (error) {
        console.error('Sign up error:', error);
        let description = 'An unexpected error occurred. Please try again.';
@@ -116,6 +124,15 @@ export default function SignUpPage() {
       setIsLoading(false);
     }
   };
+  
+  if (isUserLoading || user) {
+     return (
+       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Checking authentication...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
