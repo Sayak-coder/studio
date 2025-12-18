@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { BookOpen, Users, GraduationCap, Briefcase, BrainCircuit } from 'lucide-react';
+import { BookOpen, Users, GraduationCap, Briefcase, BrainCircuit, Bot } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import AICategoryHelp from './category-help';
 
 
 export default function Home() {
@@ -62,6 +63,23 @@ export default function Home() {
                 Catalyst
               </span>
             </p>
+             {/* AI-Powered Study Helper Section */}
+            <div className="mt-12 max-w-2xl mx-auto">
+              <Card className="bg-card/80 backdrop-blur-sm text-left">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-2xl">
+                    <Bot className="h-8 w-8 text-primary" />
+                    AI-Powered Study Helper
+                  </CardTitle>
+                   <CardDescription>
+                    Enter a topic to get a quick summary and find related subjects.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AICategoryHelp />
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </section>
 

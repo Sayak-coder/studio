@@ -2,12 +2,11 @@
 import React from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Book, Bot, FileText, LogOut } from 'lucide-react';
+import { Book, FileText, LogOut } from 'lucide-react';
 
 import { useUser, useFirebase } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import AICategoryHelp from './category-help';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,12 +25,14 @@ export default function StudentDashboard() {
 
   const handleSignOut = async () => {
     try {
-      await auth.signOut();
-      toast({
-        title: 'Signed Out',
-        description: 'You have been successfully signed out.',
-      });
-      router.push('/auth/signin/student');
+      if (auth) {
+        await auth.signOut();
+        toast({
+          title: 'Signed Out',
+          description: 'You have been successfully signed out.',
+        });
+        router.push('/auth/signin/student');
+      }
     } catch (error) {
       console.error('Sign out error:', error);
       toast({
@@ -113,25 +114,8 @@ export default function StudentDashboard() {
               </CardContent>
             </Card>
           </div>
-
-          {/* AI-Powered Study Helper Section */}
-          <div className="mt-12">
-            <Card className="bg-card/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-2xl">
-                  <Bot className="h-8 w-8 text-primary" />
-                  AI-Powered Study Helper
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AICategoryHelp />
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </main>
     </div>
   );
 }
-
-    
