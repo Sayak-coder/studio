@@ -36,7 +36,7 @@ export default function SignUpPage() {
 
   const category = Array.isArray(params.category)
     ? params.category[0]
-    : params.category;
+    : params.category as string;
   const categoryTitle = category.replace(/-/g, ' ');
 
   useEffect(() => {

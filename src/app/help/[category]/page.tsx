@@ -2,15 +2,16 @@
 
 import Link from 'next/link';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 
-export default function AuthPage({ params }: { params: { category: string } }) {
+export default function AuthPage() {
   const router = useRouter();
+  const params = useParams();
   const { user, isUserLoading } = useUser();
 
-  const category = params.category;
+  const category = Array.isArray(params.category) ? params.category[0] : params.category;
   const categoryTitle = category.replace(/-/g, ' ') + ' Portal';
 
   useEffect(() => {
@@ -48,14 +49,14 @@ export default function AuthPage({ params }: { params: { category: string } }) {
         <h1 className="text-4xl font-bold mb-8 capitalize bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">{categoryTitle}</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link
-            href={`/auth/signin/${params.category}`}
+            href={`/auth/signin/${category}`}
             className="p-6 bg-card/80 backdrop-blur-sm border rounded-lg hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 text-foreground"
           >
             <h2 className="text-2xl font-semibold">Sign In</h2>
             <p className="text-muted-foreground mt-2">Existing user? Log in here.</p>
           </Link>
           <Link
-            href={`/auth/signup/${params.category}`}
+            href={`/auth/signup/${category}`}
             className="p-6 bg-card/80 backdrop-blur-sm border rounded-lg hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 text-foreground"
           >
             <h2 className="text-2xl font-semibold">Sign Up</h2>
