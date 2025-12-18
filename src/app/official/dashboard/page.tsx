@@ -3,9 +3,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { doc } from 'firebase/firestore';
+import { collection, query, doc } from 'firebase/firestore';
 import { BrainCircuit, Loader2, Users, ShieldAlert, LogOut } from 'lucide-react';
-import { useFirestore, useUser, useMemoFirebase, useDoc, useFirebase } from '@/firebase';
+import { useFirestore, useUser, useMemoFirebase, useDoc, useCollection, useFirebase } from '@/firebase';
 import {
   Table,
   TableBody,
@@ -33,6 +33,7 @@ export default function OfficialDashboard() {
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+  const [isRoleVerified, setIsRoleVerified] = useState(false);
 
   // Redirect to login if user is not authenticated after loading
   useEffect(() => {
@@ -49,17 +50,23 @@ export default function OfficialDashboard() {
 
   const { data: userProfile, isLoading: isLoadingProfile, error: profileError } = useDoc<UserProfile>(userDocRef);
   
-  // This state will hold the list of users to display. For this prototype, it will just be the current user.
-  const [displayedUsers, setDisplayedUsers] = useState<UserProfile[]>([]);
+  // Step 2: Once role is verified, construct the query to get all users.
+  const usersQuery = useMemoFirebase(() => {
+    // Only run this query if the user's role has been verified as official/admin
+    if (firestore && isRoleVerified) {
+      return query(collection(firestore, 'users'));
+    }
+    return null; // Otherwise, the query is null and won't run
+  }, [firestore, isRoleVerified]);
 
+  const { data: allUsers, isLoading: isLoadingUsers, error: usersError } = useCollection<UserProfile>(usersQuery);
+
+  // Step 3: Effect to check the user's role and enable the main query.
   useEffect(() => {
-    // Once the user's own profile is loaded and confirmed to be an official,
-    // we can "fetch" the data. In this case, we just use the profile we already have.
     if (userProfile && (userProfile.role === 'official' || userProfile.role === 'admin')) {
-      setDisplayedUsers([userProfile]);
+      setIsRoleVerified(true);
     }
   }, [userProfile]);
-
 
   const handleSignOut = async () => {
     try {
@@ -100,12 +107,12 @@ export default function OfficialDashboard() {
                     Access Denied
                 </CardTitle>
                 <CardDescription>
-                    Your account does not have administrative privileges.
+                    Your account does not have the required privileges for this portal.
                 </CardDescription>
             </CardHeader>
              <CardContent>
                 <p className="text-sm text-muted-foreground">
-                    This portal is for authorized personnel only. If you believe this is a mistake, please contact your administrator.
+                    This dashboard is for authorized personnel only. If you believe this is a mistake, please contact your administrator.
                 </p>
                 <Button asChild variant="link" className="mt-4" onClick={handleSignOut}>
                   <Link href="/">Return to Home</Link>
@@ -137,8 +144,8 @@ export default function OfficialDashboard() {
         <div className="p-4 md:p-8">
           <Card>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'><Users className="h-6 w-6" /> Official Portal Access Log</CardTitle>
-              <CardDescription>This log shows a list of successful sign-ins to the official portal.</CardDescription>
+              <CardTitle className='flex items-center gap-2'><Users className="h-6 w-6" /> User Access Log</CardTitle>
+              <CardDescription>This log shows a list of all registered users in the system.</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -151,31 +158,32 @@ export default function OfficialDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoadingProfile &&
+                  {(isLoadingUsers || !isRoleVerified) && (
                     <TableRow>
                       <TableCell colSpan={4}>
                         <div className="flex items-center justify-center py-10">
                           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                           <p className="ml-4 text-muted-foreground">Loading user data...</p>
                         </div>
                       </TableCell>
                     </TableRow>
-                  }
-                  {!isLoadingProfile && profileError && (
+                  )}
+                  {isRoleVerified && (usersError || profileError) && (
                      <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center text-destructive">
-                          Error: Could not verify your user profile.
-                          <p className="text-xs text-muted-foreground mt-2">{profileError.message}</p>
+                          Error: Could not load user data.
+                          <p className="text-xs text-muted-foreground mt-2">{usersError?.message || profileError?.message}</p>
                         </TableCell>
                       </TableRow>
                   )}
-                  {!isLoadingProfile && displayedUsers.length === 0 && (
+                  {isRoleVerified && !isLoadingUsers && allUsers?.length === 0 && (
                      <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center">
-                          No official logins found to display.
+                          No users found in the system.
                         </TableCell>
                       </TableRow>
                   )}
-                  {displayedUsers.map((u) => (
+                  {isRoleVerified && allUsers?.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium">{u.name}</TableCell>
                       <TableCell>{u.email}</TableCell>
