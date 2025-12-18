@@ -130,7 +130,7 @@ export default function CRDashboard() {
                     {item.icon}
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground transition-colors duration-300 group-hover:text-card-foreground/90">
                       {item.description}
                     </p>
                   </CardContent>
