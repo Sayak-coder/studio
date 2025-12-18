@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { collection, query, doc } from 'firebase/firestore';
+import { collection, query, where, doc } from 'firebase/firestore';
 import { BrainCircuit, Loader2, Users, ShieldAlert, LogOut } from 'lucide-react';
 import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc, useFirebase } from '@/firebase';
 import {
@@ -52,11 +52,11 @@ export default function OfficialDashboard() {
   // Step 2: Determine if the user has admin-like privileges.
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'official';
 
-  // Step 3: Only create the query to fetch all users if the current user is confirmed to be an admin.
+  // Step 3: Only create the query to fetch official users if the current user is confirmed to be an admin.
   const usersQuery = useMemoFirebase(() => {
-    // This is the critical change: do not create the query until isAdmin is true.
     if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'users'));
+    // This query now specifically filters for users with the 'official' role.
+    return query(collection(firestore, 'users'), where('role', '==', 'official'));
   }, [firestore, isAdmin]);
 
   // The useCollection hook will now wait until usersQuery is not null.
@@ -138,7 +138,7 @@ export default function OfficialDashboard() {
         <div className="p-4 md:p-8">
           <Card>
             <CardHeader>
-              <CardTitle className='flex items-center gap-2'><Users className="h-6 w-6" /> All Registered Users</CardTitle>
+              <CardTitle className='flex items-center gap-2'><Users className="h-6 w-6" /> Official Portal Access Log</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -179,7 +179,7 @@ export default function OfficialDashboard() {
                   {!isLoadingUsers && !error && users && users.length === 0 && (
                      <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center">
-                          No users found.
+                          No official logins found.
                         </TableCell>
                       </TableRow>
                   )}
