@@ -14,12 +14,11 @@ export default function OfficialLoginPage() {
 
   const handleLogin = () => {
     if (officialId === 'office2058') {
-      // We will implement the redirect to the user data page later
       toast({
         title: 'Access Granted',
         description: 'Redirecting to officials dashboard...',
       });
-      // router.push('/official/dashboard');
+      router.push('/official/dashboard');
     } else {
       toast({
         variant: 'destructive',
