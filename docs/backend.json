@@ -27,7 +27,8 @@
       "required": [
         "id",
         "email",
-        "role"
+        "role",
+        "name"
       ]
     },
     "Content": {
