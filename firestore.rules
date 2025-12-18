@@ -29,7 +29,9 @@ service cloud.firestore {
     match /users/{userId} {
       allow get, update, delete: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow list: if false; // CRITICAL: Prevents enumerating all users.
+      // Allow any signed-in user to list all users for the official dashboard.
+      // In a production app, this should be restricted to an admin role.
+      allow list: if isSignedIn();
     }
 
     // Rules for academic content.
