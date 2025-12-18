@@ -10,6 +10,4 @@ export const ai = genkit({
       apiKey: process.env.GEMINI_API_KEY,
     }),
   ],
-  // A global model definition is required for ai.definePrompt to work correctly.
-  model: googleAI.model('gemini-pro'),
 });

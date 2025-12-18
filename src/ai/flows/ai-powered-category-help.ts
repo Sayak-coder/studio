@@ -5,6 +5,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const CategoryHelpInputSchema = z.object({
   category: z.string(),
@@ -24,6 +25,7 @@ export type CategoryHelpOutput = z.infer<typeof CategoryHelpOutputSchema>;
 
 const categoryHelpPrompt = ai.definePrompt({
   name: 'categoryHelpPrompt',
+  model: googleAI.model('gemini-pro'),
   input: { schema: CategoryHelpInputSchema },
   output: { schema: CategoryHelpOutputSchema },
   prompt: `
