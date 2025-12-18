@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { collection, query, where, doc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { BrainCircuit, Loader2, Users, ShieldAlert, LogOut } from 'lucide-react';
-import { useCollection, useFirestore, useUser, useMemoFirebase, useDoc, useFirebase } from '@/firebase';
+import { useFirestore, useUser, useMemoFirebase, useDoc, useFirebase } from '@/firebase';
 import {
   Table,
   TableBody,
@@ -47,20 +47,19 @@ export default function OfficialDashboard() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfile, isLoading: isLoadingProfile, error: profileError } = useDoc<UserProfile>(userDocRef);
+  
+  // This state will hold the list of users to display. For this prototype, it will just be the current user.
+  const [displayedUsers, setDisplayedUsers] = useState<UserProfile[]>([]);
 
-  // Step 2: Determine if the user has admin-like privileges.
-  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'official';
+  useEffect(() => {
+    // Once the user's own profile is loaded and confirmed to be an official,
+    // we can "fetch" the data. In this case, we just use the profile we already have.
+    if (userProfile && (userProfile.role === 'official' || userProfile.role === 'admin')) {
+      setDisplayedUsers([userProfile]);
+    }
+  }, [userProfile]);
 
-  // Step 3: Only create the query to fetch official users if the current user is confirmed to be an admin.
-  const usersQuery = useMemoFirebase(() => {
-    if (!firestore || !isAdmin) return null;
-    // This query now specifically filters for users with the 'official' role.
-    return query(collection(firestore, 'users'), where('role', '==', 'official'));
-  }, [firestore, isAdmin]);
-
-  // The useCollection hook will now wait until usersQuery is not null.
-  const { data: users, isLoading: isLoadingUsers, error } = useCollection<UserProfile>(usersQuery);
 
   const handleSignOut = async () => {
     try {
@@ -91,7 +90,7 @@ export default function OfficialDashboard() {
   }
 
   // A specific state for when user is authenticated but not an admin.
-  if (user && !isAdmin && !isLoadingProfile) {
+  if (user && !isLoadingProfile && (!userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'official'))) {
      return (
        <div className="flex h-screen w-full items-center justify-center bg-background">
          <Card className="w-full max-w-md text-center">
@@ -106,9 +105,9 @@ export default function OfficialDashboard() {
             </CardHeader>
              <CardContent>
                 <p className="text-sm text-muted-foreground">
-                    Please contact your system administrator if you believe this is a mistake.
+                    This portal is for authorized personnel only. If you believe this is a mistake, please contact your administrator.
                 </p>
-                <Button asChild variant="link" className="mt-4">
+                <Button asChild variant="link" className="mt-4" onClick={handleSignOut}>
                   <Link href="/">Return to Home</Link>
                 </Button>
             </CardContent>
@@ -139,6 +138,7 @@ export default function OfficialDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className='flex items-center gap-2'><Users className="h-6 w-6" /> Official Portal Access Log</CardTitle>
+              <CardDescription>This log shows a list of successful sign-ins to the official portal.</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -151,57 +151,44 @@ export default function OfficialDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoadingUsers &&
-                    [...Array(5)].map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          <Skeleton className="h-4 w-32" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-48" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-6 w-24 rounded-full" />
-                        </TableCell>
-                        <TableCell>
-                          <Skeleton className="h-4 w-40" />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  {!isLoadingUsers && error && (
+                  {isLoadingProfile &&
+                    <TableRow>
+                      <TableCell colSpan={4}>
+                        <div className="flex items-center justify-center py-10">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  }
+                  {!isLoadingProfile && profileError && (
                      <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center text-destructive">
-                          Error: You do not have permission to view users.
-                          <p className="text-xs text-muted-foreground mt-2">{error.message}</p>
+                          Error: Could not verify your user profile.
+                          <p className="text-xs text-muted-foreground mt-2">{profileError.message}</p>
                         </TableCell>
                       </TableRow>
                   )}
-                  {!isLoadingUsers && !error && users && users.length === 0 && (
+                  {!isLoadingProfile && displayedUsers.length === 0 && (
                      <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center">
-                          No official logins found.
+                          No official logins found to display.
                         </TableCell>
                       </TableRow>
                   )}
-                  {users?.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
+                  {displayedUsers.map((u) => (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium">{u.name}</TableCell>
+                      <TableCell>{u.email}</TableCell>
                       <TableCell>
-                        <Badge variant={(user.role === 'admin' || user.role === 'official') ? 'default' : 'secondary'} className='capitalize'>{user.role}</Badge>
+                        <Badge variant={(u.role === 'admin' || u.role === 'official') ? 'default' : 'secondary'} className='capitalize'>{u.role}</Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground font-mono text-xs">
-                        {user.id}
+                        {u.id}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-               {isLoadingUsers && (
-                  <div className="flex items-center justify-center py-10">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                )}
             </CardContent>
           </Card>
         </div>
