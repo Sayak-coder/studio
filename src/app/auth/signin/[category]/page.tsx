@@ -69,10 +69,8 @@ export default function SignInPage() {
       let toastAction;
 
       if (error instanceof FirebaseError) {
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-          description = 'No account found with this email. Please sign up.';
-          toastAction = <ToastAction altText="Sign Up" onClick={() => router.push(`/auth/signup/${category}`)}>Sign Up</ToastAction>;
-        } else if (error.code === 'auth/wrong-password') {
+        // auth/invalid-credential is the modern error for both user-not-found and wrong-password.
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
           description = 'Invalid email or password. Please try again.';
         } else {
           description = error.message;
