@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, query, doc } from 'firebase/firestore';
@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -97,7 +96,7 @@ export default function OfficialDashboard() {
   }
 
   // A specific state for when user is authenticated but not an admin.
-  if (user && !isLoadingProfile && (!userProfile || (userProfile.role !== 'admin' && userProfile.role !== 'official'))) {
+  if (user && !isLoadingProfile && !isRoleVerified) {
      return (
        <div className="flex h-screen w-full items-center justify-center bg-background">
          <Card className="w-full max-w-md text-center">
@@ -158,7 +157,7 @@ export default function OfficialDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(isLoadingUsers || !isRoleVerified) && (
+                  {isLoadingUsers && (
                     <TableRow>
                       <TableCell colSpan={4}>
                         <div className="flex items-center justify-center py-10">
