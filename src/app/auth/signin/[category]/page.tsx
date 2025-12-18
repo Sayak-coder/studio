@@ -215,10 +215,10 @@ export default function SignInPage() {
           </p>
           <Button
             variant="link"
-            onClick={() => router.back()}
+            asChild
             className="text-primary"
           >
-            &larr; Back
+            <Link href={`/help/${category}`}>&larr; Back</Link>
           </Button>
         </CardFooter>
       </Card>
