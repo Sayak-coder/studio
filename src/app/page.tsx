@@ -57,7 +57,10 @@ export default function Home() {
               </h1>
             </a>
             <p className="mt-4 text-lg md:text-xl text-muted-foreground animate-fade-in-up [animation-delay:0.2s]">
-              Smarter exam preparation, powered by seniors.
+              Smarter exam preparation, powered by{' '}
+              <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                Catalyst
+              </span>
             </p>
           </div>
         </section>
