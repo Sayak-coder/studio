@@ -26,6 +26,7 @@ export default function SignInPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [specialId, setSpecialId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const category = Array.isArray(params.category)
@@ -42,6 +43,25 @@ export default function SignInPage() {
       });
       return;
     }
+
+    if (category === 'class-representative' && specialId !== 'cr_edubot25') {
+       toast({
+        variant: 'destructive',
+        title: 'Invalid ID',
+        description: 'Please enter the correct CR ID to sign in.',
+      });
+      return;
+    }
+    
+    if (category === 'senior' && specialId !== 'sen_edubot25') {
+       toast({
+        variant: 'destructive',
+        title: 'Invalid ID',
+        description: 'Please enter the correct Senior ID to sign in.',
+      });
+      return;
+    }
+
 
     setIsLoading(true);
     try {
@@ -131,7 +151,25 @@ export default function SignInPage() {
               {category === 'class-representative' && (
                 <div className="flex flex-col space-y-1.5">
                   <Label htmlFor="crId">Unique CR ID</Label>
-                  <Input id="crId" placeholder="Your Unique CR ID" />
+                  <Input 
+                    id="crId" 
+                    placeholder="Your Unique CR ID" 
+                    value={specialId}
+                    onChange={(e) => setSpecialId(e.target.value)}
+                    disabled={isLoading}
+                   />
+                </div>
+              )}
+               {category === 'senior' && (
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="seniorId">Unique Senior ID</Label>
+                  <Input 
+                    id="seniorId" 
+                    placeholder="Your Unique Senior ID" 
+                    value={specialId}
+                    onChange={(e) => setSpecialId(e.target.value)}
+                    disabled={isLoading}
+                   />
                 </div>
               )}
               <div className="text-sm">

@@ -28,6 +28,7 @@ export default function SignUpPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [specialId, setSpecialId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const category = Array.isArray(params.category)
@@ -41,6 +42,24 @@ export default function SignUpPage() {
         variant: 'destructive',
         title: 'Missing Fields',
         description: 'Please fill out all required fields.',
+      });
+      return;
+    }
+
+    if (category === 'class-representative' && specialId !== 'cr_edubot25') {
+       toast({
+        variant: 'destructive',
+        title: 'Invalid ID',
+        description: 'Please enter the correct CR ID to sign up.',
+      });
+      return;
+    }
+    
+    if (category === 'senior' && specialId !== 'sen_edubot25') {
+       toast({
+        variant: 'destructive',
+        title: 'Invalid ID',
+        description: 'Please enter the correct Senior ID to sign up.',
       });
       return;
     }
@@ -155,6 +174,21 @@ export default function SignUpPage() {
                   <Input
                     id="crId"
                     placeholder="Provided by your institution"
+                    value={specialId}
+                    onChange={(e) => setSpecialId(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+              {category === 'senior' && (
+                <div className="flex flex-col space-y-1.5">
+                  <Label htmlFor="seniorId">Unique Senior ID</Label>
+                  <Input
+                    id="seniorId"
+                    placeholder="Provided by your institution"
+                    value={specialId}
+                    onChange={(e) => setSpecialId(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
               )}
