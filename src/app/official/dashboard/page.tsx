@@ -125,6 +125,8 @@ export default function OfficialDashboard() {
     );
   }
 
+  const filteredUsers = allUsers?.filter(u => ['student', 'class-representative', 'senior'].includes(u.role));
+
 
   return (
     <div className="flex min-h-screen bg-secondary/30 text-foreground">
@@ -147,7 +149,7 @@ export default function OfficialDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className='flex items-center gap-2'><Users className="h-6 w-6" /> User Access Log</CardTitle>
-              <CardDescription>This log shows a list of all registered users in the system.</CardDescription>
+              <CardDescription>This log shows a list of registered students, class representatives, and seniors.</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -178,14 +180,14 @@ export default function OfficialDashboard() {
                         </TableCell>
                       </TableRow>
                   )}
-                  {!isLoadingUsers && allUsers?.length === 0 && isRoleVerified &&(
+                  {!isLoadingUsers && filteredUsers?.length === 0 && isRoleVerified &&(
                      <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center">
-                          No users found in the system.
+                          No relevant users found in the system.
                         </TableCell>
                       </TableRow>
                   )}
-                  {allUsers?.map((u) => (
+                  {filteredUsers?.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium">{u.name}</TableCell>
                       <TableCell>{u.email}</TableCell>
