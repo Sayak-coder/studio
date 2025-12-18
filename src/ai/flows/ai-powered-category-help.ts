@@ -27,7 +27,7 @@ const categoryHelpPrompt = ai.definePrompt({
   name: 'categoryHelpPrompt',
   input: { schema: CategoryHelpInputSchema },
   output: { schema: CategoryHelpOutputSchema },
-  model: googleAI.model('gemini-1.5-pro-latest'),
+  model: googleAI.model('gemini-1.5-pro'),
   prompt: `
     You are an expert academic assistant. The user wants to learn about a topic.
     Provide a concise, helpful description of the topic: "{{category}}".
