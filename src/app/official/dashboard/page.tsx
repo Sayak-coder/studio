@@ -77,7 +77,7 @@ export default function OfficialDashboard() {
         title: 'Signed Out',
         description: 'You have been successfully signed out.',
       });
-      router.push('/help/official');
+      router.push('/');
     } catch (error) {
       console.error('Sign out error:', error);
       toast({
