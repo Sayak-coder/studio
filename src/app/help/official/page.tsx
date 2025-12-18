@@ -20,7 +20,7 @@ import { Loader2 } from 'lucide-react';
 
 // This is a simple, hardcoded secret for the prototype.
 // In a real application, this would be validated against a backend or a more secure check.
-const SECRET_OFFICIAL_ID = 'OFFICIAL_ADMIN_PASS';
+const SECRET_OFFICIAL_ID = 'catalyst2025';
 
 export default function OfficialSignInPage() {
   const router = useRouter();
