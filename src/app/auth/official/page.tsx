@@ -33,15 +33,15 @@ export default function OfficialLoginPage() {
           description: "Could not create the required admin user profile.",
        });
        // Sign out if setup fails to prevent being in a broken state
-       await auth.signOut();
+       if (auth) {
+        await auth.signOut();
+       }
     }
   };
 
   useEffect(() => {
     // If user is already logged in, redirect to dashboard
     if (!isUserLoading && user) {
-      // Check if the user is an admin before redirecting
-      // This is a client-side check, the real security is in the rules
       router.push('/official/dashboard');
       return;
     }
@@ -57,8 +57,9 @@ export default function OfficialLoginPage() {
             title: 'Official Access Granted',
             description: 'Redirecting to the dashboard.',
           });
-          // The onAuthStateChanged listener in useUser will update the user state,
-          // and the next useEffect run will handle the redirect.
+          // Now that the doc is created, we can safely redirect.
+          // The onAuthStateChanged listener in useUser will have already updated the user state.
+          router.push('/official/dashboard');
         })
         .catch((error) => {
           console.error('Anonymous sign-in error:', error);
