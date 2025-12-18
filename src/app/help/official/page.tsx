@@ -12,79 +12,58 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { getAuth, signInAnonymously } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { firebaseApp } from '@/firebase/config';
 import { Loader2 } from 'lucide-react';
-
-// This is a simple, hardcoded secret for the prototype.
-// In a real application, this would be validated against a backend or a more secure check.
-const SECRET_OFFICIAL_ID = 'catalyst2025';
+import { FirebaseError } from 'firebase/app';
 
 export default function OfficialSignInPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [officialId, setOfficialId] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
-    if (!officialId) {
+    if (!email || !password) {
       toast({
         variant: 'destructive',
-        title: 'ID Required',
-        description: 'Please enter your Unique Official ID.',
+        title: 'Fields Required',
+        description: 'Please enter both your Official Email and Password.',
       });
       return;
     }
 
-    if (officialId !== SECRET_OFFICIAL_ID) {
-      toast({
-        variant: 'destructive',
-        title: 'Access Denied',
-        description: 'The Official ID you entered is invalid.',
-      });
-      setOfficialId(''); // Clear the input
-      return;
-    }
-    
     setIsLoading(true);
     try {
       const auth = getAuth(firebaseApp);
-      const firestore = getFirestore(firebaseApp);
+      await signInWithEmailAndPassword(auth, email, password);
+
+      toast({
+        title: 'Access Granted!',
+        description: 'Redirecting to the Official Dashboard...',
+      });
       
-      const userCredential = await signInAnonymously(auth);
-      const user = userCredential.user;
-
-      if (user) {
-         // Create the user document with the 'official' role so security rules pass
-        const userRef = doc(firestore, 'users', user.uid);
-        await setDoc(userRef, {
-          id: user.uid,
-          name: 'Official User',
-          email: `${user.uid}@official.local`, // Placeholder email
-          role: 'official',
-        }, { merge: true }); // Merge to avoid overwriting if it somehow exists
-
-        toast({
-          title: 'Access Granted!',
-          description: 'Redirecting to the Official Dashboard...',
-        });
-        
-        router.push('/official/dashboard');
-      } else {
-        throw new Error("Could not create an anonymous session.");
-      }
+      router.push('/official/dashboard');
 
     } catch (error) {
       console.error('Official sign-in error:', error);
+      let description = 'An unexpected error occurred. Please try again.';
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+          description = 'Invalid credentials. Please check your email and password.';
+        } else {
+          description = error.message;
+        }
+      }
       toast({
         variant: 'destructive',
         title: 'Authentication Failed',
-        description: 'Could not establish a secure session. Please try again.',
+        description: description,
       });
-       setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -96,7 +75,7 @@ export default function OfficialSignInPage() {
             Official Portal
           </CardTitle>
           <CardDescription>
-            Enter your Unique Official ID to proceed.
+            Sign in to access the administrative dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -108,13 +87,24 @@ export default function OfficialSignInPage() {
           >
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="officialId">Unique Official ID</Label>
+                <Label htmlFor="official-email">Official Email</Label>
                 <Input
-                  id="officialId"
+                  id="official-email"
+                  type="email" 
+                  placeholder="admin@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+               <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
                   type="password" 
-                  placeholder="Enter your private ID"
-                  value={officialId}
-                  onChange={(e) => setOfficialId(e.target.value)}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
