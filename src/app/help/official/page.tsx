@@ -1,6 +1,5 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   Card,
   CardHeader,
@@ -13,59 +12,79 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, signInAnonymously } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
+import { Loader2 } from 'lucide-react';
+
+// This is a simple, hardcoded secret for the prototype.
+// In a real application, this would be validated against a backend or a more secure check.
+const SECRET_OFFICIAL_ID = 'OFFICIAL_ADMIN_PASS';
 
 export default function OfficialSignInPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [officialId, setOfficialId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
-    if (!email || !password) {
+    if (!officialId) {
       toast({
         variant: 'destructive',
-        title: 'Missing Fields',
-        description: 'Please enter both your username and password.',
+        title: 'ID Required',
+        description: 'Please enter your Unique Official ID.',
       });
       return;
     }
 
+    if (officialId !== SECRET_OFFICIAL_ID) {
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: 'The Official ID you entered is invalid.',
+      });
+      setOfficialId(''); // Clear the input
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const auth = getAuth(firebaseApp);
-      await setPersistence(auth, browserLocalPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
+      const firestore = getFirestore(firebaseApp);
       
-      toast({
-        title: 'Sign in successful!',
-        description: 'Redirecting to the Official Dashboard...',
-      });
+      const userCredential = await signInAnonymously(auth);
+      const user = userCredential.user;
 
-      router.push('/official/dashboard');
-    } catch (error) {
-      console.error('Sign in error:', error);
-      let description = 'An unexpected error occurred. Please try again.';
+      if (user) {
+         // Create the user document with the 'official' role so security rules pass
+        const userRef = doc(firestore, 'users', user.uid);
+        await setDoc(userRef, {
+          id: user.uid,
+          name: 'Official User',
+          email: `${user.uid}@official.local`, // Placeholder email
+          role: 'official',
+        }, { merge: true }); // Merge to avoid overwriting if it somehow exists
 
-      if (error instanceof FirebaseError) {
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-          description = 'Invalid credentials. Access is restricted to authorized personnel.';
-        } else {
-          description = error.message;
-        }
+        toast({
+          title: 'Access Granted!',
+          description: 'Redirecting to the Official Dashboard...',
+        });
+        
+        router.push('/official/dashboard');
+      } else {
+        throw new Error("Could not create an anonymous session.");
       }
+
+    } catch (error) {
+      console.error('Official sign-in error:', error);
       toast({
         variant: 'destructive',
-        title: 'Sign In Failed',
-        description,
+        title: 'Authentication Failed',
+        description: 'Could not establish a secure session. Please try again.',
       });
-    } finally {
-      setIsLoading(false);
+       setIsLoading(false);
     }
   };
 
@@ -74,10 +93,10 @@ export default function OfficialSignInPage() {
       <Card className="w-full max-w-sm bg-card/80 backdrop-blur-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">
-            Official Portal Sign In
+            Official Portal
           </CardTitle>
           <CardDescription>
-            Access is restricted to authorized personnel only.
+            Enter your Unique Official ID to proceed.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -89,24 +108,13 @@ export default function OfficialSignInPage() {
           >
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="email">Official Username</Label>
+                <Label htmlFor="officialId">Unique Official ID</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your username"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Your Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  id="officialId"
+                  type="password" 
+                  placeholder="Enter your private ID"
+                  value={officialId}
+                  onChange={(e) => setOfficialId(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
@@ -116,7 +124,7 @@ export default function OfficialSignInPage() {
               className="w-full mt-6"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? <Loader2 className="animate-spin" /> : 'Enter Portal'}
             </Button>
           </form>
         </CardContent>
@@ -125,6 +133,7 @@ export default function OfficialSignInPage() {
             variant="link"
             onClick={() => router.push('/')}
             className="text-primary"
+            disabled={isLoading}
           >
             &larr; Back to Home
           </Button>
