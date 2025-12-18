@@ -4,6 +4,7 @@
 'use server';
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'zod';
 
 const CategoryHelpInputSchema = z.object({
@@ -26,6 +27,7 @@ const categoryHelpPrompt = ai.definePrompt({
   name: 'categoryHelpPrompt',
   input: { schema: CategoryHelpInputSchema },
   output: { schema: CategoryHelpOutputSchema },
+  model: googleAI.model('gemini-1.5-pro-latest'),
   prompt: `
     You are an expert academic assistant. The user wants to learn about a topic.
     Provide a concise, helpful description of the topic: "{{category}}".
