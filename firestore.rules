@@ -28,10 +28,6 @@ service cloud.firestore {
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
     }
     
-    function isRole(role) {
-      return hasRole(role);
-    }
-    
     function isAdmin() {
       return hasRole('admin') || hasRole('official');
     }

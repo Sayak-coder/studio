@@ -47,9 +47,16 @@ export default function OfficialDashboard() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
-  const { data: userProfile, isLoading: isLoadingProfile, error: profileError } = useDoc<UserProfile>(userDocRef);
+  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
   
-  // Step 2: Once role is verified, construct the query to get all users.
+  // Step 2: Effect to check the user's role and enable the main query.
+  useEffect(() => {
+    if (userProfile && (userProfile.role === 'official' || userProfile.role === 'admin')) {
+      setIsRoleVerified(true);
+    }
+  }, [userProfile]);
+
+  // Step 3: Once role is verified, construct the query to get all users.
   const usersQuery = useMemoFirebase(() => {
     // Only run this query if the user's role has been verified as official/admin
     if (firestore && isRoleVerified) {
@@ -59,14 +66,6 @@ export default function OfficialDashboard() {
   }, [firestore, isRoleVerified]);
 
   const { data: allUsers, isLoading: isLoadingUsers, error: usersError } = useCollection<UserProfile>(usersQuery);
-
-  // Step 3: Effect to check the user's role and enable the main query.
-  useEffect(() => {
-    if (userProfile && (userProfile.role === 'official' || userProfile.role === 'admin')) {
-      setIsRoleVerified(true);
-    }
-    // This effect should only run when userProfile changes.
-  }, [userProfile]);
 
   const handleSignOut = async () => {
     try {
@@ -114,8 +113,8 @@ export default function OfficialDashboard() {
                 <p className="text-sm text-muted-foreground">
                     This dashboard is for authorized personnel only. If you believe this is a mistake, please contact your administrator.
                 </p>
-                <Button asChild variant="link" className="mt-4" onClick={handleSignOut}>
-                  <Link href="/">Return to Home</Link>
+                <Button variant="link" className="mt-4" onClick={handleSignOut}>
+                  Return to Home
                 </Button>
             </CardContent>
          </Card>
@@ -168,11 +167,11 @@ export default function OfficialDashboard() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {isRoleVerified && (usersError || profileError) && (
+                  {isRoleVerified && usersError && (
                      <TableRow>
                         <TableCell colSpan={4} className="h-24 text-center text-destructive">
                           Error: Could not load user data.
-                          <p className="text-xs text-muted-foreground mt-2">{usersError?.message || profileError?.message}</p>
+                          <p className="text-xs text-muted-foreground mt-2">{usersError?.message}</p>
                         </TableCell>
                       </TableRow>
                   )}
