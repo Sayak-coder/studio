@@ -31,7 +31,7 @@ export default function OfficialSignInPage() {
       toast({
         variant: 'destructive',
         title: 'Missing Fields',
-        description: 'Please enter both your email and password.',
+        description: 'Please enter both your username and password.',
       });
       return;
     }
@@ -89,11 +89,11 @@ export default function OfficialSignInPage() {
           >
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="email">Official Email</Label>
+                <Label htmlFor="email">Official Username</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="official@example.com"
+                  placeholder="Enter your username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
