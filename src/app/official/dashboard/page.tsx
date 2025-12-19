@@ -327,7 +327,7 @@ export default function OfficialDashboard() {
               className={dialogState.action === 'delete' || dialogState.action === 'block' ? 'bg-destructive hover:bg-destructive/90' : ''}
             >
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : `Yes, ${dialogState.action}`}
-            </AlergDialogAction>
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
