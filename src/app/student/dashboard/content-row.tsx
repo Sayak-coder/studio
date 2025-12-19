@@ -17,7 +17,7 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
     <section>
       <h2 className="text-2xl font-bold tracking-tight mb-4">{title}</h2>
       <div className="relative">
-        <div className="horizontal-scrollbar flex w-full space-x-4 pb-4">
+        <div className="horizontal-scrollbar flex w-full space-x-6 pb-4">
           {items.map((item) => (
             <ContentCard key={item.id} item={item} />
           ))}
