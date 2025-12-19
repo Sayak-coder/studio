@@ -19,6 +19,9 @@ const ContentCard = ({ item }: ContentCardProps) => {
         tabIndex={0}
         data-ai-hint={item.imageHint}
     >
+      <div className="absolute inset-0 card-glow-border rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div className="absolute inset-0 card-glass-pane rounded-[inherit]"></div>
+
       <div className="relative h-[220px] w-full flex-shrink-0">
         <img
           src={item.imageUrl}
@@ -28,8 +31,8 @@ const ContentCard = ({ item }: ContentCardProps) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
       </div>
       
-      <div className="flex flex-grow flex-col p-4">
-        <Badge variant="secondary" className="mb-2 self-start bg-secondary/80">{item.type}</Badge>
+      <div className="relative flex flex-grow flex-col p-4">
+        <Badge variant="secondary" className="mb-2 self-start bg-black/20 text-white backdrop-blur-sm">{item.type}</Badge>
         <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
         <p className="mt-1 text-sm text-muted-foreground">{item.subject}</p>
         <p className="mt-4 flex-grow text-sm text-foreground/80 line-clamp-3">{item.description}</p>
