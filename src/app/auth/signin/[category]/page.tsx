@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect }from 'react';
 import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
@@ -49,7 +49,6 @@ export default function SignInPage() {
         } else if (category === 'class-representative') {
             router.replace('/class-representative/dashboard');
         }
-        // Redirect logic for other roles can be added here
     }
   }, [user, isUserLoading, router, category]);
 
@@ -88,19 +87,32 @@ export default function SignInPage() {
       const firestore = getFirestore(firebaseApp);
       await setPersistence(auth, browserLocalPersistence);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const authenticatedUser = userCredential.user;
       
-      const userDocRef = doc(firestore, 'users', userCredential.user.uid);
+      const userDocRef = doc(firestore, 'users', authenticatedUser.uid);
       const userDoc = await getDoc(userDocRef);
 
-      if (userDoc.exists() && userDoc.data()?.disabled) {
-        await auth.signOut(); // Force sign out
-        toast({
-          variant: 'destructive',
-          title: 'Account Disabled',
-          description: 'Your account has been disabled by an administrator. Please contact support.',
+      if (userDoc.exists()) {
+         if (userDoc.data()?.disabled) {
+            await auth.signOut(); // Force sign out
+            toast({
+              variant: 'destructive',
+              title: 'Account Disabled',
+              description: 'Your account has been disabled by an administrator. Please contact support.',
+            });
+            setIsLoading(false);
+            return;
+          }
+      } else {
+        // If the user document doesn't exist, create it.
+        // This handles the case where an account was deleted from Firestore but not Auth.
+         await setDoc(userDocRef, {
+            id: authenticatedUser.uid,
+            email: authenticatedUser.email,
+            name: authenticatedUser.displayName || email.split('@')[0], // Use display name or derive from email
+            role: category,
+            disabled: false,
         });
-        setIsLoading(false);
-        return;
       }
       
       toast({
@@ -108,7 +120,6 @@ export default function SignInPage() {
         description: 'Redirecting to your dashboard...',
       });
 
-      // Redirection is now handled by the useEffect hook
     } catch (error) {
       console.error('Sign in error:', error);
       let description = 'An unexpected error occurred. Please try again.';
