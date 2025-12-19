@@ -17,7 +17,7 @@ import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useUser } from '@/firebase';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 
@@ -86,11 +86,30 @@ export default function SignUpPage() {
     setIsLoading(true);
     try {
       const auth = getAuth(firebaseApp);
+      const firestore = getFirestore(firebaseApp);
+
+      // Check if user email is already registered and blocked
+      const usersRef = collection(firestore, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const existingUserDoc = querySnapshot.docs[0];
+        if (existingUserDoc.data()?.disabled) {
+          toast({
+            variant: 'destructive',
+            title: 'Account Disabled',
+            description: 'This email is associated with a disabled account. Please contact support.',
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
       await updateProfile(userCredential.user, { displayName: name });
       
-      const firestore = getFirestore(firebaseApp);
       const userRef = doc(firestore, 'users', userCredential.user.uid);
       await setDoc(userRef, {
         id: userCredential.user.uid,

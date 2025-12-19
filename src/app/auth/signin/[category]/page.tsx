@@ -93,7 +93,7 @@ export default function SignInPage() {
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists() && userDoc.data()?.disabled) {
-        await auth.signOut();
+        await auth.signOut(); // Force sign out
         toast({
           variant: 'destructive',
           title: 'Account Disabled',
@@ -114,10 +114,14 @@ export default function SignInPage() {
       let description = 'An unexpected error occurred. Please try again.';
 
       if (error instanceof FirebaseError) {
-        if (error.code === 'auth/invalid-credential') {
-          description = 'Invalid email or password. Please try again.';
-        } else {
-          description = error.message;
+        switch (error.code) {
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            description = 'Invalid email or password. Please try again.';
+            break;
+          default:
+            description = error.message;
         }
       }
       toast({
