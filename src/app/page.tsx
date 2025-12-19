@@ -4,6 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import AICategoryHelp from './category-help';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 
 export default function Home() {
@@ -59,9 +65,18 @@ export default function Home() {
             </a>
             <p className="mt-4 text-lg md:text-xl text-muted-foreground animate-fade-in-up [animation-delay:0.2s]">
               Smarter exam preparation, powered by{' '}
-              <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                Catalyst
-              </span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent cursor-pointer">
+                      Catalyst
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Code. Collaborate. Conquer.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </p>
              {/* AI-Powered Study Helper Section */}
             <div className="mt-12 max-w-2xl mx-auto">
