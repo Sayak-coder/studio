@@ -1,41 +1,40 @@
 'use client';
 import React from 'react';
-import Image from 'next/image';
-import { Card } from '@/components/ui/card';
-import { StudentContent } from './types';
+import { ImagePlaceholder } from '@/lib/placeholder-images';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface ContentCardProps {
-  item: StudentContent;
+  item: ImagePlaceholder;
 }
 
 const ContentCard = ({ item }: ContentCardProps) => {
   return (
-    <Card 
+    <div 
         className={cn(
-            "content-card group relative min-w-[200px] max-w-[200px] h-[240px] overflow-hidden",
-            "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background"
+            "content-card group relative flex flex-col",
+            "w-full max-w-[340px] h-[440px] md:w-[320px] md:h-[420px]", // Responsive dimensions
+            "focus-within:ring-2 focus-within:ring-amber-400 focus-within:ring-offset-2 focus-within:ring-offset-background"
         )}
         tabIndex={0}
+        data-ai-hint={item.imageHint}
     >
-        <Image
+      <div className="relative h-[220px] w-full flex-shrink-0">
+        <img
           src={item.imageUrl}
           alt={item.title}
-          fill
-          style={{ objectFit: 'cover' }}
-          className="rounded-lg"
-          unoptimized
+          className="h-full w-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-lg" />
-      <div className="relative flex flex-col justify-end h-full p-4 text-white">
-        <h3 className="text-lg font-bold truncate">{item.title}</h3>
-        <p className="text-sm text-muted-foreground text-white/80">{item.subject}</p>
-        <div className="mt-2">
-           <Badge variant="secondary">{item.type}</Badge>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
       </div>
-    </Card>
+      
+      <div className="flex flex-grow flex-col p-4">
+        <Badge variant="secondary" className="mb-2 self-start bg-secondary/80">{item.type}</Badge>
+        <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">{item.subject}</p>
+        <p className="mt-4 flex-grow text-sm text-foreground/80 line-clamp-3">{item.description}</p>
+      </div>
+    </div>
   );
 };
 

@@ -1,3 +1,94 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "1",
+      "title": "Quantum Mechanics",
+      "subject": "Physics",
+      "type": "Class Notes",
+      "description": "An introduction to the fundamental concepts of quantum mechanics, including wave-particle duality and the Schrödinger equation.",
+      "imageUrl": "https://images.unsplash.com/photo-1612521564381-8b0d19cc4951?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxxdWFudHVtJTIwcGh5c2ljc3xlbnwwfHx8fDE3NjYxNzQ3Nzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "quantum physics"
+    },
+    {
+      "id": "2",
+      "title": "Data Structures",
+      "subject": "Computer Science",
+      "type": "Class Notes",
+      "description": "Explore fundamental data structures like arrays, linked lists, and trees, crucial for efficient algorithm design.",
+      "imageUrl": "https://images.unsplash.com/photo-1763568258817-8814c9d3a9e0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxkYXRhJTIwY29kZXxlbnwwfHx8fDE3NjYxNzQ3Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "data code"
+    },
+    {
+      "id": "3",
+      "title": "Organic Chemistry",
+      "subject": "Chemistry",
+      "type": "Class Notes",
+      "description": "A deep dive into the reactions and structures of organic compounds, essential for understanding life sciences.",
+      "imageUrl": "https://images.unsplash.com/photo-1562411053-c9ac630a5934?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjaGVtaXN0cnklMjBzY2llbmNlfGVufDB8fHx8MTc2NjE2MDkzN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "chemistry science"
+    },
+    {
+      "id": "4",
+      "title": "World War II",
+      "subject": "History",
+      "type": "Class Notes",
+      "description": "A comprehensive overview of the causes, major events, and consequences of the Second World War.",
+      "imageUrl": "https://images.unsplash.com/photo-1688042972216-a9bae4c468a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx2aW50YWdlJTIwaGlzdG9yeXxlbnwwfHx8fDE3NjYxNzQ3Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vintage history"
+    },
+    {
+      "id": "7",
+      "title": "2023 Mid-Term: Mechanics",
+      "subject": "Physics",
+      "type": "PYQ",
+      "description": "Past exam papers focusing on classical mechanics, from kinematics to rotational dynamics.",
+      "imageUrl": "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwaHlzaWNzJTIwZm9ybXVsYXxlbnwwfHx8fDE3NjYxNzQ3Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "physics formula"
+    },
+    {
+      "id": "8",
+      "title": "2023 Final: Algorithms",
+      "subject": "Computer Science",
+      "type": "PYQ",
+      "description": "Challenge yourself with algorithm problems from the final exams, covering sorting, searching, and graph theory.",
+      "imageUrl": "https://images.unsplash.com/photo-1759661990336-51bd4b951fea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhbGdvcml0aG0lMjBmbG93Y2hhcnR8ZW58MHx8fHwxNzY2MTc0Nzc5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "algorithm flowchart"
+    },
+    {
+      "id": "11",
+      "title": "Shakespeare's Sonnets",
+      "subject": "English",
+      "type": "Important Question",
+      "description": "Analyze the themes of love, beauty, and time in Shakespeare's most famous sonnets.",
+      "imageUrl": "https://images.unsplash.com/photo-1476081718509-d5d0b661a376?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8b2xkJTIwYm9va3xlbnwwfHx8fDE3NjYxMTQzODh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "old book"
+    },
+    {
+      "id": "13",
+      "title": "Big O Notation Explained",
+      "subject": "Computer Science",
+      "type": "Important Question",
+      "description": "Master the concept of Big O notation to analyze and compare the efficiency of algorithms.",
+      "imageUrl": "https://images.unsplash.com/photo-1758685734301-1e6ef045145f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjb21wbGV4aXR5JTIwZ3JhcGh8ZW58MHx8fHwxNzY2MTc0NzgxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "complexity graph"
+    },
+    {
+      "id": "16",
+      "title": "Intro to AI",
+      "subject": "Computer Science",
+      "type": "Video",
+      "description": "A video series covering the basics of Artificial Intelligence, from machine learning to neural networks.",
+      "imageUrl": "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxhcnRpZmljaWFsJTIwaW50ZWxsaWdlbmNlfGVufDB8fHx8MTc2NjE2NTA2OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "artificial intelligence"
+    },
+    {
+      "id": "17",
+      "title": "Linear Algebra: Vectors",
+      "subject": "Mathematics",
+      "type": "Video",
+      "description": "Learn about vectors, vector spaces, and linear transformations in this engaging video lecture.",
+      "imageUrl": "https://images.unsplash.com/photo-1754304342501-54bad0a6d195?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtYXRoJTIwdmVjdG9yc3xlbnwwfHx8fDE3NjYxNzQ3Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "math vectors"
+    }
+  ]
 }

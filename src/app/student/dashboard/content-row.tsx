@@ -1,11 +1,11 @@
 'use client';
 import React from 'react';
-import { StudentContent } from './types';
+import { ImagePlaceholder } from '@/lib/placeholder-images';
 import ContentCard from './content-card';
 
 interface ContentRowProps {
   title: string;
-  items: StudentContent[];
+  items: ImagePlaceholder[];
 }
 
 const ContentRow = ({ title, items }: ContentRowProps) => {
@@ -15,11 +15,13 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
 
   return (
     <section>
-      <h2 className="text-2xl font-bold tracking-tight mb-4">{title}</h2>
+      <h2 className="text-3xl font-bold tracking-tight mb-6">{title}</h2>
       <div className="relative">
-        <div className="horizontal-scrollbar flex w-full space-x-6 pb-4">
+        <div className="horizontal-scrollbar -mx-8 flex w-[calc(100%+4rem)] space-x-8 px-8 pb-4 sm:-mx-4 sm:w-[calc(100%+2rem)] sm:space-x-6 sm:px-4 md:-mx-8 md:w-[calc(100%+4rem)] md:space-x-8 md:px-8">
           {items.map((item) => (
-            <ContentCard key={item.id} item={item} />
+            <div key={item.id} className="flex-shrink-0">
+              <ContentCard item={item} />
+            </div>
           ))}
            <div className="flex-shrink-0 w-1"></div>
         </div>

@@ -87,10 +87,9 @@
     100% { background-position: 0% 50%; }
   }
 
-  /* Custom scrollbar styles for Netflix-style rows */
+  /* Custom scrollbar styles */
   .horizontal-scrollbar {
     overflow-x: auto;
-    /* For Webkit browsers (Chrome, Safari) */
     &::-webkit-scrollbar {
       height: 8px;
     }
@@ -106,38 +105,48 @@
     &::-webkit-scrollbar-thumb:hover {
       background: hsl(var(--muted-foreground));
     }
-    /* For Firefox */
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted-foreground) / 0.5) hsl(var(--secondary) / 0.5);
   }
 
+  /* New Content Card Styles */
   .content-card {
-    @apply border border-transparent rounded-lg shadow-md;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  }
-  
-  .content-card:hover, .content-card:focus-within {
-    @apply border-primary;
-    transform: translateY(-6px) translateZ(0);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15), 0 8px 16px rgba(0,0,0,0.12);
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border: 2px solid transparent;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform, box-shadow, border-color; /* Performance optimization */
   }
 
+  .content-card:hover, .content-card:focus-within {
+    transform: translateY(-8px) translateZ(0);
+    border-color: #f59e0b; /* amber-500 */
+    background: linear-gradient(145deg, #fff7ed, #fef3c7);
+    box-shadow: 
+      0 32px 64px rgba(255, 193, 7, 0.3), /* Outer yellow glow */
+      0 16px 32px rgba(0, 0, 0, 0.2),    /* Core shadow */
+      0 0 0 4px rgba(255, 193, 7, 0.15); /* Yellow ring */
+  }
+  
   .dark .content-card {
-     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+     background: linear-gradient(145deg, hsl(var(--secondary)), hsl(var(--secondary) / 0.7));
+     box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   }
   
   .dark .content-card:hover, .dark .content-card:focus-within {
-     box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 8px 16px rgba(0,0,0,0.25);
+    border-color: #f59e0b; /* amber-500 */
+    background: linear-gradient(145deg, hsl(var(--secondary)), hsl(var(--muted) / 0.8));
+    box-shadow: 
+      0 32px 64px rgba(255, 193, 7, 0.25), 
+      0 16px 32px rgba(0, 0, 0, 0.4),    
+      0 0 0 4px rgba(255, 193, 7, 0.15);
   }
-
+  
   @media (max-width: 768px) {
     .content-card:hover, .content-card:focus-within {
-      transform: translateY(-3px) translateZ(0);
+      transform: translateY(-4px) translateZ(0);
     }
-  }
-
-  .content-card:hover {
-    will-change: transform;
   }
 }

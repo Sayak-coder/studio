@@ -15,7 +15,7 @@ import {
     LayoutDashboard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { newlyAdded, currentYearPYQs, mostImportant, continueWatching, StudentContent } from './types';
+import { ImagePlaceholder, PlaceHolderImages } from '@/lib/placeholder-images';
 import ContentRow from './content-row';
 
 export default function StudentDashboard() {
@@ -49,6 +49,12 @@ export default function StudentDashboard() {
       });
     }
   };
+  
+  const newlyAdded = PlaceHolderImages.filter(item => item.type === 'Class Notes');
+  const currentYearPYQs = PlaceHolderImages.filter(item => item.type === 'PYQ');
+  const mostImportant = PlaceHolderImages.filter(item => item.type === 'Important Question');
+  const continueWatching = PlaceHolderImages.filter(item => item.type === 'Video');
+
 
   if (isUserLoading || !user) {
     return (
@@ -100,18 +106,18 @@ export default function StudentDashboard() {
 
       {/* Main Content */}
       <main className="flex-1 md:pl-64">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
            <h1 className="text-2xl font-bold md:hidden">Student Dashboard</h1>
            <p className="text-sm text-muted-foreground">
             Welcome back, {user.displayName || 'Student'}!
           </p>
         </header>
 
-        <div className="flex-1 space-y-12 p-4 md:p-8">
-            <ContentRow title="Newly Added Notes" items={newlyAdded as StudentContent[]} />
-            <ContentRow title="Current Year's PYQs" items={currentYearPYQs as StudentContent[]} />
-            <ContentRow title="Most Important Questions" items={mostImportant as StudentContent[]} />
-            <ContentRow title="Continue Watching" items={continueWatching as StudentContent[]} />
+        <div className="flex-1 space-y-12 p-8 sm:p-4 md:p-8">
+            <ContentRow title="Newly Added Notes" items={newlyAdded as ImagePlaceholder[]} />
+            <ContentRow title="Current Year's PYQs" items={currentYearPYQs as ImagePlaceholder[]} />
+            <ContentRow title="Most Important Questions" items={mostImportant as ImagePlaceholder[]} />
+            <ContentRow title="Continue Watching" items={continueWatching as ImagePlaceholder[]} />
         </div>
       </main>
     </div>
