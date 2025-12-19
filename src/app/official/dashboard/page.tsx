@@ -76,13 +76,16 @@ export default function OfficialDashboard() {
   
   // Step 2: Effect to check the user's role and enable the main query.
   useEffect(() => {
+    if (!user) return; // Wait for user object
+    if (isLoadingProfile) return; // Wait for profile to load
+
     if (userProfile && (userProfile.role === 'official' || userProfile.role === 'admin')) {
       setIsRoleVerified(true);
-    } else if (userProfile) {
-      // If profile is loaded but not an official, explicitly deny access
+    } else {
+      // If profile is loaded but role is not correct, or if there's no profile
       setIsRoleVerified(false);
     }
-  }, [userProfile]);
+  }, [userProfile, isLoadingProfile, user]);
 
   // Step 3: Once role is verified, construct the query to get all users.
   const usersQuery = useMemoFirebase(() => {
