@@ -22,15 +22,14 @@ service cloud.firestore {
     
     /**
      * Checks if the currently authenticated user has a specific role stored in their user document.
-     * This is vulnerable to race conditions if not handled carefully on the client.
+     * This function securely reads the user's own role document.
      */
-    function hasRole(role) {
-      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-      return isSignedIn() && (userRole == role);
+    function getUserRole(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.role;
     }
     
     function isAdmin() {
-      return hasRole('admin') || hasRole('official');
+      return isSignedIn() && (getUserRole(request.auth.uid) == 'admin' || getUserRole(request.auth.uid) == 'official');
     }
 
     // Rules for user profiles.
