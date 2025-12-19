@@ -130,18 +130,24 @@ export default function OfficialDashboard() {
 
     try {
         const userRef = doc(firestore, 'users', userToUpdate.id);
-        if (action === 'block' || action === 'unblock') {
-            await updateDoc(userRef, { disabled: action === 'block' });
-            toast({
-                title: `User ${action === 'block' ? 'Blocked' : 'Unblocked'}`,
-                description: `${userToUpdate.name}'s account has been ${action === 'block' ? 'disabled' : 'enabled'}.`,
-            });
-        } else if (action === 'delete') {
-            await deleteDoc(userRef);
-            toast({
-                title: 'User Deleted',
-                description: `${userToUpdate.name} has been permanently removed from the system.`,
-            });
+        if (action === 'block' || action === 'unblock' || action === 'delete') {
+            const isDisabled = action === 'block' || action === 'delete';
+            await updateDoc(userRef, { disabled: isDisabled });
+            
+            let toastTitle = '';
+            let toastDescription = '';
+
+            if (action === 'block') {
+                toastTitle = 'User Blocked';
+                toastDescription = `${userToUpdate.name}'s account has been disabled.`;
+            } else if (action === 'unblock') {
+                toastTitle = 'User Unblocked';
+                toastDescription = `${userToUpdate.name}'s account has been enabled.`;
+            } else { // delete
+                toastTitle = 'User Access Revoked';
+                toastDescription = `${userToUpdate.name}'s account has been disabled. They will need to be unblocked to sign up again.`;
+            }
+            toast({ title: toastTitle, description: toastDescription });
         }
         
     } catch (error) {
@@ -308,10 +314,9 @@ export default function OfficialDashboard() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              {dialogState.action === 'delete' && `This will permanently delete ${dialogState.user?.name}'s account and all associated data.`}
+              {dialogState.action === 'delete' && `This action will disable ${dialogState.user?.name}'s account and prevent them from logging in or signing up again with this email. This is a reversible action; you can 'unblock' them later.`}
               {dialogState.action === 'block' && `This will disable ${dialogState.user?.name}'s account, preventing them from logging in.`}
               {dialogState.action === 'unblock' && `This will re-enable ${dialogState.user?.name}'s account, allowing them to log in again.`}
-              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -322,7 +327,7 @@ export default function OfficialDashboard() {
               className={dialogState.action === 'delete' || dialogState.action === 'block' ? 'bg-destructive hover:bg-destructive/90' : ''}
             >
               {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : `Yes, ${dialogState.action}`}
-            </AlertDialogAction>
+            </AlergDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
