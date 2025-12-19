@@ -63,7 +63,7 @@ export default function Home() {
                 EduBot
               </h1>
             </a>
-            <p className="mt-4 text-lg md:text-xl text-muted-foreground animate-fade-in-up [animation-delay:0.2s]">
+            <div className="mt-4 text-lg md:text-xl text-muted-foreground animate-fade-in-up [animation-delay:0.2s]">
               Smarter exam preparation, powered by{' '}
               <TooltipProvider>
                 <Tooltip>
@@ -77,7 +77,7 @@ export default function Home() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </p>
+            </div>
              {/* AI-Powered Study Helper Section */}
             <div className="mt-12 max-w-2xl mx-auto">
               <Card className="bg-card/80 backdrop-blur-sm text-left">
