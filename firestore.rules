@@ -3,7 +3,7 @@
  *
  * Core Philosophy:
  * The default posture is deny-all. Access is granted explicitly.
- * - User Profiles (/users): Only the owner can read/write their own profile. An admin/official can read any profile.
+ * - User Profiles (/users): Only the owner can read/write their own profile. An admin/official can read/write any profile.
  * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users.
  * - Content (/content): Any authenticated user can create/read. Only the author can update/delete.
  */
@@ -38,8 +38,9 @@ service cloud.firestore {
       // An admin/official can read any user profile. An owner can read their own.
       allow get: if isAdmin() || isOwner(userId);
       
-      // Allow a user to update or delete their own profile.
-      allow update, delete: if isOwner(userId);
+      // Allow an admin/official to update or delete any user profile.
+      // Also, allow a user to update their own profile.
+      allow update, delete: if isAdmin() || isOwner(userId);
       
       // Allow any authenticated user to create their own profile, ensuring the ID matches.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
