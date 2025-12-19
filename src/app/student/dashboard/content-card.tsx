@@ -11,7 +11,7 @@ interface ContentCardProps {
 
 const ContentCard = ({ item }: ContentCardProps) => {
   return (
-    <Card className="group relative min-w-[200px] max-w-[200px] h-[240px] overflow-hidden rounded-lg shadow-lg transition-transform duration-300 ease-in-out hover:scale-105 hover:z-10 hover:shadow-2xl">
+    <Card className="group relative min-w-[200px] max-w-[200px] h-[240px] overflow-hidden rounded-lg shadow-lg transition-all duration-300 ease-in-out hover:z-10 hover:shadow-2xl hover:-translate-y-2 hover:scale-105">
       <div className="absolute inset-0">
         <Image
           src={item.imageUrl}
