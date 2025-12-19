@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { collection, query, doc } from 'firebase/firestore';
-import { BrainCircuit, Loader2, Users, ShieldAlert, LogOut } from 'lucide-react';
+import { collection, query, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { BrainCircuit, Loader2, Users, ShieldAlert, LogOut, UserX, UserCheck, Trash2 } from 'lucide-react';
 import { useFirestore, useUser, useMemoFirebase, useDoc, useCollection, useFirebase } from '@/firebase';
 import {
   Table,
@@ -14,17 +14,38 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { MoreHorizontal } from "lucide-react"
 
 type UserProfile = {
   id: string;
   name: string;
   email: string;
   role: 'student' | 'senior' | 'class-representative' | 'admin' | 'official';
+  disabled?: boolean;
 };
+
+type ActionType = 'block' | 'unblock' | 'delete';
 
 export default function OfficialDashboard() {
   const router = useRouter();
@@ -33,6 +54,10 @@ export default function OfficialDashboard() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const [isRoleVerified, setIsRoleVerified] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [dialogState, setDialogState] = useState<{isOpen: boolean, user: UserProfile | null, action: ActionType | null}>({ isOpen: false, user: null, action: null });
+
 
   // Redirect to login if user is not authenticated after loading
   useEffect(() => {
@@ -88,6 +113,49 @@ export default function OfficialDashboard() {
     }
   };
 
+  const openConfirmationDialog = (user: UserProfile, action: ActionType) => {
+    setDialogState({ isOpen: true, user, action });
+  };
+  
+  const closeConfirmationDialog = () => {
+    setDialogState({ isOpen: false, user: null, action: null });
+  };
+
+  const handleUserAction = async () => {
+    if (!firestore || !dialogState.user || !dialogState.action) return;
+    
+    setIsSubmitting(true);
+    const userToUpdate = dialogState.user;
+    const action = dialogState.action;
+
+    try {
+        const userRef = doc(firestore, 'users', userToUpdate.id);
+        if (action === 'block' || action === 'unblock') {
+            await updateDoc(userRef, { disabled: action === 'block' });
+            toast({
+                title: `User ${action === 'block' ? 'Blocked' : 'Unblocked'}`,
+                description: `${userToUpdate.name}'s account has been ${action === 'block' ? 'disabled' : 'enabled'}.`,
+            });
+        } else if (action === 'delete') {
+            await deleteDoc(userRef);
+            toast({
+                title: 'User Deleted',
+                description: `${userToUpdate.name} has been permanently removed from the system.`,
+            });
+        }
+        
+    } catch (error) {
+      console.error(`Failed to ${action} user:`, error);
+      toast({
+        variant: 'destructive',
+        title: 'Action Failed',
+        description: `Could not ${action} the user. Please try again.`,
+      });
+    } finally {
+        setIsSubmitting(false);
+        closeConfirmationDialog();
+    }
+  };
 
   if (isUserLoading || isLoadingProfile) {
     return (
@@ -98,7 +166,6 @@ export default function OfficialDashboard() {
     );
   }
 
-  // A specific state for when user is authenticated but not an admin/official, after their profile has loaded.
   if (user && !isLoadingProfile && !isRoleVerified) {
      return (
        <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -158,13 +225,14 @@ export default function OfficialDashboard() {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
-                    <TableHead>User ID</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoadingUsers && isRoleVerified && (
                     <TableRow>
-                      <TableCell colSpan={4}>
+                      <TableCell colSpan={5}>
                         <div className="flex items-center justify-center py-10">
                           <Loader2 className="h-8 w-8 animate-spin text-primary" />
                            <p className="ml-4 text-muted-foreground">Loading user data...</p>
@@ -174,7 +242,7 @@ export default function OfficialDashboard() {
                   )}
                   {usersError && (
                      <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center text-destructive">
+                        <TableCell colSpan={5} className="h-24 text-center text-destructive">
                           Error: Could not load user data.
                           <p className="text-xs text-muted-foreground mt-2">{usersError?.message}</p>
                         </TableCell>
@@ -182,7 +250,7 @@ export default function OfficialDashboard() {
                   )}
                   {!isLoadingUsers && filteredUsers?.length === 0 && isRoleVerified &&(
                      <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center">
+                        <TableCell colSpan={5} className="h-24 text-center">
                           No relevant users found in the system.
                         </TableCell>
                       </TableRow>
@@ -194,8 +262,37 @@ export default function OfficialDashboard() {
                       <TableCell>
                         <Badge variant={(u.role === 'admin' || u.role === 'official') ? 'default' : 'secondary'} className='capitalize'>{u.role}</Badge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground font-mono text-xs">
-                        {u.id}
+                      <TableCell>
+                        <Badge variant={u.disabled ? 'destructive' : 'default'} className="bg-opacity-80">
+                          {u.disabled ? 'Blocked' : 'Active'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {u.disabled ? (
+                                <DropdownMenuItem onClick={() => openConfirmationDialog(u, 'unblock')}>
+                                  <UserCheck className="mr-2 h-4 w-4" />
+                                  Unblock
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => openConfirmationDialog(u, 'block')}>
+                                  <UserX className="mr-2 h-4 w-4" />
+                                  Block
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem className="text-destructive" onClick={() => openConfirmationDialog(u, 'delete')}>
+                                 <Trash2 className="mr-2 h-4 w-4" />
+                                 Delete User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -205,6 +302,30 @@ export default function OfficialDashboard() {
           </Card>
         </div>
       </main>
+      
+       <AlertDialog open={dialogState.isOpen} onOpenChange={closeConfirmationDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {dialogState.action === 'delete' && `This will permanently delete ${dialogState.user?.name}'s account and all associated data.`}
+              {dialogState.action === 'block' && `This will disable ${dialogState.user?.name}'s account, preventing them from logging in.`}
+              {dialogState.action === 'unblock' && `This will re-enable ${dialogState.user?.name}'s account, allowing them to log in again.`}
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleUserAction}
+              disabled={isSubmitting}
+              className={dialogState.action === 'delete' || dialogState.action === 'block' ? 'bg-destructive hover:bg-destructive/90' : ''}
+            >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : `Yes, ${dialogState.action}`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

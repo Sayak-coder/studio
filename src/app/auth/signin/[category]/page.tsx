@@ -12,8 +12,9 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useState, useEffect } from 'react';
+import { useState, useEffect }from 'react';
 import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
@@ -84,8 +85,23 @@ export default function SignInPage() {
     setIsLoading(true);
     try {
       const auth = getAuth(firebaseApp);
+      const firestore = getFirestore(firebaseApp);
       await setPersistence(auth, browserLocalPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      const userDocRef = doc(firestore, 'users', userCredential.user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists() && userDoc.data()?.disabled) {
+        await auth.signOut();
+        toast({
+          variant: 'destructive',
+          title: 'Account Disabled',
+          description: 'Your account has been disabled by an administrator. Please contact support.',
+        });
+        setIsLoading(false);
+        return;
+      }
       
       toast({
         title: 'Sign in successful!',
