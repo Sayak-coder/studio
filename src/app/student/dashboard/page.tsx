@@ -1,14 +1,22 @@
 'use client';
 import React from 'react';
-import { useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Book, FileText, LogOut } from 'lucide-react';
-
 import { useUser, useFirebase } from '@/firebase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { 
+    Book, 
+    FileText, 
+    LogOut, 
+    Loader2, 
+    BrainCircuit, 
+    Video, 
+    Star,
+    LayoutDashboard
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { newlyAdded, currentYearPYQs, mostImportant, continueWatching, StudentContent } from './types';
+import ContentRow from './content-row';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -16,8 +24,7 @@ export default function StudentDashboard() {
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
 
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/auth/signin/student');
     }
@@ -42,78 +49,69 @@ export default function StudentDashboard() {
       });
     }
   };
-  
+
   if (isUserLoading || !user) {
     return (
-       <div className="container mx-auto p-4 md:p-8">
-          <Skeleton className="h-8 w-1/4 mb-8" />
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-          </div>
-          <Skeleton className="h-64 mt-12" />
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <header className="sticky top-0 z-10 border-b bg-background/80 py-4 backdrop-blur-sm">
-        <div className="container mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
-            Welcome, {user.displayName || 'Student'}!
-          </h1>
-          <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign Out">
-            <LogOut className="h-5 w-5" />
+    <div className="flex min-h-screen bg-background text-foreground">
+      {/* Sidebar */}
+      <aside className="fixed left-0 top-0 hidden h-full w-64 flex-col border-r bg-card shadow-lg md:flex">
+        <div className="flex h-16 items-center border-b px-6">
+          <Link href="/" className="flex items-center gap-2 font-semibold">
+            <BrainCircuit className="h-8 w-8 text-primary" />
+            <span className="text-2xl font-bold">EduBot</span>
+          </Link>
+        </div>
+        <nav className="flex-1 space-y-2 p-4">
+          <Button variant="ghost" className="w-full justify-start text-base gap-3">
+            <LayoutDashboard />
+            Dashboard
+          </Button>
+          <Button variant="ghost" className="w-full justify-start text-base gap-3">
+            <FileText />
+            Class Notes
+          </Button>
+          <Button variant="ghost" className="w-full justify-start text-base gap-3">
+            <Book />
+            PYQs
+          </Button>
+          <Button variant="ghost" className="w-full justify-start text-base gap-3">
+            <Star />
+            Important Questions
+          </Button>
+          <Button variant="ghost" className="w-full justify-start text-base gap-3">
+            <Video />
+            Video Links
+          </Button>
+        </nav>
+        <div className="mt-auto p-4">
+          <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
+            <LogOut />
+            Sign Out
           </Button>
         </div>
-      </header>
+      </aside>
 
-      <main className="flex-grow p-4 md:p-8">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {/* PYQs Card */}
-            <Card className="animated-gradient-border transform transition-all duration-300 hover:-translate-y-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xl font-bold">PYQs</CardTitle>
-                <Book className="h-6 w-6 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Access Previous Year Questions to ace your exams.
-                </p>
-              </CardContent>
-            </Card>
+      {/* Main Content */}
+      <main className="flex-1 md:pl-64">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
+           <h1 className="text-2xl font-bold md:hidden">Student Dashboard</h1>
+           <p className="text-sm text-muted-foreground">
+            Welcome back, {user.displayName || 'Student'}!
+          </p>
+        </header>
 
-            {/* Class Notes Card */}
-            <Card className="animated-gradient-border transform transition-all duration-300 hover:-translate-y-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xl font-bold">Class Notes</CardTitle>
-                <FileText className="h-6 w-6 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Find all your class notes, compiled and verified.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Important Questions Card */}
-            <Card className="animated-gradient-border transform transition-all duration-300 hover:-translate-y-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xl font-bold">
-                  Important Questions
-                </CardTitle>
-                <FileText className="h-6 w-6 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  A curated list of important questions for all subjects.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="flex-1 space-y-12 p-4 md:p-8">
+            <ContentRow title="Newly Added Notes" items={newlyAdded as StudentContent[]} />
+            <ContentRow title="Current Year's PYQs" items={currentYearPYQs as StudentContent[]} />
+            <ContentRow title="Most Important Questions" items={mostImportant as StudentContent[]} />
+            <ContentRow title="Continue Watching" items={continueWatching as StudentContent[]} />
         </div>
       </main>
     </div>
