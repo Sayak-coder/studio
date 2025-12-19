@@ -132,26 +132,19 @@ export default function OfficialDashboard() {
     const action = dialogState.action;
 
     try {
-        const userRef = doc(firestore, 'users', userToUpdate.id);
-        if (action === 'block' || action === 'unblock' || action === 'delete') {
-            const isDisabled = action === 'block' || action === 'delete';
-            await updateDoc(userRef, { disabled: isDisabled });
-            
-            let toastTitle = '';
-            let toastDescription = '';
+      const userRef = doc(firestore, 'users', userToUpdate.id);
+      
+      if (action === 'delete') {
+        await deleteDoc(userRef);
+        toast({ title: 'User Deleted', description: `${userToUpdate.name}'s account data has been permanently removed. They will need to sign up again.` });
+      } else { // 'block' or 'unblock'
+        const isDisabled = action === 'block';
+        await updateDoc(userRef, { disabled: isDisabled });
 
-            if (action === 'block') {
-                toastTitle = 'User Blocked';
-                toastDescription = `${userToUpdate.name}'s account has been disabled.`;
-            } else if (action === 'unblock') {
-                toastTitle = 'User Unblocked';
-                toastDescription = `${userToUpdate.name}'s account has been enabled.`;
-            } else { // delete
-                toastTitle = 'User Access Revoked';
-                toastDescription = `${userToUpdate.name}'s account has been disabled. They will need to be unblocked to sign up again.`;
-            }
-            toast({ title: toastTitle, description: toastDescription });
-        }
+        const toastTitle = isDisabled ? 'User Blocked' : 'User Unblocked';
+        const toastDescription = `${userToUpdate.name}'s account has been ${isDisabled ? 'disabled' : 'enabled'}.`;
+        toast({ title: toastTitle, description: toastDescription });
+      }
         
     } catch (error) {
       console.error(`Failed to ${action} user:`, error);
@@ -317,8 +310,8 @@ export default function OfficialDashboard() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              {dialogState.action === 'delete' && `This action will disable ${dialogState.user?.name}'s account and prevent them from logging in or signing up again with this email. This is a reversible action; you can 'unblock' them later.`}
-              {dialogState.action === 'block' && `This will disable ${dialogState.user?.name}'s account, preventing them from logging in.`}
+              {dialogState.action === 'delete' && `This action cannot be undone. This will permanently delete ${dialogState.user?.name}'s account data. They will be signed out and will need to sign up again.`}
+              {dialogState.action === 'block' && `This will disable ${dialogState.user?.name}'s account, preventing them from logging in. They will not be able to sign up with the same email until unblocked.`}
               {dialogState.action === 'unblock' && `This will re-enable ${dialogState.user?.name}'s account, allowing them to log in again.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
