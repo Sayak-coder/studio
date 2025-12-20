@@ -17,6 +17,8 @@ import {
   Menu,
   LayoutDashboard,
   FilePlus,
+  User,
+  Users,
 } from 'lucide-react';
 
 import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -173,6 +175,20 @@ export default function CRDashboard() {
               >
                 <FilePlus />Add Content
               </Button>
+              <Button
+                variant='ghost'
+                className="w-full justify-start text-base gap-3"
+                asChild
+              >
+                <Link href="#my-contributions"><User />My Contributions</Link>
+              </Button>
+               <Button
+                variant='ghost'
+                className="w-full justify-start text-base gap-3"
+                asChild
+              >
+                <Link href="#other-cr-contributions"><Users />Other Contributions</Link>
+              </Button>
         </nav>
         <div className="mt-auto p-4">
           <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
@@ -216,20 +232,24 @@ export default function CRDashboard() {
         </header>
 
         <div className="flex-1 space-y-12 p-4 md:p-8">
-           <ContentSection 
-            title="My Contributions"
-            contents={myContents}
-            isLoading={isLoadingMyContent}
-            onEdit={handleEdit}
-            onDelete={openDeleteDialog}
-            isEditable={true}
-          />
-           <ContentSection 
-            title="Other CR Contributions"
-            contents={otherContents}
-            isLoading={isLoadingOtherContent}
-            isEditable={false}
-          />
+           <div id="my-contributions">
+              <ContentSection 
+                title="My Contributions"
+                contents={myContents}
+                isLoading={isLoadingMyContent}
+                onEdit={handleEdit}
+                onDelete={openDeleteDialog}
+                isEditable={true}
+              />
+           </div>
+           <div id="other-cr-contributions">
+              <ContentSection 
+                title="Other CR Contributions"
+                contents={otherContents}
+                isLoading={isLoadingOtherContent}
+                isEditable={false}
+              />
+           </div>
         </div>
       </main>
       
