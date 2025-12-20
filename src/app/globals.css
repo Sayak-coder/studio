@@ -136,7 +136,7 @@
 
   /* Hover state for the entire card */
   .content-card:hover, .content-card:focus-within {
-    transform: translateY(-8px) translateZ(0); /* Lift effect */
+    transform: translateY(-8px) translateZ(0) scale(1.05); /* Lift and Zoom effect */
     box-shadow: 0 32px 64px rgba(0,0,0,0.2), 0 16px 32px rgba(0,0,0,0.15); /* Enhanced shadow */
   }
 
