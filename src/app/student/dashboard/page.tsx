@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ImagePlaceholder, PlaceHolderImages } from '@/lib/placeholder-images';
 import ContentRow from './content-row';
+import ContentCard from './content-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import GlobalSearch from './global-search';
 
@@ -53,12 +54,10 @@ export default function StudentDashboard() {
     }
   };
   
-  const dataToDisplay = filteredData === null ? PlaceHolderImages : filteredData;
-
-  const newlyAdded = dataToDisplay.filter(item => item.type === 'Class Notes');
-  const currentYearPYQs = dataToDisplay.filter(item => item.type === 'PYQ');
-  const mostImportant = dataToDisplay.filter(item => item.type === 'Important Question');
-  const continueWatching = dataToDisplay.filter(item => item.type === 'Video');
+  const newlyAdded = PlaceHolderImages.filter(item => item.type === 'Class Notes');
+  const currentYearPYQs = PlaceHolderImages.filter(item => item.type === 'PYQ');
+  const mostImportant = PlaceHolderImages.filter(item => item.type === 'Important Question');
+  const continueWatching = PlaceHolderImages.filter(item => item.type === 'Video');
 
 
   if (isUserLoading || !user) {
@@ -113,7 +112,6 @@ export default function StudentDashboard() {
       <main className="flex-1 w-full overflow-hidden md:pl-64">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm">
           <div className="flex w-full max-w-lg items-center gap-4">
-              <h1 className="text-2xl font-bold md:hidden">EduBot</h1>
               <GlobalSearch onSearchChange={setFilteredData} />
           </div>
           <div className="flex items-center gap-4">
@@ -125,12 +123,27 @@ export default function StudentDashboard() {
         </header>
 
         <div className="flex-1 space-y-4 p-4 md:p-8">
-            {filteredData !== null && filteredData.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
-                    <h3 className="text-2xl font-bold tracking-tight">No Results Found</h3>
-                    <p className="text-muted-foreground mt-2">Try adjusting your search terms.</p>
-                </div>
+            {filteredData !== null ? (
+              // Search is active, show search results
+              <>
+                <h2 className="text-3xl font-bold tracking-tight">Search Results</h2>
+                {filteredData.length > 0 ? (
+                  <div className="flex flex-wrap gap-6">
+                    {filteredData.map((item) => (
+                       <div key={item.id} className="py-2">
+                         <ContentCard item={item} />
+                       </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
+                      <h3 className="text-2xl font-bold tracking-tight">No Results Found</h3>
+                      <p className="text-muted-foreground mt-2">Try adjusting your search terms.</p>
+                  </div>
+                )}
+              </>
             ) : (
+                // No search, show default content rows
                 <>
                     <ContentRow title="Newly Added Notes" items={newlyAdded} />
                     <ContentRow title="Current Year's PYQs" items={currentYearPYQs} />
