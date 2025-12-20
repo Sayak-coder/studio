@@ -110,10 +110,10 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
     
     try {
       const contentData = {
-        ...formData,
-        // File properties are handled after creation/update
-        fileUrl: editingContent?.fileUrl || '',
-        fileType: editingContent?.fileType || '',
+        title: formData.title,
+        subject: formData.subject,
+        type: formData.type,
+        content: formData.content,
         authorId: user.uid,
         authorName: user.displayName || 'Anonymous',
         role: userProfile.role,

@@ -36,7 +36,7 @@ type ContentData = {
 };
 
 /**
- * Creates or updates a content document in Firestore.
+ * Creates or updates a content document in Firestore, WITHOUT file data.
  * File upload is handled separately to make the initial save faster.
  * @param firestore - The Firestore instance.
  * @param data - The data for the content.
@@ -45,7 +45,7 @@ type ContentData = {
  */
 export async function createOrUpdateContent(
   firestore: Firestore,
-  data: ContentData,
+  data: Omit<ContentData, 'fileUrl' | 'fileType'>, // Exclude file fields
   docId?: string
 ): Promise<string> {
   try {
@@ -56,6 +56,7 @@ export async function createOrUpdateContent(
         ...data,
         updatedAt: serverTimestamp(),
       };
+      // This only updates text fields, fileUrl is handled by handleBackgroundUpload
       await updateDoc(contentDocRef, payload);
       return docId;
     } else {
@@ -65,6 +66,11 @@ export async function createOrUpdateContent(
         ...data,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        // Initialize file fields as empty, to be updated later
+        fileUrl: '',
+        fileType: '',
+        fileName: '',
+        fileSize: 0,
       };
       const newDocRef = await addDoc(contentColRef, payload);
       return newDocRef.id;
@@ -88,6 +94,7 @@ export async function createOrUpdateContent(
 
 /**
  * Handles the file upload process as a separate step after content creation.
+ * It uploads the file and then updates the corresponding document with the file's metadata.
  * @param firestore The Firestore instance.
  * @param userId The current user's ID.
  * @param docId The ID of the document to associate the file with.
@@ -106,6 +113,7 @@ export async function handleBackgroundUpload(
         const { downloadURL, fileType } = await uploadFile(userId, docId, file, onProgress);
         const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
         
+        // This payload ONLY contains file-related data to prevent overwriting other fields.
         const updatePayload = {
             fileUrl: downloadURL,
             fileType: fileType,
@@ -127,7 +135,7 @@ export async function handleBackgroundUpload(
         });
 
     } catch (error) {
-        console.error("Background upload or update failed:", error);
+        console.error("Background upload or document update failed:", error);
         // Re-throw to be handled by the calling UI component
         throw error;
     }
