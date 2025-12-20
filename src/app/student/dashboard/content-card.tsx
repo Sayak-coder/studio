@@ -13,7 +13,7 @@ const ContentCard = ({ item }: ContentCardProps) => {
     <div
       className={cn(
         'content-card group relative flex flex-col',
-        'w-full max-w-[300px] md:w-[280px]',
+        'w-full max-w-[280px] md:w-[260px]',
         'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background'
       )}
       tabIndex={0}
@@ -21,7 +21,7 @@ const ContentCard = ({ item }: ContentCardProps) => {
     >
       <div className="card-glass-pane absolute inset-0 rounded-[inherit]"></div>
 
-      <div className="relative h-[180px] w-full flex-shrink-0">
+      <div className="relative h-[160px] w-full flex-shrink-0">
         <img
           src={item.imageUrl}
           alt={item.title}
@@ -42,12 +42,10 @@ const ContentCard = ({ item }: ContentCardProps) => {
           <p className="mt-1 text-sm text-muted-foreground">{item.subject}</p>
         </div>
 
-        <div className="flex-grow" />
-
-        <div className="max-h-0 opacity-0 transition-all duration-300 ease-in-out group-hover:max-h-40 group-hover:opacity-100">
-          <p className="mt-4 text-sm text-foreground/80 transition-opacity delay-100 duration-300 ease-in-out group-hover:opacity-100">
+        <div
+          className="mt-4 max-h-0 text-sm text-foreground/80 opacity-0 transition-all duration-300 ease-in-out group-hover:max-h-40 group-hover:opacity-100"
+        >
             {item.description}
-          </p>
         </div>
       </div>
     </div>

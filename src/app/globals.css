@@ -90,7 +90,7 @@
   /* Custom scrollbar styles */
   .horizontal-scrollbar {
     overflow-x: auto;
-    overflow-y: visible; /* Allow vertical overflow for hover effect */
+    overflow-y: hidden; /* Prevent vertical clipping */
     &::-webkit-scrollbar {
       height: 8px;
     }
@@ -138,7 +138,7 @@
 
   /* Hover state for the entire card */
   .content-card:hover, .content-card:focus-within {
-    transform: translateY(-4px) translateZ(0) scale(1.05); /* Lift and Zoom effect */
+    transform: translateY(-4px) translateZ(0); /* Lift effect */
     /* Light color glow effect using the theme's primary color */
     box-shadow:
       0 0 15px 4px hsla(var(--primary) / 0.4), /* Outer glow */
