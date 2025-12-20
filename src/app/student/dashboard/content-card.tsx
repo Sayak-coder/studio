@@ -13,7 +13,7 @@ const ContentCard = ({ item }: ContentCardProps) => {
     <div
       className={cn(
         'content-card group relative flex flex-col',
-        'w-full max-w-[280px] md:w-[260px]',
+        'w-[280px] md:w-[260px]',
         'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background'
       )}
       tabIndex={0}
