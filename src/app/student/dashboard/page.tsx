@@ -130,7 +130,7 @@ export default function StudentDashboard() {
                 {filteredData.length > 0 ? (
                   <div className="mt-6 flex flex-wrap gap-6">
                     {filteredData.map((item) => (
-                       <div key={item.id} className="py-2">
+                       <div key={item.id} className="py-4">
                          <ContentCard item={item} />
                        </div>
                     ))}
