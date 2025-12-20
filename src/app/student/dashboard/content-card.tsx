@@ -14,12 +14,12 @@ const ContentCard = ({ item }: ContentCardProps) => {
         className={cn(
             "content-card group relative flex flex-col",
             "w-full max-w-[340px] h-[440px] md:w-[320px] md:h-[420px]", // Responsive dimensions
-            "focus-within:ring-2 focus-within:ring-amber-400 focus-within:ring-offset-2 focus-within:ring-offset-background"
+            "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background"
         )}
         tabIndex={0}
         data-ai-hint={item.imageHint}
     >
-      <div className="absolute inset-0 card-glow-border rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div className="absolute inset-0 card-glow-border rounded-[inherit] opacity-0 transition-opacity duration-300"></div>
       <div className="absolute inset-0 card-glass-pane rounded-[inherit]"></div>
 
       <div className="relative h-[220px] w-full flex-shrink-0">

@@ -146,11 +146,17 @@
     z-index: -1;
     background: radial-gradient(
       circle at center,
-      #f59e0b, /* amber-500 */
+      hsl(var(--primary)),
       transparent 60%
     );
     filter: blur(24px); /* Creates the soft glow */
+    transition: opacity 0.3s ease-in-out;
   }
+  
+  .content-card:hover .card-glow-border {
+    opacity: 1;
+  }
+
 
   /* When the card is hovered, make the glass pane more opaque */
   .content-card:hover .card-glass-pane,
