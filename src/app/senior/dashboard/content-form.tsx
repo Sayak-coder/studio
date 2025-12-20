@@ -19,9 +19,10 @@ import { Progress } from "@/components/ui/progress"
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Content, initialFormData } from './types';
-import { useFirestore } from '@/firebase';
-import { createOrUpdateContent, uploadFile } from '@/firebase/firestore/content';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { createOrUpdateContent, handleBackgroundUpload } from '@/firebase/firestore/content';
 import { FirebaseError } from 'firebase/app';
+import { doc } from 'firebase/firestore';
 
 interface ContentFormProps {
   isOpen: boolean;
@@ -30,7 +31,12 @@ interface ContentFormProps {
   user: User;
 }
 
-type SubmissionState = 'idle' | 'uploading' | 'saving' | 'success' | 'error';
+type UserProfile = {
+  role: string;
+};
+
+
+type SubmissionState = 'idle' | 'saving' | 'uploading' | 'success' | 'error';
 
 export default function ContentForm({ isOpen, onClose, editingContent, user }: ContentFormProps) {
   const { toast } = useToast();
@@ -39,6 +45,13 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   const [submissionState, setSubmissionState] = useState<SubmissionState>('idle');
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
 
   useEffect(() => {
@@ -87,64 +100,56 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   };
 
   const handleSubmit = async () => {
-    if (!user || !firestore) return;
+    if (!user || !firestore || !userProfile) return;
     if (!formData.title || !formData.subject || !formData.content) {
       toast({ variant: 'destructive', title: 'Missing Fields', description: 'Please fill out Title, Subject, and Content.' });
       return;
     }
     
-    setSubmissionState('uploading');
+    setSubmissionState('saving');
     
     try {
-      let filePayload: { fileUrl?: string; fileType?: string } = {
-        fileUrl: formData.fileUrl, // Keep existing file if not changed
-        fileType: formData.fileType,
-      };
-      
-      if (fileToUpload) {
-        setUploadProgress(0);
-        const { downloadURL, fileType } = await uploadFile(
-          user.uid,
-          fileToUpload,
-          setUploadProgress
-        );
-        filePayload = { fileUrl: downloadURL, fileType };
-      }
-
-      setSubmissionState('saving');
       const contentData = {
         ...formData,
-        ...filePayload,
+        // File properties are handled after creation/update
+        fileUrl: editingContent?.fileUrl || '',
+        fileType: editingContent?.fileType || '',
         authorId: user.uid,
         authorName: user.displayName || 'Anonymous',
+        role: userProfile.role,
       };
       
-      const documentId = editingContent?.id; // Will be undefined for new content
+      const documentId = await createOrUpdateContent(firestore, contentData, editingContent?.id);
 
-      await createOrUpdateContent(firestore, contentData, documentId);
-
-      setSubmissionState('success');
       toast({
         title: 'Success!',
-        description: `Your content has been ${documentId ? 'updated' : 'added'}.`,
+        description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}.`,
       });
 
+      // Now, handle the file upload in the background if a file was selected.
+      if (fileToUpload) {
+        setSubmissionState('uploading');
+        setUploadProgress(0);
+        await handleBackgroundUpload(firestore, user.uid, documentId, fileToUpload, setUploadProgress);
+        toast({
+          title: 'Upload Complete',
+          description: `Your file "${fileToUpload.name}" has been attached.`,
+        });
+      }
+
+      setSubmissionState('success');
       onClose();
+
     } catch (error) {
       setSubmissionState('error');
       console.error("Content submission error:", error);
       const errorMessage = error instanceof FirebaseError ? error.message : 'Could not save your content. Please try again.';
       toast({ variant: 'destructive', title: 'Something went wrong', description: errorMessage });
-    } finally {
-      // Reset state if not successful, otherwise let the useEffect handle it on next open
-      if(submissionState !== 'success') {
-         setSubmissionState('idle');
-      }
-      setUploadProgress(null);
+      setSubmissionState('idle'); // Reset on error
     }
   };
   
-  const isSubmitting = submissionState === 'uploading' || submissionState === 'saving';
+  const isSubmitting = submissionState === 'saving' || submissionState === 'uploading';
 
   const getButtonText = () => {
     if (submissionState === 'uploading') return 'Uploading File...';
