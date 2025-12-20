@@ -19,9 +19,10 @@ import { Progress } from "@/components/ui/progress"
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Content, initialFormData } from './types';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { createOrUpdateContent, uploadFile } from '@/firebase/firestore/content';
 import { FirebaseError } from 'firebase/app';
+import { doc } from 'firebase/firestore';
 
 interface ContentFormProps {
   isOpen: boolean;
@@ -29,6 +30,11 @@ interface ContentFormProps {
   editingContent: Content | null;
   user: User;
 }
+
+type UserProfile = {
+  role: string;
+};
+
 
 type SubmissionState = 'idle' | 'uploading' | 'saving' | 'success' | 'error';
 
@@ -39,6 +45,13 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   const [submissionState, setSubmissionState] = useState<SubmissionState>('idle');
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
 
 
   useEffect(() => {
@@ -87,7 +100,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   };
 
   const handleSubmit = async () => {
-    if (!user || !firestore) return;
+    if (!user || !firestore || !userProfile) return;
     if (!formData.title || !formData.subject || !formData.content) {
       toast({ variant: 'destructive', title: 'Missing Fields', description: 'Please fill out Title, Subject, and Content.' });
       return;
@@ -117,6 +130,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
         ...filePayload,
         authorId: user.uid,
         authorName: user.displayName || 'Anonymous',
+        role: userProfile.role,
       };
       
       const documentId = editingContent?.id; // Will be undefined for new content

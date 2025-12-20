@@ -30,6 +30,7 @@ type ContentData = {
   content: string;
   authorId: string;
   authorName: string;
+  role: string;
   fileUrl?: string;
   fileType?: string;
 };

@@ -17,15 +17,14 @@ import {
   Menu,
   LayoutDashboard,
   FilePlus,
-  Trash2,
 } from 'lucide-react';
 
 import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
 
 import { Content } from './types';
-import ContentDisplay from './content-display';
 import ContentForm from './content-form';
+import ContentSection from './content-section';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -59,14 +58,25 @@ export default function CRDashboard() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
-
-  const contentQuery = useMemoFirebase(() => {
+  
+  // Query for the logged-in CR's own content
+  const myContentQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'content'), where('authorId', '==', user.uid));
   }, [firestore, user?.uid]);
 
-  const { data: contents, isLoading: isLoadingContent } = useCollection<Content>(contentQuery);
+  // Query for other CRs' content
+  const otherContentQuery = useMemoFirebase(() => {
+    if (!firestore || !user?.uid) return null;
+    return query(
+      collection(firestore, 'content'),
+      where('authorId', '!=', user.uid),
+      where('role', 'in', ['class-representative', 'senior'])
+    );
+  }, [firestore, user?.uid]);
 
+  const { data: myContents, isLoading: isLoadingMyContent } = useCollection<Content>(myContentQuery);
+  const { data: otherContents, isLoading: isLoadingOtherContent } = useCollection<Content>(otherContentQuery);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -140,13 +150,6 @@ export default function CRDashboard() {
       </div>
     );
   }
-
-  const sidebarNavItems = [
-      { title: 'Dashboard', href: '/class-representative/dashboard', icon: <LayoutDashboard /> },
-      { title: 'Class Notes', href: '/class-representative/notes', icon: <BookCopy /> },
-      { title: 'Important Questions', href: '/class-representative/important-questions', icon: <HelpCircle /> },
-      { title: 'PYQs', href: '/class-representative/pyq', icon: <FileText /> },
-  ];
   
   const SidebarContent = () => (
      <>
@@ -171,16 +174,6 @@ export default function CRDashboard() {
               >
                 <FilePlus />Add Content
               </Button>
-            {sidebarNavItems.slice(1).map(item => (
-                <Button
-                    key={item.title}
-                    variant='ghost'
-                    className="w-full justify-start text-base gap-3"
-                    asChild
-                >
-                    <Link href={item.href}>{item.icon}{item.title}</Link>
-                </Button>
-            ))}
         </nav>
         <div className="mt-auto p-4">
           <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
@@ -215,6 +208,7 @@ export default function CRDashboard() {
                <h1 className="text-xl font-semibold md:text-2xl">CR Dashboard</h1>
             </div>
           <div className="flex items-center gap-2 md:gap-4">
+             <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user.displayName || 'CR'}!</p>
             <Button variant="outline" size="sm" onClick={handleAddNew} className="gap-2">
                 <FilePlus className="h-4 w-4" /> Add New
             </Button>
@@ -222,12 +216,20 @@ export default function CRDashboard() {
           </div>
         </header>
 
-        <div className="flex-1 space-y-8 p-4 md:p-8">
-           <ContentDisplay 
-            contents={contents}
-            isLoading={isLoadingContent}
+        <div className="flex-1 space-y-12 p-4 md:p-8">
+           <ContentSection 
+            title="My Contributions"
+            contents={myContents}
+            isLoading={isLoadingMyContent}
             onEdit={handleEdit}
             onDelete={openDeleteDialog}
+            isEditable={true}
+          />
+           <ContentSection 
+            title="Other CR Contributions"
+            contents={otherContents}
+            isLoading={isLoadingOtherContent}
+            isEditable={false}
           />
         </div>
       </main>
