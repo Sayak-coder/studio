@@ -15,7 +15,6 @@ const ContentCard = ({ item }: ContentCardProps) => {
             "content-card group relative flex flex-col",
             "w-full max-w-[340px] h-[440px] md:w-[320px] md:h-[420px]",
             "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
-            "transition-all duration-300 hover:-translate-y-4 hover:scale-105 hover:shadow-2xl hover:z-10"
         )}
         tabIndex={0}
         data-ai-hint={item.imageHint}
@@ -37,7 +36,7 @@ const ContentCard = ({ item }: ContentCardProps) => {
         <Badge variant="secondary" className="mb-2 self-start bg-black/20 text-white backdrop-blur-sm">{item.type}</Badge>
         <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
         <p className="mt-1 text-sm text-muted-foreground">{item.subject}</p>
-        <p className="mt-4 flex-grow text-sm text-foreground/80 line-clamp-3">{item.description}</p>
+        <p className="mt-4 flex-grow text-sm text-foreground/80 line-clamp-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 translate-y-4 group-focus-within:opacity-100 group-focus-within:translate-y-0">{item.description}</p>
       </div>
     </div>
   );
