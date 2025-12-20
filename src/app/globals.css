@@ -90,6 +90,7 @@
   /* Custom scrollbar styles */
   .horizontal-scrollbar {
     overflow-x: auto;
+    overflow-y: visible; /* Allow vertical overflow for hover effect */
     &::-webkit-scrollbar {
       height: 8px;
     }
@@ -137,12 +138,12 @@
 
   /* Hover state for the entire card */
   .content-card:hover, .content-card:focus-within {
-    transform: translateY(-8px) translateZ(0) scale(1.05); /* Lift and Zoom effect */
-    /* Golden Glow Effect */
-    box-shadow: 
-      0 0 15px 5px rgba(255, 215, 0, 0.4), /* Outer golden glow */
-      0 0 5px 2px rgba(255, 223, 0, 0.6),  /* Inner golden glow */
-      0 16px 32px rgba(0,0,0,0.2);         /* Standard elevation shadow */
+    transform: translateY(-4px) translateZ(0) scale(1.05); /* Lift and Zoom effect */
+    /* Light color glow effect using the theme's primary color */
+    box-shadow:
+      0 0 15px 4px hsla(var(--primary) / 0.4), /* Outer glow */
+      0 0 5px 1px hsla(var(--primary) / 0.6),   /* Inner glow */
+      0 16px 32px rgba(0,0,0,0.2);          /* Standard elevation shadow */
   }
 
 
