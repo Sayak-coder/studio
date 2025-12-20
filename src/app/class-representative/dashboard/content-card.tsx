@@ -58,10 +58,12 @@ const ContentCard = ({ item, onEdit, onDelete, isEditable = false }: ContentCard
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <FileSymlink className="h-10 w-10 text-white"/>
                 </div>
+                 <div className="absolute inset-0 rounded-t-lg bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
              </a>
-         ) : null}
+         ) : (
+            <div className="absolute inset-0 rounded-t-lg bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+         )}
 
-        <div className="absolute inset-0 rounded-t-lg bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
       </div>
 
       <div className="relative flex flex-grow flex-col p-4">

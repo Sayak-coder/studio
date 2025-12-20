@@ -24,7 +24,7 @@ const ContentRow = ({ title, items, isLoading, onEdit, onDelete, isEditable }: C
     return (
       <section>
         <Skeleton className="h-8 w-1/3 mb-4" />
-        <div className="flex space-x-6">
+        <div className="flex space-x-6 pb-4">
           {[...Array(3)].map((_, j) => (
             <Skeleton key={j} className="h-[280px] w-[280px] rounded-lg" />
           ))}

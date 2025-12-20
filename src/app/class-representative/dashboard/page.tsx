@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import {
   collection,
   query,
-  where,
 } from 'firebase/firestore';
 import {
   LogOut,
@@ -28,7 +27,6 @@ import { deleteContent } from '@/firebase/firestore/content';
 import { Content } from './types';
 import ContentForm from './content-form';
 import ContentRow from './content-row';
-import ContentCard from './content-card';
 import GlobalSearch from './global-search';
 
 import { Button } from '@/components/ui/button';
@@ -39,6 +37,8 @@ import {
   SheetContent,
   SheetTrigger,
   SheetClose,
+  SheetHeader,
+  SheetTitle,
 } from '@/components/ui/sheet';
 import {
   Dialog,
@@ -57,6 +57,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import ContentCard from './content-card';
 
 export default function CRDashboard() {
   const router = useRouter();
@@ -169,48 +170,60 @@ export default function CRDashboard() {
           </Link>
         </div>
         <nav className="flex-1 space-y-2 p-4">
-            <Button
-                variant='secondary'
-                className="w-full justify-start text-base gap-3"
-                asChild
-            >
-              <Link href="/class-representative/dashboard"><LayoutDashboard />Dashboard</Link>
-            </Button>
-             <Button
-                variant='ghost'
-                className="w-full justify-start text-base gap-3"
-                onClick={handleAddNew}
-              >
-                <FilePlus />Add Content
-              </Button>
-              <Button
-                variant='ghost'
-                className="w-full justify-start text-base gap-3"
-                asChild
-              >
-                <Link href="#my-contributions"><User />My Contributions</Link>
-              </Button>
-              <Button
-                variant='ghost'
-                className="w-full justify-start text-base gap-3"
-                asChild
-              >
-                <Link href="#newly-added"><FileText />Newly Added Notes</Link>
-              </Button>
-              <Button
-                variant='ghost'
-                className="w-full justify-start text-base gap-3"
-                asChild
-              >
-                <Link href="#pyqs"><BookCopy />Current PYQs</Link>
-              </Button>
-              <Button
-                variant='ghost'
-                className="w-full justify-start text-base gap-3"
-                asChild
-              >
-                <Link href="#important-questions"><Star />Important Questions</Link>
-              </Button>
+              <SheetClose asChild>
+                <Button
+                    variant='secondary'
+                    className="w-full justify-start text-base gap-3"
+                    asChild
+                >
+                  <Link href="/class-representative/dashboard"><LayoutDashboard />Dashboard</Link>
+                </Button>
+              </SheetClose>
+              <SheetClose asChild>
+                 <Button
+                    variant='ghost'
+                    className="w-full justify-start text-base gap-3"
+                    onClick={handleAddNew}
+                  >
+                    <FilePlus />Add Content
+                  </Button>
+              </SheetClose>
+              <SheetClose asChild>
+                  <Button
+                    variant='ghost'
+                    className="w-full justify-start text-base gap-3"
+                    asChild
+                  >
+                    <Link href="#my-contributions"><User />My Contributions</Link>
+                  </Button>
+              </SheetClose>
+              <SheetClose asChild>
+                  <Button
+                    variant='ghost'
+                    className="w-full justify-start text-base gap-3"
+                    asChild
+                  >
+                    <Link href="#newly-added"><FileText />Newly Added Notes</Link>
+                  </Button>
+              </SheetClose>
+              <SheetClose asChild>
+                  <Button
+                    variant='ghost'
+                    className="w-full justify-start text-base gap-3"
+                    asChild
+                  >
+                    <Link href="#pyqs"><BookCopy />Current PYQs</Link>
+                  </Button>
+              </SheetClose>
+              <SheetClose asChild>
+                  <Button
+                    variant='ghost'
+                    className="w-full justify-start text-base gap-3"
+                    asChild
+                  >
+                    <Link href="#important-questions"><Star />Important Questions</Link>
+                  </Button>
+              </SheetClose>
         </nav>
         <div className="mt-auto p-4">
           <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
@@ -237,9 +250,10 @@ export default function CRDashboard() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="flex w-[280px] flex-col p-0">
-                    <SheetClose asChild>
-                      <SidebarContent />
-                    </SheetClose>
+                    <SheetHeader>
+                      <SheetTitle className="sr-only">Main Menu</SheetTitle>
+                    </SheetHeader>
+                    <SidebarContent />
                 </SheetContent>
               </Sheet>
                <h1 className="text-xl font-semibold md:hidden">EduBot CR</h1>
