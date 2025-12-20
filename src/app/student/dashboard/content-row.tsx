@@ -30,6 +30,34 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
     <section className="group/row relative py-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
+        <div className="flex items-center gap-2">
+           <Button
+            variant="outline"
+            size="icon"
+            onClick={scrollLeft}
+            disabled={!canScrollLeft}
+            className={cn(
+              'h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-50',
+              !canScrollLeft && 'opacity-50 cursor-not-allowed'
+            )}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={scrollRight}
+            disabled={!canScrollRight}
+            className={cn(
+              'h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-50',
+               !canScrollRight && 'opacity-50 cursor-not-allowed'
+            )}
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+        </div>
       </div>
 
       <div className="relative">
@@ -49,29 +77,6 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
             ))}
             </div>
         </div>
-        {/* Navigation Buttons */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={scrollLeft}
-          disabled={!canScrollLeft}
-          className={cn(
-            'absolute left-2 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm transition-opacity opacity-0 group-hover/row:opacity-100 disabled:opacity-0 cursor-pointer'
-          )}
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={scrollRight}
-          disabled={!canScrollRight}
-          className={cn(
-            'absolute right-2 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm transition-opacity opacity-0 group-hover/row:opacity-100 disabled:opacity-0 cursor-pointer'
-          )}
-        >
-          <ChevronRight className="h-6 w-6" />
-        </Button>
       </div>
     </section>
   );
