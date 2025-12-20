@@ -32,8 +32,8 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
             <div className="flex gap-2">
-                <CarouselPrevious className="relative translate-x-0 translate-y-0 top-0 left-0 static md:opacity-0 md:group-hover/row:opacity-100 transition-opacity" />
-                <CarouselNext className="relative translate-x-0 translate-y-0 top-0 right-0 static md:opacity-0 md:group-hover/row:opacity-100 transition-opacity" />
+                <CarouselPrevious className="relative translate-x-0 translate-y-0 top-0 left-0 static opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity" />
+                <CarouselNext className="relative translate-x-0 translate-y-0 top-0 right-0 static opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity" />
             </div>
         </div>
         <CarouselContent className="-ml-4">

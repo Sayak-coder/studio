@@ -24,7 +24,7 @@
       "subject": "Chemistry",
       "type": "Class Notes",
       "description": "A deep dive into the reactions and structures of organic compounds, essential for understanding life sciences.",
-      "imageUrl": "https://images.unsplash.com/photo-1562411053-c9ac630a5934?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjaGVtaXN0cnklMjBzY2llbmNlfGVufDB8fHx8MTc2NjE2MDkzN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1562411053-c9ac630a5934?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjaGVtaXN0cnklMjBzY2llbmNlfGVufDB8fHx8MTc2NjE2MDkzN3ww&ixlib  .rb-4.1.0&q=80&w=1080",
       "imageHint": "chemistry science"
     },
     {
@@ -35,6 +35,24 @@
       "description": "A comprehensive overview of the causes, major events, and consequences of the Second World War.",
       "imageUrl": "https://images.unsplash.com/photo-1688042972216-a9bae4c468a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx2aW50YWdlJTIwaGlzdG9yeXxlbnwwfHx8fDE3NjYxNzQ3Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "vintage history"
+    },
+    {
+      "id": "5",
+      "title": "Thermodynamics Basics",
+      "subject": "Physics",
+      "type": "Class Notes",
+      "description": "Understanding the laws of thermodynamics, energy, and entropy.",
+      "imageUrl": "https://images.unsplash.com/photo-1760043186309-69c11f4c08ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGh5c2ljcyUyMGVuZXJneXxlbnwwfHx8fDE3NjYyMDc1Mjl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "physics energy"
+    },
+    {
+      "id": "6",
+      "title": "Advanced Networking",
+      "subject": "Computer Science",
+      "type": "Class Notes",
+      "description": "Covering TCP/IP, routing protocols, and network security concepts.",
+      "imageUrl": "https://images.unsplash.com/photo-1650522697134-90d09ac584fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxuZXR3b3JrJTIwc2VydmVyfGVufDB8fHx8MTc2NjIwNDA5M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "network server"
     },
     {
       "id": "7",
@@ -55,6 +73,24 @@
       "imageHint": "algorithm flowchart"
     },
     {
+      "id": "9",
+      "title": "2022 Final: Electromagnetism",
+      "subject": "Physics",
+      "type": "PYQ",
+      "description": "Questions on Maxwell's equations, electromagnetic waves, and circuits.",
+      "imageUrl": "https://images.unsplash.com/photo-1633715588387-b588fb35b1ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxlbGVjdHJpY2l0eSUyMGNpcmN1aXR8ZW58MHx8fHwxNzY2MjA3NTI5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "electricity circuit"
+    },
+    {
+      "id": "10",
+      "title": "2022 Mid-Term: OS",
+      "subject": "Computer Science",
+      "type": "PYQ",
+      "description": "Operating systems concepts including processes, memory management, and concurrency.",
+      "imageUrl": "https://images.unsplash.com/photo-1620283085068-5aab84e2db8e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxvcGVyYXRpbmclMjBzeXN0ZW18ZW58MHx8fHwxNzY2MjA3NTI5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "operating system"
+    },
+    {
       "id": "11",
       "title": "Shakespeare's Sonnets",
       "subject": "English",
@@ -64,6 +100,15 @@
       "imageHint": "old book"
     },
     {
+      "id": "12",
+      "title": "The Derivative Test",
+      "subject": "Mathematics",
+      "type": "Important Question",
+      "description": "How to use the first and second derivative to find local extrema and inflection points.",
+      "imageUrl": "https://images.unsplash.com/photo-1758685848691-3933bc2aa3ce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjYWxjdWx1cyUyMG1hdGh8ZW58MHx8fHwxNzY2MjA3NTI5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "calculus math"
+    },
+    {
       "id": "13",
       "title": "Big O Notation Explained",
       "subject": "Computer Science",
@@ -71,6 +116,24 @@
       "description": "Master the concept of Big O notation to analyze and compare the efficiency of algorithms.",
       "imageUrl": "https://images.unsplash.com/photo-1758685734301-1e6ef045145f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjb21wbGV4aXR5JTIwZ3JhcGh8ZW58MHx8fHwxNzY2MTc0NzgxfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "complexity graph"
+    },
+    {
+      "id": "14",
+      "title": "The Cell Cycle",
+      "subject": "Biology",
+      "type": "Important Question",
+      "description": "Explain the phases of mitosis and meiosis and their significance.",
+      "imageUrl": "https://images.unsplash.com/photo-1576086085526-0de1930a57c7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjZWxsJTIwYmlvbG9neXxlbnwwfHx8fDE3NjYwODUxNzB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cell biology"
+    },
+    {
+      "id": "15",
+      "title": "Newton's Laws of Motion",
+      "subject": "Physics",
+      "type": "Important Question",
+      "description": "Describe Newton's three laws of motion and provide real-world examples for each.",
+      "imageUrl": "https://images.unsplash.com/photo-1644075364816-35befed6ff35?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxwaHlzaWNzJTIwbW90aW9ufGVufDB8fHx8MTc2NjIwNzUyOXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "physics motion"
     },
     {
       "id": "16",
@@ -89,6 +152,24 @@
       "description": "Learn about vectors, vector spaces, and linear transformations in this engaging video lecture.",
       "imageUrl": "https://images.unsplash.com/photo-1754304342501-54bad0a6d195?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtYXRoJTIwdmVjdG9yc3xlbnwwfHx8fDE3NjYxNzQ3Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "math vectors"
+    },
+    {
+      "id": "18",
+      "title": "History of Ancient Rome",
+      "subject": "History",
+      "type": "Video",
+      "description": "A documentary series exploring the rise and fall of the Roman Empire.",
+      "imageUrl": "https://images.unsplash.com/photo-1578301978577-5189c83839ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhbmNpZW50JTIwcm9tZXxlbnwwfHx8fDE3NjYyMDc1Mjl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ancient rome"
+    },
+    {
+      "id": "19",
+      "title": "The Human Brain",
+      "subject": "Biology",
+      "type": "Video",
+      "description": "An animated exploration of the different regions of the human brain and their functions.",
+      "imageUrl": "https://images.unsplash.com/photo-1572625259782-94ac200efcdb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxodW1hbiUyMGJyYWlufGVufDB8fHx8MTc2NjIwNzUyOXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "human brain"
     }
   ]
 }
