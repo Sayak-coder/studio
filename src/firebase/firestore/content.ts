@@ -152,7 +152,7 @@ export function uploadFile(
     // New path: content/{userId}/{contentId}/{originalFileName}
     const filePath = `content/${userId}/${contentId}/${file.name}`;
     const storageRef: StorageReference = ref(storage, filePath);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    const uploadTask = uploadBytesResumable(storageRef, file, { contentType: file.type });
 
     uploadTask.on(
       'state_changed',
