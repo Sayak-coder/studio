@@ -20,7 +20,6 @@ export default function Home() {
       description: 'Access notes, PYQs, and important questions before exams.',
       cta: 'Enter as Student',
       href: '/help/student',
-      hoverClass: 'animated-gradient-border',
     },
     {
       name: 'Class Representative (CR) Portal',
@@ -28,7 +27,6 @@ export default function Home() {
       description: 'Manage, verify, and upload academic content for your class.',
       cta: 'Enter as CR',
       href: '/help/class-representative',
-      hoverClass: 'animated-gradient-border',
     },
     {
       name: 'Senior Portal',
@@ -36,7 +34,6 @@ export default function Home() {
       description: 'Guide juniors with curated notes and exam-focused insights.',
       cta: 'Enter as Senior',
       href: '/help/senior',
-      hoverClass: 'animated-gradient-border',
     },
     {
       name: 'Official Portal',
@@ -44,7 +41,6 @@ export default function Home() {
       description: 'Access and manage all user data with administrative privileges.',
       cta: 'Enter as Official',
       href: '/help/official',
-      hoverClass: 'animated-gradient-border',
     },
   ];
 
@@ -105,7 +101,7 @@ export default function Home() {
               {portals.map((portal, index) => (
                 <Card
                   key={portal.name}
-                  className={`flex flex-col text-center bg-card/80 backdrop-blur-sm rounded-xl shadow-md transition-all duration-300 transform hover:-translate-y-2 ${portal.hoverClass} animate-fade-in-up`}
+                  className={`flex flex-col text-center bg-card/80 backdrop-blur-sm rounded-xl shadow-md transition-all duration-300 transform hover:-translate-y-2 animate-fade-in-up`}
                   style={{ animationDelay: `${index * 0.15}s` }}
                 >
                   <CardHeader className="items-center">
