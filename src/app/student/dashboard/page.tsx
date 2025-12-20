@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
     Book, 
     FileText, 
-    LogOut, 
+    LogOut, _
     Loader2, 
     BrainCircuit, 
     Video, 
