@@ -110,19 +110,21 @@ export default function StudentDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:pl-64 w-full overflow-hidden">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
-           <h1 className="text-2xl font-bold md:hidden">Student Dashboard</h1>
-           <div className="flex w-full max-w-2xl items-center gap-4">
-               <GlobalSearch onSearchChange={setFilteredData} />
-               <p className="hidden text-sm text-muted-foreground sm:block">
+      <main className="flex-1 w-full overflow-hidden md:pl-64">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm">
+          <div className="flex w-full max-w-lg items-center gap-4">
+              <h1 className="text-2xl font-bold md:hidden">EduBot</h1>
+              <GlobalSearch onSearchChange={setFilteredData} />
+          </div>
+          <div className="flex items-center gap-4">
+              <p className="hidden text-sm text-muted-foreground sm:block">
                 Welcome back, {user.displayName || 'Student'}!
               </p>
               <ThemeToggle />
-           </div>
+          </div>
         </header>
 
-        <div className="flex-1 space-y-12 p-8 sm:p-4 md:p-8">
+        <div className="flex-1 space-y-4 p-4 md:p-8">
             {filteredData !== null && filteredData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
                     <h3 className="text-2xl font-bold tracking-tight">No Results Found</h3>
