@@ -20,6 +20,9 @@ import ContentRow from './content-row';
 import ContentCard from './content-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import GlobalSearch from './global-search';
+import { cn } from '@/lib/utils';
+
+type Category = ImagePlaceholder['type'] | 'All';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -27,6 +30,7 @@ export default function StudentDashboard() {
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
   const [filteredData, setFilteredData] = useState<ImagePlaceholder[] | null>(null);
+  const [activeCategory, setActiveCategory] = useState<Category>('All');
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
@@ -53,11 +57,27 @@ export default function StudentDashboard() {
       });
     }
   };
+
+  const handleCategoryClick = (category: Category) => {
+    setActiveCategory(category);
+    // When a category is clicked, we should clear the search results
+    setFilteredData(null); 
+  };
   
   const newlyAdded = PlaceHolderImages.filter(item => item.type === 'Class Notes');
   const currentYearPYQs = PlaceHolderImages.filter(item => item.type === 'PYQ');
   const mostImportant = PlaceHolderImages.filter(item => item.type === 'Important Question');
   const continueWatching = PlaceHolderImages.filter(item => item.type === 'Video');
+  
+  const categoryContent = activeCategory !== 'All' 
+    ? PlaceHolderImages.filter(item => item.type === activeCategory) 
+    : [];
+
+  const getCategoryTitle = () => {
+    if(activeCategory === 'PYQ') return "Previous Year Questions";
+    if(activeCategory === 'Important Question') return "Important Questions";
+    return activeCategory;
+  }
 
 
   if (isUserLoading || !user) {
@@ -67,6 +87,14 @@ export default function StudentDashboard() {
       </div>
     );
   }
+  
+  const sidebarButtons = [
+    { name: 'Dashboard', icon: <LayoutDashboard />, category: 'All' as Category },
+    { name: 'Class Notes', icon: <FileText />, category: 'Class Notes' as Category },
+    { name: 'PYQs', icon: <Book />, category: 'PYQ' as Category },
+    { name: 'Important Questions', icon: <Star />, category: 'Important Question' as Category },
+    { name: 'Video Links', icon: <Video />, category: 'Video' as Category },
+  ];
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -79,26 +107,17 @@ export default function StudentDashboard() {
           </Link>
         </div>
         <nav className="flex-1 space-y-2 p-4">
-          <Button variant="ghost" className="w-full justify-start text-base gap-3">
-            <LayoutDashboard />
-            Dashboard
-          </Button>
-          <Button variant="ghost" className="w-full justify-start text-base gap-3">
-            <FileText />
-            Class Notes
-          </Button>
-          <Button variant="ghost" className="w-full justify-start text-base gap-3">
-            <Book />
-            PYQs
-          </Button>
-          <Button variant="ghost" className="w-full justify-start text-base gap-3">
-            <Star />
-            Important Questions
-          </Button>
-          <Button variant="ghost" className="w-full justify-start text-base gap-3">
-            <Video />
-            Video Links
-          </Button>
+          {sidebarButtons.map(btn => (
+             <Button 
+                key={btn.name} 
+                variant={activeCategory === btn.category ? 'secondary' : 'ghost'} 
+                className="w-full justify-start text-base gap-3"
+                onClick={() => handleCategoryClick(btn.category)}
+            >
+              {btn.icon}
+              {btn.name}
+            </Button>
+          ))}
         </nav>
         <div className="mt-auto p-4">
           <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
@@ -124,11 +143,11 @@ export default function StudentDashboard() {
 
         <div className="flex-1 space-y-4 p-4 md:p-8">
             {filteredData !== null ? (
-              // Search is active, show search results
+              // 1. Search is active: show search results
               <div className="py-4">
                 <h2 className="text-3xl font-bold tracking-tight">Search Results</h2>
                 {filteredData.length > 0 ? (
-                  <div className="mt-6 flex flex-wrap gap-6">
+                  <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
                     {filteredData.map((item) => (
                        <div key={item.id} className="py-4">
                          <ContentCard item={item} />
@@ -142,8 +161,27 @@ export default function StudentDashboard() {
                   </div>
                 )}
               </div>
+            ) : activeCategory !== 'All' ? (
+              // 2. A category is selected: show category results
+              <div className="py-4">
+                <h2 className="text-3xl font-bold tracking-tight">{getCategoryTitle()}</h2>
+                 {categoryContent.length > 0 ? (
+                    <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+                      {categoryContent.map((item) => (
+                        <div key={item.id} className="py-4">
+                          <ContentCard item={item} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                     <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
+                        <h3 className="text-2xl font-bold tracking-tight">No Content Yet</h3>
+                        <p className="text-muted-foreground mt-2">There is no content available in this category.</p>
+                    </div>
+                  )}
+              </div>
             ) : (
-                // No search, show default content rows
+                // 3. Default view: show all content rows
                 <>
                     <ContentRow title="Newly Added Notes" items={newlyAdded} />
                     <ContentRow title="Current Year's PYQs" items={currentYearPYQs} />
