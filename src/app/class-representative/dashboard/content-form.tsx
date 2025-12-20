@@ -129,16 +129,33 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
       // Now, handle the file upload in the background if a file was selected.
       if (fileToUpload) {
         setSubmissionState('uploading');
-        setUploadProgress(0);
-        await handleBackgroundUpload(firestore, user.uid, documentId, fileToUpload, setUploadProgress);
-        toast({
-          title: 'Upload Complete',
-          description: `Your file "${fileToUpload.name}" has been attached.`,
-        });
+        // This is NOT awaited. It runs in the background.
+        handleBackgroundUpload(firestore, user.uid, documentId, fileToUpload, 
+          // Progress callback
+          (progress) => {
+            setUploadProgress(progress);
+          },
+          // Completion callback
+          () => {
+             toast({
+              title: 'Upload Complete',
+              description: `Your file "${fileToUpload.name}" has been attached.`,
+            });
+            setSubmissionState('success');
+            onClose(); // Close the form on successful upload
+          },
+          // Error callback
+          (uploadError) => {
+             console.error("Background upload failed:", uploadError);
+             toast({ variant: 'destructive', title: 'Upload Failed', description: 'Your file could not be attached. Please try editing the content to upload it again.' });
+             setSubmissionState('error');
+          }
+        );
+         // Don't close form immediately, let it close on upload completion
+      } else {
+         setSubmissionState('success');
+         onClose();
       }
-
-      setSubmissionState('success');
-      onClose();
 
     } catch (error) {
       setSubmissionState('error');

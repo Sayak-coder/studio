@@ -31,8 +31,6 @@ type ContentData = {
   authorId: string;
   authorName: string;
   role: string;
-  fileUrl?: string;
-  fileType?: string;
 };
 
 /**
@@ -100,14 +98,17 @@ export async function createOrUpdateContent(
  * @param docId The ID of the document to associate the file with.
  * @param file The file to be uploaded.
  * @param onProgress A callback function to track upload progress.
- * @returns A promise that resolves when the upload and document update are complete.
+ * @param onComplete A callback function for when the upload succeeds.
+ * @param onError A callback function for when the upload fails.
  */
 export async function handleBackgroundUpload(
   firestore: Firestore,
   userId: string,
   docId: string,
   file: File,
-  onProgress: (progress: number) => void
+  onProgress: (progress: number) => void,
+  onComplete: () => void,
+  onError: (error: Error) => void
 ): Promise<void> {
     try {
         const { downloadURL, fileType } = await uploadFile(userId, docId, file, onProgress);
@@ -122,22 +123,12 @@ export async function handleBackgroundUpload(
             updatedAt: serverTimestamp(),
         };
 
-        await updateDoc(contentDocRef, updatePayload).catch((serverError) => {
-           errorEmitter.emit(
-              'permission-error',
-              new FirestorePermissionError({
-                path: contentDocRef.path,
-                operation: 'update',
-                requestResourceData: updatePayload,
-              })
-            );
-            throw serverError;
-        });
+        await updateDoc(contentDocRef, updatePayload);
+        onComplete();
 
     } catch (error) {
         console.error("Background upload or document update failed:", error);
-        // Re-throw to be handled by the calling UI component
-        throw error;
+        onError(error as Error);
     }
 }
 
@@ -157,7 +148,6 @@ export function uploadFile(
   onProgress: (progress: number) => void
 ): Promise<{ downloadURL: string; fileType: string }> {
   return new Promise((resolve, reject) => {
-    // New path: content/{userId}/{contentId}/{originalFileName}
     const filePath = `content/${userId}/${contentId}/${file.name}`;
     const storageRef: StorageReference = ref(storage, filePath);
     const uploadTask = uploadBytesResumable(storageRef, file, { contentType: file.type });
