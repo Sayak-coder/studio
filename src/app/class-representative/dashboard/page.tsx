@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,7 @@ import {
   BrainCircuit,
   Menu,
   LayoutDashboard,
+  FilePlus,
 } from 'lucide-react';
 
 import { useUser, useFirebase } from '@/firebase';
@@ -26,6 +27,9 @@ import {
   SheetTrigger,
   SheetClose
 } from '@/components/ui/sheet';
+import ContentForm from './content-form';
+import { Content } from './types';
+
 
 const dashboardItems = [
   {
@@ -53,6 +57,9 @@ export default function CRDashboard() {
   const { toast } = useToast();
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingContent, setEditingContent] = useState<Content | null>(null);
+
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -80,6 +87,17 @@ export default function CRDashboard() {
     }
   };
 
+  const handleAddNew = () => {
+    setEditingContent(null);
+    setIsFormOpen(true);
+  }
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setEditingContent(null);
+  }
+
+
   if (isUserLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -105,6 +123,13 @@ export default function CRDashboard() {
             >
               <Link href="/class-representative/dashboard"><LayoutDashboard />Dashboard</Link>
             </Button>
+             <Button
+                variant='ghost'
+                className="w-full justify-start text-base gap-3"
+                onClick={handleAddNew}
+              >
+                <FilePlus />Add Content
+              </Button>
             {dashboardItems.map(item => (
                 <Button
                     key={item.title}
@@ -155,6 +180,15 @@ export default function CRDashboard() {
                                 asChild
                                 >
                                 <Link href="/class-representative/dashboard"><LayoutDashboard />Dashboard</Link>
+                            </Button>
+                        </SheetClose>
+                         <SheetClose asChild>
+                            <Button
+                                variant='ghost'
+                                className="w-full justify-start text-base gap-3"
+                                onClick={handleAddNew}
+                                >
+                                <FilePlus />Add Content
                             </Button>
                         </SheetClose>
                         {dashboardItems.map(item => (
@@ -210,6 +244,13 @@ export default function CRDashboard() {
             </div>
         </div>
       </main>
+      
+       <ContentForm 
+          isOpen={isFormOpen}
+          onClose={closeForm}
+          editingContent={editingContent}
+          user={user}
+       />
     </div>
   );
 }
