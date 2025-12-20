@@ -18,7 +18,8 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
     scrollLeft, 
     scrollRight, 
     canScrollLeft, 
-    canScrollRight 
+    canScrollRight,
+    scrollAmount,
   } = useHorizontalScroll(items.length);
 
   if (!items || items.length === 0) {
@@ -32,13 +33,14 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
       </div>
 
       <div className="relative">
-        <div
-          ref={scrollContainerRef}
-          className="overflow-hidden"
-        >
+        <div className="overflow-hidden">
             <div
-            className="flex flex-nowrap gap-6 transition-transform duration-500 ease-in-out"
-            style={{ willChange: 'transform' }}
+                ref={scrollContainerRef}
+                className="flex flex-nowrap gap-6 transition-transform duration-500 ease-in-out"
+                style={{
+                    transform: `translateX(-${scrollAmount}px)`,
+                    willChange: 'transform',
+                }}
             >
             {items.map((item, index) => (
                 <div key={index} className="flex-shrink-0">
