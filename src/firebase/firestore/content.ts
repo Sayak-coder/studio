@@ -7,13 +7,13 @@ import {
   deleteDoc,
   serverTimestamp,
   type Firestore,
-  writeBatch,
 } from 'firebase/firestore';
 import {
   getStorage,
   ref,
   uploadBytesResumable,
   getDownloadURL,
+  type StorageReference,
 } from 'firebase/storage';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -34,59 +34,6 @@ type ContentData = {
   fileUrl?: string;
   fileType?: string;
 };
-
-/**
- * Uploads a file to Firebase Storage and updates the corresponding Firestore document.
- * This is now a separate function to be called after the document is created.
- * @param firestore - The Firestore instance.
- * @param userId - The ID of the user uploading the file.
- * @param docId - The ID of the Firestore document to update with the URL.
- * @param file - The file to upload.
- * @param onProgress - Callback to report upload progress.
- * @returns A promise that resolves when the upload and update are complete.
- */
-function uploadFileAndUpdateDoc(
-  firestore: Firestore,
-  userId: string,
-  docId: string,
-  file: File,
-  onProgress: (progress: number) => void
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const filePath = `content/${userId}/${docId}-${file.name}`;
-    const storageRef = ref(storage, filePath);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        onProgress(progress);
-      },
-      (error) => {
-        console.error('Upload failed:', error);
-        reject(error);
-      },
-      async () => {
-        try {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
-          await updateDoc(contentDocRef, {
-            fileUrl: downloadURL,
-            fileType: file.type,
-            updatedAt: serverTimestamp(),
-          });
-          resolve();
-        } catch (updateError) {
-          console.error('Firestore update failed after upload:', updateError);
-          reject(updateError);
-        }
-      }
-    );
-  });
-}
-
 
 /**
  * Creates or updates a content document in Firestore.
@@ -156,19 +103,20 @@ export async function handleBackgroundUpload(
   onProgress: (progress: number) => void
 ): Promise<void> {
     try {
-        const { downloadURL, fileType } = await uploadFile(userId, file, onProgress);
+        const { downloadURL, fileType } = await uploadFile(userId, docId, file, onProgress);
         const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
         
         await updateDoc(contentDocRef, {
             fileUrl: downloadURL,
             fileType: fileType,
+            fileName: file.name,
+            fileSize: file.size,
             updatedAt: serverTimestamp(),
         });
 
     } catch (error) {
         console.error("Background upload or update failed:", error);
-        // Optionally, handle the error more gracefully, e.g., by updating the UI
-        // For now, we'll re-throw to be consistent with existing patterns
+        // Re-throw to be handled by the calling UI component
         throw error;
     }
 }
@@ -177,26 +125,27 @@ export async function handleBackgroundUpload(
 /**
  * Uploads a file to Firebase Storage.
  * @param userId - The ID of the user uploading the file.
+ * @param contentId - The ID of the content document.
  * @param file - The file to upload.
  * @param onProgress - Callback to report upload progress.
  * @returns A promise that resolves with the download URL and file type.
  */
 export function uploadFile(
   userId: string,
+  contentId: string,
   file: File,
   onProgress: (progress: number) => void
 ): Promise<{ downloadURL: string; fileType: string }> {
   return new Promise((resolve, reject) => {
-    // We use the docId in the path to ensure a stable and unique file path
-    const filePath = `content/${userId}/${file.name}-${Date.now()}`;
-    const storageRef = ref(storage, filePath);
+    // New path: contents/{userId}/{contentId}/{originalFileName}
+    const filePath = `content/${userId}/${contentId}/${file.name}`;
+    const storageRef: StorageReference = ref(storage, filePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     uploadTask.on(
       'state_changed',
       (snapshot) => {
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         onProgress(progress);
       },
       (error) => {

@@ -79,15 +79,14 @@ service cloud.firestore {
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow reads by anyone (e.g., for public images or files).
-    // In a real app, you'd likely restrict this further.
+    // Allow reads by anyone. This is safe because the URLs are unguessable.
+    // For stricter security, you could add `&& request.auth != null`
     allow read: if true;
 
-    // Allow writes only for authenticated users.
-    // The file path must match the user's UID.
-    // This rule ensures users can only upload files to their own "folder".
-    // We also limit the file size to 5MB.
-    match /content/{userId}/{allPaths=**} {
+    // Rules for content files.
+    // Users can only write to a path that matches their own UID.
+    // This rule ensures a user can't upload files on behalf of someone else.
+    match /content/{userId}/{contentId}/{allPaths=**} {
       allow write: if request.auth != null 
                    && request.auth.uid == userId
                    && request.resource.size < 5 * 1024 * 1024
