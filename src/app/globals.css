@@ -90,25 +90,30 @@
   /* Custom scrollbar styles */
   .horizontal-scrollbar {
     overflow-x: auto;
-    overflow-y: hidden; /* Prevent vertical clipping */
-    &::-webkit-scrollbar {
-      height: 8px;
-    }
-    &::-webkit-scrollbar-track {
-      background: hsl(var(--secondary) / 0.5);
-      border-radius: 10px;
-    }
-    &::-webkit-scrollbar-thumb {
-      background: hsl(var(--muted-foreground) / 0.5);
-      border-radius: 10px;
-      transition: background 0.3s;
-    }
-    &::-webkit-scrollbar-thumb:hover {
-      background: hsl(var(--muted-foreground));
-    }
+    overflow-y: hidden;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .horizontal-scrollbar::-webkit-scrollbar {
+    height: 8px;
+  }
+  .horizontal-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--secondary) / 0.5);
+    border-radius: 10px;
+  }
+  .horizontal-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.5);
+    border-radius: 10px;
+    transition: background 0.3s;
+  }
+  .horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+  .horizontal-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted-foreground) / 0.5) hsl(var(--secondary) / 0.5);
   }
+
 
   /* New Futuristic Glassmorphism Card Styles */
   .content-card {
