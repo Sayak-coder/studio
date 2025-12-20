@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -8,18 +8,18 @@ import {
   where,
 } from 'firebase/firestore';
 import {
-  BookCopy,
-  FileText,
   LogOut,
   Loader2,
-  HelpCircle,
   BrainCircuit,
   Menu,
-  LayoutDashboard,
   FilePlus,
   User,
   Users,
+  FileText,
+  BookCopy,
   Star,
+  LayoutDashboard,
+  Search
 } from 'lucide-react';
 
 import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -27,7 +27,10 @@ import { deleteContent } from '@/firebase/firestore/content';
 
 import { Content } from './types';
 import ContentForm from './content-form';
-import ContentSection from './content-section';
+import ContentRow from './content-row';
+import ContentCard from './content-card';
+import GlobalSearch from './global-search';
+
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -35,8 +38,15 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
-  SheetClose
+  SheetClose,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,30 +72,24 @@ export default function CRDashboard() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
   
-  // Query for the logged-in CR's own content
-  const myContentQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
-    return query(collection(firestore, 'content'), where('authorId', '==', user.uid));
-  }, [firestore, user?.uid]);
+  const [filteredData, setFilteredData] = useState<Content[] | null>(null);
 
-  // Query for other users' content
-  const otherContentQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
-    return query(
-      collection(firestore, 'content'),
-      where('authorId', '!=', user.uid)
-    );
-  }, [firestore, user?.uid]);
+  const allContentQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'content'));
+  }, [firestore]);
 
-  const { data: myContents, isLoading: isLoadingMyContent } = useCollection<Content>(myContentQuery);
-  const { data: otherContents, isLoading: isLoadingOtherContent } = useCollection<Content>(otherContentQuery);
+  const { data: allContents, isLoading: isLoadingAllContent } = useCollection<Content>(allContentQuery);
+  
+  const myContents = useMemo(() => allContents?.filter(c => c.authorId === user?.uid) || [], [allContents, user?.uid]);
+  const otherContents = useMemo(() => allContents?.filter(c => c.authorId !== user?.uid) || [], [allContents, user?.uid]);
 
   const otherNotes = useMemo(() => otherContents?.filter(c => c.type === 'Class Notes') || [], [otherContents]);
   const otherPyqs = useMemo(() => otherContents?.filter(c => c.type === 'PYQ') || [], [otherContents]);
   const otherImpQs = useMemo(() => otherContents?.filter(c => c.type === 'Important Question') || [], [otherContents]);
 
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/auth/signin/class-representative');
     }
@@ -142,14 +146,12 @@ export default function CRDashboard() {
     }
   }
 
-
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingContent(null);
   }
 
-
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || isLoadingAllContent) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -219,7 +221,7 @@ export default function CRDashboard() {
   );
 
   return (
-    <div className="flex min-h-screen bg-secondary/30 text-foreground">
+    <div className="flex min-h-screen bg-background text-foreground">
        <aside className="fixed left-0 top-0 hidden h-full w-64 flex-col border-r bg-card shadow-lg md:flex">
           <SidebarContent />
       </aside>
@@ -240,52 +242,95 @@ export default function CRDashboard() {
                     </SheetClose>
                 </SheetContent>
               </Sheet>
-               <h1 className="text-xl font-semibold md:text-2xl">CR Dashboard</h1>
+               <h1 className="text-xl font-semibold md:hidden">EduBot CR</h1>
             </div>
-          <div className="flex items-center gap-2 md:gap-4">
-             <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user.displayName || 'CR'}!</p>
-            <Button variant="outline" size="sm" onClick={handleAddNew} className="gap-2">
-                <FilePlus className="h-4 w-4" /> Add New
-            </Button>
-            <ThemeToggle />
-          </div>
+          
+            <div className="hidden w-full max-w-lg items-center gap-4 md:flex">
+              <GlobalSearch onSearchChange={setFilteredData} allContent={allContents || []} />
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-4">
+              <Dialog>
+                <DialogTrigger asChild>
+                   <Button variant="ghost" size="icon" className="md:hidden">
+                    <Search className="h-6 w-6" />
+                    <span className="sr-only">Search</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="top-[25%]">
+                   <DialogHeader>
+                      <DialogTitle>Global Search</DialogTitle>
+                   </DialogHeader>
+                   <GlobalSearch onSearchChange={setFilteredData} allContent={allContents || []} />
+                </DialogContent>
+              </Dialog>
+              <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user.displayName || 'CR'}!</p>
+              <ThemeToggle />
+            </div>
         </header>
 
         <div className="flex-1 space-y-12 p-4 md:p-8">
-           <div id="my-contributions">
-              <ContentSection 
-                title="My Contributions"
-                contents={myContents}
-                isLoading={isLoadingMyContent}
-                onEdit={handleEdit}
-                onDelete={openDeleteDialog}
-                isEditable={true}
-              />
-           </div>
-           <div id="newly-added">
-              <ContentSection 
-                title="Newly Added Notes"
-                contents={otherNotes}
-                isLoading={isLoadingOtherContent}
-                isEditable={false}
-              />
-           </div>
-            <div id="pyqs">
-              <ContentSection
-                title="Current PYQs"
-                contents={otherPyqs}
-                isLoading={isLoadingOtherContent}
-                isEditable={false}
-              />
+          {filteredData !== null ? (
+            <div className="py-4">
+              <h2 className="text-3xl font-bold tracking-tight">Search Results</h2>
+              {filteredData.length > 0 ? (
+                 <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {filteredData.map((item) => (
+                      <div key={item.id} className="py-4 flex justify-center">
+                        <ContentCard 
+                          item={item} 
+                          onEdit={handleEdit}
+                          onDelete={openDeleteDialog}
+                          isEditable={item.authorId === user.uid}
+                        />
+                      </div>
+                    ))}
+                  </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
+                  <h3 className="text-2xl font-bold tracking-tight">No Results Found</h3>
+                  <p className="text-muted-foreground mt-2">Try adjusting your search terms.</p>
+                </div>
+              )}
             </div>
-            <div id="important-questions">
-              <ContentSection
-                title="Important Questions"
-                contents={otherImpQs}
-                isLoading={isLoadingOtherContent}
-                isEditable={false}
-              />
-            </div>
+          ) : (
+            <>
+              <div id="my-contributions">
+                <ContentRow
+                  title="My Contributions"
+                  items={myContents}
+                  isLoading={isLoadingAllContent}
+                  onEdit={handleEdit}
+                  onDelete={openDeleteDialog}
+                  isEditable={true}
+                />
+              </div>
+              <div id="newly-added">
+                <ContentRow 
+                  title="Newly Added Notes"
+                  items={otherNotes}
+                  isLoading={isLoadingAllContent}
+                  isEditable={false}
+                />
+              </div>
+              <div id="pyqs">
+                <ContentRow
+                  title="Current PYQs"
+                  items={otherPyqs}
+                  isLoading={isLoadingAllContent}
+                  isEditable={false}
+                />
+              </div>
+              <div id="important-questions">
+                <ContentRow
+                  title="Important Questions"
+                  items={otherImpQs}
+                  isLoading={isLoadingAllContent}
+                  isEditable={false}
+                />
+              </div>
+            </>
+          )}
         </div>
       </main>
       
