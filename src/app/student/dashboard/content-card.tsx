@@ -10,20 +10,18 @@ interface ContentCardProps {
 
 const ContentCard = ({ item }: ContentCardProps) => {
   return (
-    <div 
-        className={cn(
-            "content-card group relative flex flex-col",
-            "w-full max-w-[340px] md:w-[320px]",
-            "focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background",
-        )}
-        tabIndex={0}
-        data-ai-hint={item.imageHint}
+    <div
+      className={cn(
+        'content-card group relative flex flex-col',
+        'w-full max-w-[300px] md:w-[280px]',
+        'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background'
+      )}
+      tabIndex={0}
+      data-ai-hint={item.imageHint}
     >
       <div className="card-glass-pane absolute inset-0 rounded-[inherit]"></div>
-      
-       <div className="card-glow-border"></div>
 
-      <div className="relative h-[220px] w-full flex-shrink-0">
+      <div className="relative h-[180px] w-full flex-shrink-0">
         <img
           src={item.imageUrl}
           alt={item.title}
@@ -31,18 +29,25 @@ const ContentCard = ({ item }: ContentCardProps) => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
       </div>
-      
-      <div className="relative flex flex-col flex-grow p-4">
+
+      <div className="relative flex flex-grow flex-col p-4">
         <div>
-            <Badge variant="secondary" className="mb-2 self-start bg-black/20 text-white backdrop-blur-sm">{item.type}</Badge>
-            <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{item.subject}</p>
+          <Badge
+            variant="secondary"
+            className="mb-2 self-start bg-black/20 text-white backdrop-blur-sm"
+          >
+            {item.type}
+          </Badge>
+          <h3 className="text-lg font-bold text-foreground">{item.title}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{item.subject}</p>
         </div>
-        
+
         <div className="flex-grow" />
 
         <div className="max-h-0 opacity-0 transition-all duration-300 ease-in-out group-hover:max-h-40 group-hover:opacity-100">
-             <p className="mt-4 text-sm text-foreground/80 transition-opacity duration-300 ease-in-out delay-100 group-hover:opacity-100">{item.description}</p>
+          <p className="mt-4 text-sm text-foreground/80 transition-opacity delay-100 duration-300 ease-in-out group-hover:opacity-100">
+            {item.description}
+          </p>
         </div>
       </div>
     </div>
