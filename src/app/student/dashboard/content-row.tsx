@@ -71,7 +71,7 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
                 }}
             >
             {items.map((item, index) => (
-                <div key={index} className="flex-shrink-0">
+                <div key={index} className="flex-shrink-0 py-2">
                 <ContentCard item={item} />
                 </div>
             ))}
