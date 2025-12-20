@@ -138,9 +138,9 @@ export default function SubjectPage() {
                 {subjectName} {categoryInfo.title}
             </h1>
             {contentForSubject.length > 0 ? (
-                <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+                <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {contentForSubject.map((item) => (
-                        <div key={item.id} className="py-4">
+                        <div key={item.id} className="py-4 flex justify-center">
                             <ContentCard item={item} />
                         </div>
                     ))}

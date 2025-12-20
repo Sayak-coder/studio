@@ -20,13 +20,13 @@ const SubjectSection = ({ subject, items, category }: SubjectSectionProps) => {
   const categorySlug = category.toLowerCase().replace(/\s+/g, '-');
 
   return (
-    <div className="py-6">
+    <div className="py-2">
       <Link href={`/student/${categorySlug}/${subjectSlug}`} passHref>
         <h2 className="text-3xl font-bold tracking-tight mb-4 hover:text-primary transition-colors cursor-pointer">
-          {subject} {categoryTitle}
+          {subject}
         </h2>
       </Link>
-      <ContentRow items={items} />
+      <ContentRow title={`${subject} ${categoryTitle}`} items={items} />
     </div>
   );
 };
