@@ -106,7 +106,7 @@ export default function StudentDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:pl-64">
+      <main className="flex-1 md:pl-64 max-w-full overflow-x-hidden">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
            <h1 className="text-2xl font-bold md:hidden">Student Dashboard</h1>
            <div className="flex items-center gap-4">
