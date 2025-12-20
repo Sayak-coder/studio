@@ -58,6 +58,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ContentCard from './content-card';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 export default function CRDashboard() {
   const router = useRouter();
@@ -170,60 +171,48 @@ export default function CRDashboard() {
           </Link>
         </div>
         <nav className="flex-1 space-y-2 p-4">
-              <SheetClose asChild>
-                <Button
-                    variant='secondary'
-                    className="w-full justify-start text-base gap-3"
-                    asChild
+              <Button
+                  variant='secondary'
+                  className="w-full justify-start text-base gap-3"
+                  asChild
+              >
+                <Link href="/class-representative/dashboard"><LayoutDashboard />Dashboard</Link>
+              </Button>
+               <Button
+                  variant='ghost'
+                  className="w-full justify-start text-base gap-3"
+                  onClick={handleAddNew}
                 >
-                  <Link href="/class-representative/dashboard"><LayoutDashboard />Dashboard</Link>
+                  <FilePlus />Add Content
                 </Button>
-              </SheetClose>
-              <SheetClose asChild>
-                 <Button
-                    variant='ghost'
-                    className="w-full justify-start text-base gap-3"
-                    onClick={handleAddNew}
-                  >
-                    <FilePlus />Add Content
-                  </Button>
-              </SheetClose>
-              <SheetClose asChild>
-                  <Button
-                    variant='ghost'
-                    className="w-full justify-start text-base gap-3"
-                    asChild
-                  >
-                    <Link href="#my-contributions"><User />My Contributions</Link>
-                  </Button>
-              </SheetClose>
-              <SheetClose asChild>
-                  <Button
-                    variant='ghost'
-                    className="w-full justify-start text-base gap-3"
-                    asChild
-                  >
-                    <Link href="#newly-added"><FileText />Newly Added Notes</Link>
-                  </Button>
-              </SheetClose>
-              <SheetClose asChild>
-                  <Button
-                    variant='ghost'
-                    className="w-full justify-start text-base gap-3"
-                    asChild
-                  >
-                    <Link href="#pyqs"><BookCopy />Current PYQs</Link>
-                  </Button>
-              </SheetClose>
-              <SheetClose asChild>
-                  <Button
-                    variant='ghost'
-                    className="w-full justify-start text-base gap-3"
-                    asChild
-                  >
-                    <Link href="#important-questions"><Star />Important Questions</Link>
-                  </Button>
-              </SheetClose>
+                <Button
+                  variant='ghost'
+                  className="w-full justify-start text-base gap-3"
+                  asChild
+                >
+                  <Link href="#my-contributions"><User />My Contributions</Link>
+                </Button>
+                <Button
+                  variant='ghost'
+                  className="w-full justify-start text-base gap-3"
+                  asChild
+                >
+                  <Link href="#newly-added"><FileText />Newly Added Notes</Link>
+                </Button>
+                <Button
+                  variant='ghost'
+                  className="w-full justify-start text-base gap-3"
+                  asChild
+                >
+                  <Link href="#pyqs"><BookCopy />Current PYQs</Link>
+                </Button>
+                <Button
+                  variant='ghost'
+                  className="w-full justify-start text-base gap-3"
+                  asChild
+                >
+                  <Link href="#important-questions"><Star />Important Questions</Link>
+                </Button>
         </nav>
         <div className="mt-auto p-4">
           <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
@@ -232,6 +221,79 @@ export default function CRDashboard() {
         </div>
       </>
   );
+
+  const MobileSidebarContent = () => (
+    <>
+       <div className="flex h-16 items-center border-b px-6">
+         <Link href="/" className="flex items-center gap-2 font-semibold">
+           <BrainCircuit className="h-8 w-8 text-primary" />
+           <span className="text-xl font-bold">EduBot CR</span>
+         </Link>
+       </div>
+       <nav className="flex-1 space-y-2 p-4">
+             <SheetClose asChild>
+               <Button
+                   variant='secondary'
+                   className="w-full justify-start text-base gap-3"
+                   asChild
+               >
+                 <Link href="/class-representative/dashboard"><LayoutDashboard />Dashboard</Link>
+               </Button>
+             </SheetClose>
+             <SheetClose asChild>
+                <Button
+                   variant='ghost'
+                   className="w-full justify-start text-base gap-3"
+                   onClick={handleAddNew}
+                 >
+                   <FilePlus />Add Content
+                 </Button>
+             </SheetClose>
+             <SheetClose asChild>
+                 <Button
+                   variant='ghost'
+                   className="w-full justify-start text-base gap-3"
+                   asChild
+                 >
+                   <Link href="#my-contributions"><User />My Contributions</Link>
+                 </Button>
+             </SheetClose>
+             <SheetClose asChild>
+                 <Button
+                   variant='ghost'
+                   className="w-full justify-start text-base gap-3"
+                   asChild
+                 >
+                   <Link href="#newly-added"><FileText />Newly Added Notes</Link>
+                 </Button>
+             </SheetClose>
+             <SheetClose asChild>
+                 <Button
+                   variant='ghost'
+                   className="w-full justify-start text-base gap-3"
+                   asChild
+                 >
+                   <Link href="#pyqs"><BookCopy />Current PYQs</Link>
+                 </Button>
+             </SheetClose>
+             <SheetClose asChild>
+                 <Button
+                   variant='ghost'
+                   className="w-full justify-start text-base gap-3"
+                   asChild
+                 >
+                   <Link href="#important-questions"><Star />Important Questions</Link>
+                 </Button>
+             </SheetClose>
+       </nav>
+       <div className="mt-auto p-4">
+         <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
+           <LogOut /> Sign Out
+         </Button>
+       </div>
+     </>
+ );
+
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -251,9 +313,11 @@ export default function CRDashboard() {
                 </SheetTrigger>
                 <SheetContent side="left" className="flex w-[280px] flex-col p-0">
                     <SheetHeader>
-                      <SheetTitle className="sr-only">Main Menu</SheetTitle>
+                      <SheetTitle>
+                        <VisuallyHidden>Main Menu</VisuallyHidden>
+                      </SheetTitle>
                     </SheetHeader>
-                    <SidebarContent />
+                    <MobileSidebarContent />
                 </SheetContent>
               </Sheet>
                <h1 className="text-xl font-semibold md:hidden">EduBot CR</h1>
