@@ -30,11 +30,34 @@ export const useSearch = (onSearchChange: (results: ImagePlaceholder[] | null) =
       return [];
     }
     const lowerCaseQuery = debouncedQuery.toLowerCase().trim();
-    return PlaceHolderImages.filter(
-      (item) =>
-        item.title.toLowerCase().includes(lowerCaseQuery) ||
-        item.subject.toLowerCase().includes(lowerCaseQuery)
-    );
+    
+    // Map keywords to content types
+    const categoryKeywords: { [key: string]: ImagePlaceholder['type'] } = {
+      'notes': 'Class Notes',
+      'class notes': 'Class Notes',
+      'pyq': 'PYQ',
+      'pyqs': 'PYQ',
+      'previous year question': 'PYQ',
+      'previous year questions': 'PYQ',
+      'important question': 'Important Question',
+      'important questions': 'Important Question',
+      'video': 'Video',
+      'videos': 'Video',
+    };
+
+    const matchedCategory = categoryKeywords[lowerCaseQuery];
+
+    if (matchedCategory) {
+      // If the query is a category keyword, filter by type
+      return PlaceHolderImages.filter(item => item.type === matchedCategory);
+    } else {
+      // Otherwise, search by title and subject
+      return PlaceHolderImages.filter(
+        (item) =>
+          item.title.toLowerCase().includes(lowerCaseQuery) ||
+          item.subject.toLowerCase().includes(lowerCaseQuery)
+      );
+    }
   }, [debouncedQuery]);
 
   useEffect(() => {
