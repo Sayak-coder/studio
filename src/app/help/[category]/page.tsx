@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -46,7 +47,10 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
+    <div className="relative flex min-h-screen flex-col items-center justify-center p-8 bg-background">
+       <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md text-center">
         <h1 className="text-4xl font-bold mb-8 capitalize bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">{categoryTitle}</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

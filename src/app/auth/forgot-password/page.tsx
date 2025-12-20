@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -62,7 +63,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
+    <div className="relative flex min-h-screen flex-col items-center justify-center p-4 bg-background">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <Card className="w-full max-w-sm bg-card/80 backdrop-blur-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Forgot Password</CardTitle>

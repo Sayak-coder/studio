@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ImagePlaceholder, PlaceHolderImages } from '@/lib/placeholder-images';
 import ContentRow from './content-row';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -108,9 +109,12 @@ export default function StudentDashboard() {
       <main className="flex-1 md:pl-64">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
            <h1 className="text-2xl font-bold md:hidden">Student Dashboard</h1>
-           <p className="text-sm text-muted-foreground">
-            Welcome back, {user.displayName || 'Student'}!
-          </p>
+           <div className="flex items-center gap-4">
+              <p className="text-sm text-muted-foreground">
+                Welcome back, {user.displayName || 'Student'}!
+              </p>
+              <ThemeToggle />
+           </div>
         </header>
 
         <div className="flex-1 space-y-12 p-8 sm:p-4 md:p-8">

@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { ThemeToggle } from '@/components/theme-toggle';
 
 
 export default function SeniorDashboard() {
@@ -58,12 +59,14 @@ export default function SeniorDashboard() {
 
   const handleSignOut = async () => {
     try {
-      await auth.signOut();
-      toast({
-        title: 'Signed Out',
-        description: 'You have been successfully signed out.',
-      });
-      router.push('/auth/signin/senior');
+      if (auth) {
+        await auth.signOut();
+        toast({
+          title: 'Signed Out',
+          description: 'You have been successfully signed out.',
+        });
+        router.push('/auth/signin/senior');
+      }
     } catch (error) {
       console.error('Sign out error:', error);
       toast({
@@ -165,6 +168,7 @@ export default function SeniorDashboard() {
              <Button variant="outline" size="sm" onClick={handleAddNew} className="gap-2">
                 <PlusCircle className="h-4 w-4" /> Add New
             </Button>
+             <ThemeToggle />
           </div>
         </header>
 

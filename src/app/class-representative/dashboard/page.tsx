@@ -19,6 +19,7 @@ import { useUser, useFirebase } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const dashboardItems = [
     {
@@ -111,6 +112,7 @@ export default function CRDashboard() {
                 <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign Out">
                     <LogOut className="h-5 w-5" />
                 </Button>
+                 <ThemeToggle />
             </div>
         </div>
       </header>

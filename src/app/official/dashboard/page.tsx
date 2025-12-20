@@ -36,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal } from "lucide-react"
+import { ThemeToggle } from '@/components/theme-toggle';
 
 type UserProfile = {
   id: string;
@@ -170,7 +171,7 @@ export default function OfficialDashboard() {
 
   if (user && !isLoadingProfile && !isRoleVerified) {
      return (
-       <div className="flex h-screen w-full items-center justify-center bg-background">
+       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
          <Card className="w-full max-w-md text-center">
             <CardHeader>
                 <CardTitle className="flex items-center justify-center gap-2 text-2xl text-destructive">
@@ -211,6 +212,7 @@ export default function OfficialDashboard() {
               <LogOut className="h-5 w-5" />
               Sign Out
             </Button>
+            <ThemeToggle />
           </div>
         </header>
 
