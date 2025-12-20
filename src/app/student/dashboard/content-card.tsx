@@ -32,17 +32,17 @@ const ContentCard = ({ item }: ContentCardProps) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
       </div>
       
-      <div className="relative grid flex-grow grid-rows-[auto_1fr_0fr] p-4 transition-all duration-300 ease-in-out group-hover:grid-rows-[auto_1fr_1fr]">
+      <div className="relative flex flex-col flex-grow p-4">
         <div>
             <Badge variant="secondary" className="mb-2 self-start bg-black/20 text-white backdrop-blur-sm">{item.type}</Badge>
             <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{item.subject}</p>
         </div>
         
-        <div className="self-end" />
+        <div className="flex-grow" />
 
-        <div className="overflow-hidden">
-             <p className="mt-4 text-sm text-foreground/80 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100">{item.description}</p>
+        <div className="max-h-0 opacity-0 transition-all duration-300 ease-in-out group-hover:max-h-40 group-hover:opacity-100">
+             <p className="mt-4 text-sm text-foreground/80 transition-opacity duration-300 ease-in-out delay-100 group-hover:opacity-100">{item.description}</p>
         </div>
       </div>
     </div>
