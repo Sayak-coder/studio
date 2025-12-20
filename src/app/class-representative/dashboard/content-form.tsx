@@ -109,6 +109,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
     setSubmissionState('saving');
     
     try {
+      // This part now only saves the text data and is very fast.
       const contentData = {
         title: formData.title,
         subject: formData.subject,
@@ -126,35 +127,41 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
         description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}.`,
       });
 
-      // Now, handle the file upload in the background if a file was selected.
+      // If a file was selected, start the upload in the background.
       if (fileToUpload) {
         setSubmissionState('uploading');
-        // This is NOT awaited. It runs in the background.
-        handleBackgroundUpload(firestore, user.uid, documentId, fileToUpload, 
-          // Progress callback
-          (progress) => {
-            setUploadProgress(progress);
-          },
-          // Completion callback
-          () => {
-             toast({
+        
+        // This function is NOT awaited. It runs in the background.
+        handleBackgroundUpload(
+          firestore,
+          user.uid,
+          documentId,
+          fileToUpload,
+          (progress) => setUploadProgress(progress), // Progress callback
+          () => { // Completion callback
+            toast({
               title: 'Upload Complete',
               description: `Your file "${fileToUpload.name}" has been attached.`,
             });
             setSubmissionState('success');
             onClose(); // Close the form on successful upload
           },
-          // Error callback
-          (uploadError) => {
-             console.error("Background upload failed:", uploadError);
-             toast({ variant: 'destructive', title: 'Upload Failed', description: 'Your file could not be attached. Please try editing the content to upload it again.' });
-             setSubmissionState('error');
+          (uploadError) => { // Error callback
+            console.error("Background upload failed:", uploadError);
+            toast({
+              variant: 'destructive',
+              title: 'Upload Failed',
+              description: 'Your file could not be attached. Please try editing the content to upload it again.'
+            });
+            setSubmissionState('error');
           }
         );
-         // Don't close form immediately, let it close on upload completion
+        // The UI is not blocked here. If the user wants to close the dialog before upload is done, they can.
+        // The dialog is now closed based on the onComplete callback.
       } else {
-         setSubmissionState('success');
-         onClose();
+        // If there's no file, just close the form.
+        setSubmissionState('success');
+        onClose();
       }
 
     } catch (error) {
@@ -162,7 +169,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
       console.error("Content submission error:", error);
       const errorMessage = error instanceof FirebaseError ? error.message : 'Could not save your content. Please try again.';
       toast({ variant: 'destructive', title: 'Something went wrong', description: errorMessage });
-      setSubmissionState('idle'); // Reset on error
     }
   };
   
@@ -176,7 +182,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
 
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !isSubmitting && !open && onClose()}>
       <DialogContent className="sm:max-w-[600px] bg-card">
         <DialogHeader>
           <DialogTitle>{editingContent ? 'Edit Content' : 'Create a New Contribution'}</DialogTitle>

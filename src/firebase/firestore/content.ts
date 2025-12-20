@@ -101,7 +101,7 @@ export async function createOrUpdateContent(
  * @param onComplete A callback function for when the upload succeeds.
  * @param onError A callback function for when the upload fails.
  */
-export async function handleBackgroundUpload(
+export function handleBackgroundUpload(
   firestore: Firestore,
   userId: string,
   docId: string,
@@ -109,27 +109,42 @@ export async function handleBackgroundUpload(
   onProgress: (progress: number) => void,
   onComplete: () => void,
   onError: (error: Error) => void
-): Promise<void> {
-    try {
-        const { downloadURL, fileType } = await uploadFile(userId, docId, file, onProgress);
-        const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
-        
-        // This payload ONLY contains file-related data to prevent overwriting other fields.
-        const updatePayload = {
-            fileUrl: downloadURL,
-            fileType: fileType,
-            fileName: file.name,
-            fileSize: file.size,
-            updatedAt: serverTimestamp(),
-        };
-
-        await updateDoc(contentDocRef, updatePayload);
-        onComplete();
-
-    } catch (error) {
-        console.error("Background upload or document update failed:", error);
-        onError(error as Error);
-    }
+): void {
+  // This function is intentionally not async and does not return a promise
+  // to ensure it runs in the background without blocking the UI.
+  
+  uploadFile(userId, docId, file, onProgress)
+    .then(({ downloadURL, fileType }) => {
+      // Once upload is complete, update the document with the URL
+      const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
+      const updatePayload = {
+        fileUrl: downloadURL,
+        fileType: fileType,
+        fileName: file.name,
+        fileSize: file.size,
+        updatedAt: serverTimestamp(),
+      };
+      
+      // Perform the update. This is a fire-and-forget operation in the background.
+      updateDoc(contentDocRef, updatePayload)
+        .then(() => {
+          onComplete();
+        })
+        .catch((updateError) => {
+           console.error("Document update failed after upload:", updateError);
+           // Emit a specific error for UI feedback if needed
+           errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: contentDocRef.path,
+              operation: 'update',
+              requestResourceData: updatePayload,
+           }));
+           onError(updateError);
+        });
+    })
+    .catch((uploadError) => {
+      console.error("Background upload failed:", uploadError);
+      onError(uploadError as Error);
+    });
 }
 
 
