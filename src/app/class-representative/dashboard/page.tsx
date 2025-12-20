@@ -1,9 +1,12 @@
 'use client';
-
-import React, { useState } from 'react';
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  collection,
+  query,
+  where,
+} from 'firebase/firestore';
 import {
   BookCopy,
   FileText,
@@ -14,10 +17,15 @@ import {
   Menu,
   LayoutDashboard,
   FilePlus,
+  Trash2,
 } from 'lucide-react';
 
-import { useUser, useFirebase } from '@/firebase';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { deleteContent } from '@/firebase/firestore/content';
+
+import { Content } from './types';
+import ContentDisplay from './content-display';
+import ContentForm from './content-form';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -27,38 +35,37 @@ import {
   SheetTrigger,
   SheetClose
 } from '@/components/ui/sheet';
-import ContentForm from './content-form';
-import { Content } from './types';
-
-
-const dashboardItems = [
-  {
-    title: 'Class Notes',
-    description: 'Access and manage verified class notes.',
-    icon: <BookCopy className="h-8 w-8 text-primary" />,
-    href: '/class-representative/notes',
-  },
-  {
-    title: 'Important Questions',
-    description: 'Curate and share key questions for exams.',
-    icon: <HelpCircle className="h-8 w-8 text-primary" />,
-    href: '/class-representative/important-questions',
-  },
-  {
-    title: 'PYQ',
-    description: 'Upload and organize previous year question papers.',
-    icon: <FileText className="h-8 w-8 text-primary" />,
-    href: '/class-representative/pyq',
-  },
-];
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function CRDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const { auth } = useFirebase();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
+
+  const contentQuery = useMemoFirebase(() => {
+    if (!firestore || !user?.uid) return null;
+    return query(collection(firestore, 'content'), where('authorId', '==', user.uid));
+  }, [firestore, user?.uid]);
+
+  const { data: contents, isLoading: isLoadingContent } = useCollection<Content>(contentQuery);
 
 
   useEffect(() => {
@@ -92,6 +99,33 @@ export default function CRDashboard() {
     setIsFormOpen(true);
   }
 
+  const handleEdit = (content: Content) => {
+    setEditingContent(content);
+    setIsFormOpen(true);
+  };
+
+  const openDeleteDialog = (id: string) => {
+    setDeletingContentId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingContentId || !firestore) return;
+    setIsDeleting(true);
+    try {
+      await deleteContent(firestore, deletingContentId);
+      toast({ title: 'Content Deleted', description: 'The selected item has been successfully deleted.' });
+      setIsDeleteDialogOpen(false);
+      setDeletingContentId(null);
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast({ variant: 'destructive', title: 'Deletion Failed', description: 'Could not delete the content. Please try again.' });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingContent(null);
@@ -106,6 +140,13 @@ export default function CRDashboard() {
       </div>
     );
   }
+
+  const sidebarNavItems = [
+      { title: 'Dashboard', href: '/class-representative/dashboard', icon: <LayoutDashboard /> },
+      { title: 'Class Notes', href: '/class-representative/notes', icon: <BookCopy /> },
+      { title: 'Important Questions', href: '/class-representative/important-questions', icon: <HelpCircle /> },
+      { title: 'PYQs', href: '/class-representative/pyq', icon: <FileText /> },
+  ];
   
   const SidebarContent = () => (
      <>
@@ -117,9 +158,9 @@ export default function CRDashboard() {
         </div>
         <nav className="flex-1 space-y-2 p-4">
             <Button
-              variant='secondary'
-              className="w-full justify-start text-base gap-3"
-              asChild
+                variant='secondary'
+                className="w-full justify-start text-base gap-3"
+                asChild
             >
               <Link href="/class-representative/dashboard"><LayoutDashboard />Dashboard</Link>
             </Button>
@@ -130,7 +171,7 @@ export default function CRDashboard() {
               >
                 <FilePlus />Add Content
               </Button>
-            {dashboardItems.map(item => (
+            {sidebarNavItems.slice(1).map(item => (
                 <Button
                     key={item.title}
                     variant='ghost'
@@ -150,7 +191,7 @@ export default function CRDashboard() {
   );
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen bg-secondary/30 text-foreground">
        <aside className="fixed left-0 top-0 hidden h-full w-64 flex-col border-r bg-card shadow-lg md:flex">
           <SidebarContent />
       </aside>
@@ -166,82 +207,28 @@ export default function CRDashboard() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="flex w-[280px] flex-col p-0">
-                    <div className="flex h-16 items-center border-b px-6">
-                        <Link href="/" className="flex items-center gap-2 font-semibold">
-                        <BrainCircuit className="h-8 w-8 text-primary" />
-                        <span className="text-xl font-bold">EduBot CR</span>
-                        </Link>
-                    </div>
-                    <nav className="flex-1 space-y-2 p-4">
-                        <SheetClose asChild>
-                            <Button
-                                variant='secondary'
-                                className="w-full justify-start text-base gap-3"
-                                asChild
-                                >
-                                <Link href="/class-representative/dashboard"><LayoutDashboard />Dashboard</Link>
-                            </Button>
-                        </SheetClose>
-                         <SheetClose asChild>
-                            <Button
-                                variant='ghost'
-                                className="w-full justify-start text-base gap-3"
-                                onClick={handleAddNew}
-                                >
-                                <FilePlus />Add Content
-                            </Button>
-                        </SheetClose>
-                        {dashboardItems.map(item => (
-                            <SheetClose asChild key={item.title}>
-                                <Button
-                                    variant='ghost'
-                                    className="w-full justify-start text-base gap-3"
-                                    asChild
-                                >
-                                    <Link href={item.href}>{item.icon}{item.title}</Link>
-                                </Button>
-                            </SheetClose>
-                        ))}
-                    </nav>
-                    <div className="mt-auto p-4">
-                        <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-                            <LogOut /> Sign Out
-                        </Button>
-                    </div>
+                    <SheetClose asChild>
+                      <SidebarContent />
+                    </SheetClose>
                 </SheetContent>
               </Sheet>
-               <h1 className="text-xl font-semibold md:hidden">CR Dashboard</h1>
+               <h1 className="text-xl font-semibold md:text-2xl">CR Dashboard</h1>
             </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <p className="hidden text-sm text-muted-foreground sm:block">
-              Welcome back, {user.displayName || 'CR'}!
-            </p>
+            <Button variant="outline" size="sm" onClick={handleAddNew} className="gap-2">
+                <FilePlus className="h-4 w-4" /> Add New
+            </Button>
             <ThemeToggle />
           </div>
         </header>
 
         <div className="flex-1 space-y-8 p-4 md:p-8">
-            <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">CR Dashboard</h1>
-                <p className="text-muted-foreground mt-2">Manage all your academic resources from one place.</p>
-            </div>
-             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {dashboardItems.map((item) => (
-                <Link href={item.href} key={item.title} passHref>
-                    <Card className="animated-gradient-border group transform cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
-                        {React.cloneElement(item.icon, { className: "h-8 w-8 text-primary group-hover:scale-110 transition-transform"})}
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground transition-colors duration-300 group-hover:text-foreground">
-                        {item.description}
-                        </p>
-                    </CardContent>
-                    </Card>
-                </Link>
-                ))}
-            </div>
+           <ContentDisplay 
+            contents={contents}
+            isLoading={isLoadingContent}
+            onEdit={handleEdit}
+            onDelete={openDeleteDialog}
+          />
         </div>
       </main>
       
@@ -251,6 +238,27 @@ export default function CRDashboard() {
           editingContent={editingContent}
           user={user}
        />
+
+       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this piece of content from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Yes, delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
