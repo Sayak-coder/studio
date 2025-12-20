@@ -63,7 +63,7 @@ service cloud.firestore {
 
       /**
        * @description Only the original author of the content can update it.
-       *              The authorId and createdAt fields are immutable.
+       *              The authorId and createdAt fields are immutable on content updates by the author.
        */
       allow update: if isSignedIn() && resource.data.authorId == request.auth.uid
                     && request.resource.data.authorId == resource.data.authorId
@@ -79,8 +79,17 @@ service cloud.firestore {
 
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if true;
+    // Allow public read access to all files. This is safe because URLs are unguessable.
+    allow read: if true;
+
+    // Rules for content files.
+    // Users can only write to a path that corresponds to their own UID.
+    // This prevents one user from overwriting another user's files.
+    match /content/{userId}/{contentId}/{allPaths=**} {
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024 // 5MB limit
+                   && request.resource.contentType.matches('image/.*|application/pdf');
     }
   }
 }

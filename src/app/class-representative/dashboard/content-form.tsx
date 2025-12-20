@@ -109,7 +109,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
     setSubmissionState('saving');
     
     try {
-      // This part now only saves the text data and is very fast.
       const contentData = {
         title: formData.title,
         subject: formData.subject,
@@ -124,14 +123,13 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
 
       toast({
         title: 'Success!',
-        description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}.`,
+        description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}. Starting file upload...`,
       });
 
       // If a file was selected, start the upload in the background.
       if (fileToUpload) {
         setSubmissionState('uploading');
         
-        // This function is NOT awaited. It runs in the background.
         handleBackgroundUpload(
           firestore,
           user.uid,
@@ -156,8 +154,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
             setSubmissionState('error');
           }
         );
-        // The UI is not blocked here. If the user wants to close the dialog before upload is done, they can.
-        // The dialog is now closed based on the onComplete callback.
       } else {
         // If there's no file, just close the form.
         setSubmissionState('success');

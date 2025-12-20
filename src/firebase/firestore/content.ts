@@ -54,7 +54,6 @@ export async function createOrUpdateContent(
         ...data,
         updatedAt: serverTimestamp(),
       };
-      // This only updates text fields, fileUrl is handled by handleBackgroundUpload
       await updateDoc(contentDocRef, payload);
       return docId;
     } else {
@@ -64,7 +63,6 @@ export async function createOrUpdateContent(
         ...data,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        // Initialize file fields as empty, to be updated later
         fileUrl: '',
         fileType: '',
         fileName: '',
@@ -85,8 +83,7 @@ export async function createOrUpdateContent(
         requestResourceData: data,
       })
     );
-    // Re-throw the original error to be caught by the calling function
-    throw serverError;
+    throw serverError; // Re-throw to be caught by the handleSubmit's try-catch block
   }
 }
 
@@ -115,7 +112,6 @@ export function handleBackgroundUpload(
   
   uploadFile(userId, docId, file, onProgress)
     .then(({ downloadURL, fileType }) => {
-      // Once upload is complete, update the document with the URL
       const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
       const updatePayload = {
         fileUrl: downloadURL,
@@ -125,14 +121,12 @@ export function handleBackgroundUpload(
         updatedAt: serverTimestamp(),
       };
       
-      // Perform the update. This is a fire-and-forget operation in the background.
       updateDoc(contentDocRef, updatePayload)
         .then(() => {
           onComplete();
         })
         .catch((updateError) => {
            console.error("Document update failed after upload:", updateError);
-           // Emit a specific error for UI feedback if needed
            errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: contentDocRef.path,
               operation: 'update',
@@ -175,7 +169,7 @@ export function uploadFile(
       },
       (error) => {
         console.error('Upload failed:', error);
-        reject(error); // Reject the promise on error
+        reject(error);
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref)
@@ -202,7 +196,6 @@ export function deleteContent(firestore: Firestore, contentId: string) {
       path: contentDocRef.path,
       operation: 'delete',
     }));
-    // IMPORTANT: Re-throw the error to fail the promise in the UI
     throw serverError;
   });
 }
