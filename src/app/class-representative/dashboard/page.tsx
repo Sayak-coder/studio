@@ -65,13 +65,12 @@ export default function CRDashboard() {
     return query(collection(firestore, 'content'), where('authorId', '==', user.uid));
   }, [firestore, user?.uid]);
 
-  // Query for other CRs' content
+  // Query for other users' content
   const otherContentQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
     return query(
       collection(firestore, 'content'),
-      where('authorId', '!=', user.uid),
-      where('role', 'in', ['class-representative', 'senior'])
+      where('authorId', '!=', user.uid)
     );
   }, [firestore, user?.uid]);
 
