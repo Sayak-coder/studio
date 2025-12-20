@@ -103,6 +103,8 @@ const ContentCard = ({ item, onEdit, onDelete, isEditable = false }: ContentCard
       </div>
   );
 
+  // If a file URL exists, wrap the entire card in an anchor tag to make it clickable.
+  // Otherwise, render the card content without a link.
   if (item.fileUrl) {
     return (
       <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className="block">
