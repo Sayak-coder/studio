@@ -2,51 +2,54 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-const CARD_WIDTH_WITH_GAP = 284; // 260px card + 24px gap
+const CARD_WIDTH_WITH_GAP = 300; // Adjusted for card width + gap
 
-export const useHorizontalScroll = (itemCount: number) => {
+export const useHorizontalScroll = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
   const updateScrollability = useCallback(() => {
     if (!scrollContainerRef.current) return;
 
-    const { clientWidth } = scrollContainerRef.current;
-    const cardsInView = Math.floor(clientWidth / CARD_WIDTH_WITH_GAP);
-    const maxIndex = Math.max(0, itemCount - cardsInView);
-
-    setCanScrollLeft(currentIndex > 0);
-    setCanScrollRight(currentIndex < maxIndex);
-  }, [currentIndex, itemCount]);
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    
+    // Check if we can scroll left (not at the beginning)
+    setCanScrollLeft(scrollLeft > 0);
+    // Check if we can scroll right (not at the end)
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1); // -1 for precision
+  }, []);
 
   useEffect(() => {
-    updateScrollability();
-    window.addEventListener('resize', updateScrollability);
-    return () => window.removeEventListener('resize', updateScrollability);
+    const container = scrollContainerRef.current;
+    if (container) {
+      // Initial check
+      updateScrollability();
+      // Listen for scroll events on the container
+      container.addEventListener('scroll', updateScrollability);
+      // Also check on resize
+      window.addEventListener('resize', updateScrollability);
+      
+      // Cleanup
+      return () => {
+        container.removeEventListener('scroll', updateScrollability);
+        window.removeEventListener('resize', updateScrollability);
+      };
+    }
   }, [updateScrollability]);
-
-  const scrollTo = useCallback((index: number) => {
-    if (!scrollContainerRef.current) return;
-
-    const { clientWidth } = scrollContainerRef.current;
-    const cardsInView = Math.floor(clientWidth / CARD_WIDTH_WITH_GAP);
-    const maxIndex = Math.max(0, itemCount - cardsInView);
-    const newIndex = Math.max(0, Math.min(index, maxIndex));
-
-    setCurrentIndex(newIndex);
-
-    const scrollAmount = newIndex * CARD_WIDTH_WITH_GAP;
-    scrollContainerRef.current.style.transform = `translateX(-${scrollAmount}px)`;
-  }, [itemCount]);
+  
+  const scrollBy = (amount: number) => {
+    if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  }
 
   const scrollLeft = () => {
-    scrollTo(currentIndex - 1);
+    scrollBy(-CARD_WIDTH_WITH_GAP);
   };
 
   const scrollRight = () => {
-    scrollTo(currentIndex + 1);
+    scrollBy(CARD_WIDTH_WITH_GAP);
   };
   
   return {

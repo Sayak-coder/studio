@@ -12,7 +12,9 @@ import {
     BrainCircuit, 
     Video, 
     Star,
-    LayoutDashboard
+    LayoutDashboard,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ImagePlaceholder, PlaceHolderImages } from '@/lib/placeholder-images';
@@ -21,8 +23,51 @@ import ContentCard from './content-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import GlobalSearch from './global-search';
 import { cn } from '@/lib/utils';
+import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
 
-type Category = ImagePlaceholder['type'] | 'All';
+const DashboardSection = ({ title, items }: { title: string, items: ImagePlaceholder[] }) => {
+  const { scrollContainerRef, scrollLeft, scrollRight, canScrollLeft, canScrollRight } = useHorizontalScroll();
+  
+  if (!items || items.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="relative">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={scrollLeft}
+            disabled={!canScrollLeft}
+            className={cn(
+              'h-9 w-9 cursor-pointer rounded-full bg-background/80 backdrop-blur-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50',
+            )}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={scrollRight}
+            disabled={!canScrollRight}
+            className={cn(
+              'h-9 w-9 cursor-pointer rounded-full bg-background/80 backdrop-blur-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50',
+            )}
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+        </div>
+      </div>
+      <ContentRow items={items} scrollContainerRef={scrollContainerRef} />
+    </section>
+  );
+};
+
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -92,7 +137,7 @@ export default function StudentDashboard() {
           {sidebarButtons.map(btn => (
              <Button 
                 key={btn.name} 
-                variant={router.pathname === btn.href ? 'secondary' : 'ghost'} 
+                variant={btn.href === '/student/dashboard' ? 'secondary' : 'ghost'} 
                 className="w-full justify-start text-base gap-3"
                 asChild
             >
@@ -125,14 +170,14 @@ export default function StudentDashboard() {
           </div>
         </header>
 
-        <div className="flex-1 space-y-4 p-4 md:p-8">
+        <div className="flex-1 space-y-8 p-4 md:p-8">
             {filteredData !== null ? (
               <div className="py-4">
                 <h2 className="text-3xl font-bold tracking-tight">Search Results</h2>
                 {filteredData.length > 0 ? (
-                  <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+                  <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {filteredData.map((item) => (
-                       <div key={item.id} className="py-4">
+                       <div key={item.id} className="py-4 flex justify-center">
                          <ContentCard item={item} />
                        </div>
                     ))}
@@ -146,10 +191,10 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <>
-                <ContentRow title="Newly Added" items={newlyAdded} />
-                <ContentRow title="Current PYQs" items={currentYearPYQs} />
-                <ContentRow title="Important" items={mostImportant} />
-                <ContentRow title="Continue Watching" items={continueWatching} />
+                <DashboardSection title="Newly Added" items={newlyAdded} />
+                <DashboardSection title="Current PYQs" items={currentYearPYQs} />
+                <DashboardSection title="Important" items={mostImportant} />
+                <DashboardSection title="Continue Watching" items={continueWatching} />
               </>
             )}
         </div>
