@@ -53,7 +53,7 @@ export default function SubjectPage() {
   const { toast } = useToast();
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
-  const [filteredData, setFilteredData] = useState<ImagePlaceholder[] | null>(null);
+  const [filteredData, setFilteredData] = React.useState<ImagePlaceholder[] | null>(null);
 
   const categorySlug = Array.isArray(params.category) ? params.category[0] : params.category;
   const subjectSlug = Array.isArray(params.subject) ? params.subject[0] : params.subject;
@@ -117,15 +117,14 @@ export default function SubjectPage() {
         </div>
         <nav className="flex-1 space-y-2 p-4">
           {sidebarButtons.map(btn => (
-            <SheetClose asChild key={btn.name}>
                <Button
+                key={btn.name}
                 variant={ `/student/${categorySlug}` === btn.href ? 'secondary' : 'ghost'}
                 className="w-full justify-start text-base gap-3"
                 asChild
               >
                 <Link href={btn.href}>{btn.icon}{btn.name}</Link>
               </Button>
-            </SheetClose>
           ))}
         </nav>
         <div className="mt-auto p-4">
@@ -134,7 +133,36 @@ export default function SubjectPage() {
           </Button>
         </div>
       </>
-  )
+  );
+
+  const MobileSidebarContent = () => (
+    <>
+      <div className="flex h-16 items-center border-b px-6">
+        <Link href="/" className="flex items-center gap-2 font-semibold">
+          <BrainCircuit className="h-8 w-8 text-primary" />
+          <span className="text-2xl font-bold">EduBot</span>
+        </Link>
+      </div>
+      <nav className="flex-1 space-y-2 p-4">
+        {sidebarButtons.map(btn => (
+          <SheetClose asChild key={btn.name}>
+             <Button
+              variant={ `/student/${categorySlug}` === btn.href ? 'secondary' : 'ghost'}
+              className="w-full justify-start text-base gap-3"
+              asChild
+            >
+              <Link href={btn.href}>{btn.icon}{btn.name}</Link>
+            </Button>
+          </SheetClose>
+        ))}
+      </nav>
+      <div className="mt-auto p-4">
+        <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
+          <LogOut /> Sign Out
+        </Button>
+      </div>
+    </>
+  );
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -153,7 +181,7 @@ export default function SubjectPage() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="flex w-[280px] flex-col p-0">
-                  <SidebarContent />
+                  <MobileSidebarContent />
                 </SheetContent>
               </Sheet>
                <Button variant="ghost" onClick={() => router.back()} className="gap-2 hidden md:flex">

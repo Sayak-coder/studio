@@ -119,15 +119,14 @@ export default function CategoryPage() {
         </div>
         <nav className="flex-1 space-y-2 p-4">
           {sidebarButtons.map(btn => (
-            <SheetClose asChild key={btn.name}>
                <Button
+                key={btn.name}
                 variant={ `/student/${categorySlug}` === btn.href ? 'secondary' : 'ghost'}
                 className="w-full justify-start text-base gap-3"
                 asChild
               >
                 <Link href={btn.href}>{btn.icon}{btn.name}</Link>
               </Button>
-            </SheetClose>
           ))}
         </nav>
         <div className="mt-auto p-4">
@@ -136,6 +135,35 @@ export default function CategoryPage() {
           </Button>
         </div>
       </>
+  )
+
+  const MobileSidebarContent = () => (
+    <>
+      <div className="flex h-16 items-center border-b px-6">
+        <Link href="/" className="flex items-center gap-2 font-semibold">
+          <BrainCircuit className="h-8 w-8 text-primary" />
+          <span className="text-2xl font-bold">EduBot</span>
+        </Link>
+      </div>
+      <nav className="flex-1 space-y-2 p-4">
+        {sidebarButtons.map(btn => (
+          <SheetClose asChild key={btn.name}>
+             <Button
+              variant={ `/student/${categorySlug}` === btn.href ? 'secondary' : 'ghost'}
+              className="w-full justify-start text-base gap-3"
+              asChild
+            >
+              <Link href={btn.href}>{btn.icon}{btn.name}</Link>
+            </Button>
+          </SheetClose>
+        ))}
+      </nav>
+      <div className="mt-auto p-4">
+        <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
+          <LogOut /> Sign Out
+        </Button>
+      </div>
+    </>
   )
 
 
@@ -157,7 +185,7 @@ export default function CategoryPage() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="flex w-[280px] flex-col p-0">
-                 <SidebarContent />
+                 <MobileSidebarContent />
               </SheetContent>
             </Sheet>
            </div>
