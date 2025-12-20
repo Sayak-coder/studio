@@ -138,23 +138,11 @@
   /* Hover state for the entire card */
   .content-card:hover, .content-card:focus-within {
     transform: translateY(-8px) translateZ(0) scale(1.05); /* Lift and Zoom effect */
-    box-shadow: 0 32px 64px rgba(0,0,0,0.2), 0 16px 32px rgba(0,0,0,0.15); /* Enhanced shadow */
-  }
-
-  /* The glowing border pseudo-element */
-  .card-glow-border {
-    z-index: -1;
-    background: radial-gradient(
-      circle at center,
-      hsl(var(--primary)),
-      transparent 60%
-    );
-    filter: blur(24px); /* Creates the soft glow */
-    transition: opacity 0.3s ease-in-out;
-  }
-  
-  .content-card:hover .card-glow-border {
-    opacity: 1;
+    /* Golden Glow Effect */
+    box-shadow: 
+      0 0 15px 5px rgba(255, 215, 0, 0.4), /* Outer golden glow */
+      0 0 5px 2px rgba(255, 223, 0, 0.6),  /* Inner golden glow */
+      0 16px 32px rgba(0,0,0,0.2);         /* Standard elevation shadow */
   }
 
 
