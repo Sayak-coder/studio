@@ -19,15 +19,14 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
     scrollRight, 
     canScrollLeft, 
     canScrollRight,
-    scrollAmount,
-  } = useHorizontalScroll(items.length);
+  } = useHorizontalScroll();
 
   if (!items || items.length === 0) {
     return null;
   }
 
   return (
-    <section className="relative py-4">
+    <section className="relative">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
         <div className="flex items-center gap-2">
@@ -58,21 +57,15 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
         </div>
       </div>
 
-      <div className="overflow-hidden">
-        <div
-            ref={scrollContainerRef}
-            className="flex flex-nowrap gap-6 transition-transform duration-500 ease-in-out"
-            style={{
-                transform: `translateX(-${scrollAmount}px)`,
-                willChange: 'transform',
-            }}
+      <div 
+        ref={scrollContainerRef}
+        className="horizontal-scrollbar flex w-full space-x-6 pb-4"
         >
           {items.map((item) => (
             <div key={item.id} className="flex-shrink-0 py-4">
               <ContentCard item={item} />
             </div>
           ))}
-        </div>
       </div>
     </section>
   );

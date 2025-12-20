@@ -71,11 +71,11 @@ export default function StudentDashboard() {
   }
   
   const sidebarButtons = [
-    { name: 'Dashboard', icon: <LayoutDashboard />, href: '/student/dashboard', category: 'All' },
-    { name: 'Class Notes', icon: <FileText />, href: '/student/notes', category: 'Class Notes' },
-    { name: 'PYQs', icon: <Book />, href: '/student/pyq', category: 'PYQ' },
-    { name: 'Important Questions', icon: <Star />, href: '/student/imp-questions', category: 'Important Question' },
-    { name: 'Video Links', icon: <Video />, href: '/student/videos', category: 'Video' },
+    { name: 'Dashboard', icon: <LayoutDashboard />, href: '/student/dashboard' },
+    { name: 'Class Notes', icon: <FileText />, href: '/student/notes' },
+    { name: 'PYQs', icon: <Book />, href: '/student/pyq' },
+    { name: 'Important Questions', icon: <Star />, href: '/student/imp-questions' },
+    { name: 'Video Links', icon: <Video />, href: '/student/videos' },
   ];
 
   return (
@@ -146,9 +146,9 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <>
-                <ContentRow title="Newly Added Notes" items={newlyAdded} />
-                <ContentRow title="Current Year's PYQs" items={currentYearPYQs} />
-                <ContentRow title="Most Important Questions" items={mostImportant} />
+                <ContentRow title="Newly Added" items={newlyAdded} />
+                <ContentRow title="Current PYQs" items={currentYearPYQs} />
+                <ContentRow title="Important" items={mostImportant} />
                 <ContentRow title="Continue Watching" items={continueWatching} />
               </>
             )}

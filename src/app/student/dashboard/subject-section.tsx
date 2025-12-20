@@ -15,7 +15,6 @@ const SubjectSection = ({ subject, items, category }: SubjectSectionProps) => {
     return null;
   }
   
-  const categoryTitle = category === 'pyq' ? 'PYQs' : category === 'imp-questions' ? 'Important Questions' : category.charAt(0).toUpperCase() + category.slice(1);
   const subjectSlug = subject.toLowerCase().replace(/\s+/g, '-');
   const categorySlug = category.toLowerCase().replace(/\s+/g, '-');
 
@@ -26,7 +25,7 @@ const SubjectSection = ({ subject, items, category }: SubjectSectionProps) => {
           {subject}
         </h2>
       </Link>
-      <ContentRow title={`${subject} ${categoryTitle}`} items={items} />
+      <ContentRow title={subject} items={items} />
     </div>
   );
 };
