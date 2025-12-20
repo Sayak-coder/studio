@@ -118,6 +118,7 @@
     /* Transition for all properties */
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform, box-shadow; /* Performance optimization */
+    cursor: pointer;
   }
 
   /* Frosted glass pane */
