@@ -31,11 +31,15 @@ import {
   SheetContent,
   SheetTrigger,
   SheetClose,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui/sheet"
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 
 
@@ -244,6 +248,9 @@ export default function StudentDashboard() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="flex w-[280px] flex-col p-0">
+                 <SheetHeader className="p-4 border-b">
+                    <SheetTitle className="sr-only">Main Menu</SheetTitle>
+                 </SheetHeader>
                  <MobileSidebarContent />
               </SheetContent>
             </Sheet>
@@ -264,6 +271,9 @@ export default function StudentDashboard() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="top-[25%]">
+                   <DialogHeader>
+                      <DialogTitle>Global Search</DialogTitle>
+                   </DialogHeader>
                    <GlobalSearch onSearchChange={setFilteredData} />
                 </DialogContent>
               </Dialog>
