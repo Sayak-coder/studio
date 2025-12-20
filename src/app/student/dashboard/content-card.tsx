@@ -19,8 +19,7 @@ const ContentCard = ({ item }: ContentCardProps) => {
         tabIndex={0}
         data-ai-hint={item.imageHint}
     >
-      <div className="absolute inset-0 card-glow-border rounded-[inherit] opacity-0 transition-opacity duration-300"></div>
-      <div className="absolute inset-0 card-glass-pane rounded-[inherit]"></div>
+      <div className="card-glass-pane absolute inset-0 rounded-[inherit]"></div>
 
       <div className="relative h-[220px] w-full flex-shrink-0">
         <img
