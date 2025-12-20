@@ -134,7 +134,7 @@ export default function SubjectPage() {
         </header>
 
         <div className="flex-1 space-y-4 p-4 md:p-8">
-            <h1 className="text-4xl font-bold tracking-tight capitalize">
+            <h1 className="text-4xl font-bold tracking-tight capitalize bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                 {subjectName} {categoryInfo.title}
             </h1>
             {contentForSubject.length > 0 ? (

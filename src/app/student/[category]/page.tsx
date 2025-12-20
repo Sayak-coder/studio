@@ -157,7 +157,7 @@ export default function CategoryPage() {
             </div>
           ) : (
             <>
-              <h1 className="text-4xl font-bold tracking-tight">{categoryInfo.title}</h1>
+              <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">{categoryInfo.title}</h1>
               {Object.keys(contentBySubject).length > 0 ? (
                 Object.keys(contentBySubject).map(subject => (
                   <SubjectSection
