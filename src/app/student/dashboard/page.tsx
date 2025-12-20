@@ -125,10 +125,10 @@ export default function StudentDashboard() {
         <div className="flex-1 space-y-4 p-4 md:p-8">
             {filteredData !== null ? (
               // Search is active, show search results
-              <>
+              <div className="py-4">
                 <h2 className="text-3xl font-bold tracking-tight">Search Results</h2>
                 {filteredData.length > 0 ? (
-                  <div className="flex flex-wrap gap-6">
+                  <div className="mt-6 flex flex-wrap gap-6">
                     {filteredData.map((item) => (
                        <div key={item.id} className="py-2">
                          <ContentCard item={item} />
@@ -141,7 +141,7 @@ export default function StudentDashboard() {
                       <p className="text-muted-foreground mt-2">Try adjusting your search terms.</p>
                   </div>
                 )}
-              </>
+              </div>
             ) : (
                 // No search, show default content rows
                 <>

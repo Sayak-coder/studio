@@ -27,7 +27,7 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
   }
 
   return (
-    <section className="group/row relative py-6">
+    <section className="relative py-4">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
         <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
         </div>
       </div>
 
-      <div className="relative z-10 overflow-hidden">
+      <div className="overflow-hidden">
         <div
             ref={scrollContainerRef}
             className="flex flex-nowrap gap-6 transition-transform duration-500 ease-in-out"

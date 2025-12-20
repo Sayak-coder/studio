@@ -13,7 +13,7 @@ const ContentCard = ({ item }: ContentCardProps) => {
     <div
       className={cn(
         'content-card group relative flex flex-col',
-        'w-[280px] md:w-[260px]',
+        'w-[280px]',
         'focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-background'
       )}
       tabIndex={0}
@@ -25,9 +25,9 @@ const ContentCard = ({ item }: ContentCardProps) => {
         <img
           src={item.imageUrl}
           alt={item.title}
-          className="h-full w-full object-cover object-center"
+          className="h-full w-full rounded-t-lg object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        <div className="absolute inset-0 rounded-t-lg bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
       </div>
 
       <div className="relative flex flex-grow flex-col p-4">
