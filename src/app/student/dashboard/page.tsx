@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirebase } from '@/firebase';
@@ -18,12 +18,14 @@ import { Button } from '@/components/ui/button';
 import { ImagePlaceholder, PlaceHolderImages } from '@/lib/placeholder-images';
 import ContentRow from './content-row';
 import { ThemeToggle } from '@/components/theme-toggle';
+import GlobalSearch from './global-search';
 
 export default function StudentDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
+  const [filteredData, setFilteredData] = useState<ImagePlaceholder[] | null>(null);
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
@@ -51,10 +53,12 @@ export default function StudentDashboard() {
     }
   };
   
-  const newlyAdded = PlaceHolderImages.filter(item => item.type === 'Class Notes');
-  const currentYearPYQs = PlaceHolderImages.filter(item => item.type === 'PYQ');
-  const mostImportant = PlaceHolderImages.filter(item => item.type === 'Important Question');
-  const continueWatching = PlaceHolderImages.filter(item => item.type === 'Video');
+  const dataToDisplay = filteredData === null ? PlaceHolderImages : filteredData;
+
+  const newlyAdded = dataToDisplay.filter(item => item.type === 'Class Notes');
+  const currentYearPYQs = dataToDisplay.filter(item => item.type === 'PYQ');
+  const mostImportant = dataToDisplay.filter(item => item.type === 'Important Question');
+  const continueWatching = dataToDisplay.filter(item => item.type === 'Video');
 
 
   if (isUserLoading || !user) {
@@ -106,11 +110,12 @@ export default function StudentDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:pl-64 max-w-full overflow-x-hidden">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
+      <main className="flex-1 md:pl-64 w-full overflow-hidden">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm md:justify-end">
            <h1 className="text-2xl font-bold md:hidden">Student Dashboard</h1>
-           <div className="flex items-center gap-4">
-              <p className="text-sm text-muted-foreground">
+           <div className="flex w-full max-w-2xl items-center gap-4">
+               <GlobalSearch onSearchChange={setFilteredData} />
+               <p className="hidden text-sm text-muted-foreground sm:block">
                 Welcome back, {user.displayName || 'Student'}!
               </p>
               <ThemeToggle />
@@ -118,10 +123,19 @@ export default function StudentDashboard() {
         </header>
 
         <div className="flex-1 space-y-12 p-8 sm:p-4 md:p-8">
-            <ContentRow title="Newly Added Notes" items={newlyAdded as ImagePlaceholder[]} />
-            <ContentRow title="Current Year's PYQs" items={currentYearPYQs as ImagePlaceholder[]} />
-            <ContentRow title="Most Important Questions" items={mostImportant as ImagePlaceholder[]} />
-            <ContentRow title="Continue Watching" items={continueWatching as ImagePlaceholder[]} />
+            {filteredData !== null && filteredData.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
+                    <h3 className="text-2xl font-bold tracking-tight">No Results Found</h3>
+                    <p className="text-muted-foreground mt-2">Try adjusting your search terms.</p>
+                </div>
+            ) : (
+                <>
+                    <ContentRow title="Newly Added Notes" items={newlyAdded} />
+                    <ContentRow title="Current Year's PYQs" items={currentYearPYQs} />
+                    <ContentRow title="Most Important Questions" items={mostImportant} />
+                    <ContentRow title="Continue Watching" items={continueWatching} />
+                </>
+            )}
         </div>
       </main>
     </div>

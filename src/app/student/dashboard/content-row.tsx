@@ -28,17 +28,16 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
 
   return (
     <section className="group/row relative py-6">
-      <div className="flex justify-between items-center mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
         <div className="flex items-center gap-2">
-           <Button
+          <Button
             variant="outline"
             size="icon"
             onClick={scrollLeft}
             disabled={!canScrollLeft}
             className={cn(
-              'h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-50',
-              !canScrollLeft && 'opacity-50 cursor-not-allowed'
+              'h-9 w-9 cursor-pointer rounded-full bg-background/80 backdrop-blur-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50',
             )}
             aria-label="Scroll left"
           >
@@ -50,8 +49,7 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
             onClick={scrollRight}
             disabled={!canScrollRight}
             className={cn(
-              'h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm transition-opacity disabled:opacity-50',
-               !canScrollRight && 'opacity-50 cursor-not-allowed'
+              'h-9 w-9 cursor-pointer rounded-full bg-background/80 backdrop-blur-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50',
             )}
             aria-label="Scroll right"
           >
@@ -60,22 +58,20 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
         </div>
       </div>
 
-      <div className="relative">
-        <div className="overflow-hidden">
-            <div
-                ref={scrollContainerRef}
-                className="flex flex-nowrap gap-6 transition-transform duration-500 ease-in-out"
-                style={{
-                    transform: `translateX(-${scrollAmount}px)`,
-                    willChange: 'transform',
-                }}
-            >
-            {items.map((item, index) => (
-                <div key={index} className="flex-shrink-0 py-2">
-                <ContentCard item={item} />
-                </div>
-            ))}
+      <div className="relative z-10 overflow-hidden">
+        <div
+            ref={scrollContainerRef}
+            className="flex flex-nowrap gap-6 transition-transform duration-500 ease-in-out"
+            style={{
+                transform: `translateX(-${scrollAmount}px)`,
+                willChange: 'transform',
+            }}
+        >
+          {items.map((item) => (
+            <div key={item.id} className="flex-shrink-0 py-2">
+              <ContentCard item={item} />
             </div>
+          ))}
         </div>
       </div>
     </section>
