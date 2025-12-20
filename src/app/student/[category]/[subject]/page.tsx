@@ -13,12 +13,27 @@ import {
     Video, 
     Star,
     LayoutDashboard,
-    ArrowLeft
+    ArrowLeft,
+    Menu,
+    Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ImagePlaceholder, PlaceHolderImages } from '@/lib/placeholder-images';
 import ContentCard from '../../dashboard/content-card';
 import { ThemeToggle } from '@/components/theme-toggle';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose
+} from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import GlobalSearch from '../../dashboard/global-search';
+
 
 type CategoryInfo = {
   title: string;
@@ -38,6 +53,7 @@ export default function SubjectPage() {
   const { toast } = useToast();
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
+  const [filteredData, setFilteredData] = useState<ImagePlaceholder[] | null>(null);
 
   const categorySlug = Array.isArray(params.category) ? params.category[0] : params.category;
   const subjectSlug = Array.isArray(params.subject) ? params.subject[0] : params.subject;
@@ -90,10 +106,9 @@ export default function SubjectPage() {
     { name: 'Important Questions', icon: <Star />, href: '/student/imp-questions' },
     { name: 'Video Links', icon: <Video />, href: '/student/videos' },
   ];
-
-  return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="fixed left-0 top-0 hidden h-full w-64 flex-col border-r bg-card shadow-lg md:flex">
+  
+  const SidebarContent = () => (
+      <>
         <div className="flex h-16 items-center border-b px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <BrainCircuit className="h-8 w-8 text-primary" />
@@ -102,14 +117,15 @@ export default function SubjectPage() {
         </div>
         <nav className="flex-1 space-y-2 p-4">
           {sidebarButtons.map(btn => (
-            <Button
-              key={btn.name}
-              variant={ `/student/${categorySlug}` === btn.href ? 'secondary' : 'ghost'}
-              className="w-full justify-start text-base gap-3"
-              asChild
-            >
-              <Link href={btn.href}>{btn.icon}{btn.name}</Link>
-            </Button>
+            <SheetClose asChild key={btn.name}>
+               <Button
+                variant={ `/student/${categorySlug}` === btn.href ? 'secondary' : 'ghost'}
+                className="w-full justify-start text-base gap-3"
+                asChild
+              >
+                <Link href={btn.href}>{btn.icon}{btn.name}</Link>
+              </Button>
+            </SheetClose>
           ))}
         </nav>
         <div className="mt-auto p-4">
@@ -117,15 +133,46 @@ export default function SubjectPage() {
             <LogOut /> Sign Out
           </Button>
         </div>
+      </>
+  )
+
+  return (
+    <div className="flex min-h-screen bg-background text-foreground">
+      <aside className="fixed left-0 top-0 hidden h-full w-64 flex-col border-r bg-card shadow-lg md:flex">
+        <SidebarContent />
       </aside>
 
       <main className="flex-1 w-full overflow-y-auto md:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm">
-          <Button variant="ghost" onClick={() => router.back()} className="gap-2">
-            <ArrowLeft />
-            Back
-          </Button>
-          <div className="flex items-center gap-4">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 md:px-6 backdrop-blur-sm">
+           <div className="flex items-center gap-2">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden">
+                    <Menu className="h-6 w-6" />
+                    <span className="sr-only">Toggle Menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="flex w-[280px] flex-col p-0">
+                  <SidebarContent />
+                </SheetContent>
+              </Sheet>
+               <Button variant="ghost" onClick={() => router.back()} className="gap-2 hidden md:flex">
+                <ArrowLeft />
+                Back
+              </Button>
+            </div>
+          <div className="flex items-center gap-2 md:gap-4">
+              <Dialog>
+                <DialogTrigger asChild>
+                   <Button variant="ghost" size="icon" className="md:hidden">
+                    <Search className="h-6 w-6" />
+                    <span className="sr-only">Search</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="top-[25%]">
+                   <GlobalSearch onSearchChange={setFilteredData} />
+                </DialogContent>
+              </Dialog>
             <p className="hidden text-sm text-muted-foreground sm:block">
               Welcome back, {user.displayName || 'Student'}!
             </p>
@@ -134,23 +181,45 @@ export default function SubjectPage() {
         </header>
 
         <div className="flex-1 space-y-4 p-4 md:p-8">
-            <h1 className="text-4xl font-bold tracking-tight capitalize bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                {subjectName} {categoryInfo.title}
-            </h1>
-            {contentForSubject.length > 0 ? (
+          { filteredData !== null ? (
+             <div className="py-4">
+              <h2 className="text-3xl font-bold tracking-tight">Search Results</h2>
+              {filteredData.length > 0 ? (
                 <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {contentForSubject.map((item) => (
-                        <div key={item.id} className="py-4 flex justify-center">
-                            <ContentCard item={item} />
-                        </div>
-                    ))}
+                  {filteredData.map((item) => (
+                    <div key={item.id} className="py-4 flex justify-center">
+                      <ContentCard item={item} />
+                    </div>
+                  ))}
                 </div>
-            ) : (
+              ) : (
                 <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
-                    <h3 className="text-2xl font-bold tracking-tight">No Content Found</h3>
-                    <p className="text-muted-foreground mt-2">There is no content available for this subject in this category.</p>
+                  <h3 className="text-2xl font-bold tracking-tight">No Results Found</h3>
+                  <p className="text-muted-foreground mt-2">Try adjusting your search terms.</p>
                 </div>
-            )}
+              )}
+            </div>
+           ) : (
+            <>
+              <h1 className="text-4xl font-bold tracking-tight capitalize bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                  {subjectName} {categoryInfo.title}
+              </h1>
+              {contentForSubject.length > 0 ? (
+                  <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {contentForSubject.map((item) => (
+                          <div key={item.id} className="py-4 flex justify-center">
+                              <ContentCard item={item} />
+                          </div>
+                      ))}
+                  </div>
+              ) : (
+                  <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
+                      <h3 className="text-2xl font-bold tracking-tight">No Content Found</h3>
+                      <p className="text-muted-foreground mt-2">There is no content available for this subject in this category.</p>
+                  </div>
+              )}
+            </>
+           )}
         </div>
       </main>
     </div>

@@ -12,7 +12,9 @@ import {
     BrainCircuit, 
     Video, 
     Star,
-    LayoutDashboard
+    LayoutDashboard,
+    Menu,
+    Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ImagePlaceholder, PlaceHolderImages } from '@/lib/placeholder-images';
@@ -20,6 +22,18 @@ import ContentCard from '../dashboard/content-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import GlobalSearch from '../dashboard/global-search';
 import SubjectSection from '../dashboard/subject-section';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet"
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
 
 type CategoryInfo = {
   title: string;
@@ -94,10 +108,9 @@ export default function CategoryPage() {
     { name: 'Important Questions', icon: <Star />, href: '/student/imp-questions' },
     { name: 'Video Links', icon: <Video />, href: '/student/videos' },
   ];
-
-  return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="fixed left-0 top-0 hidden h-full w-64 flex-col border-r bg-card shadow-lg md:flex">
+  
+  const SidebarContent = () => (
+      <>
         <div className="flex h-16 items-center border-b px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <BrainCircuit className="h-8 w-8 text-primary" />
@@ -106,14 +119,15 @@ export default function CategoryPage() {
         </div>
         <nav className="flex-1 space-y-2 p-4">
           {sidebarButtons.map(btn => (
-            <Button
-              key={btn.name}
-              variant={ `/student/${categorySlug}` === btn.href ? 'secondary' : 'ghost'}
-              className="w-full justify-start text-base gap-3"
-              asChild
-            >
-              <Link href={btn.href}>{btn.icon}{btn.name}</Link>
-            </Button>
+            <SheetClose asChild key={btn.name}>
+               <Button
+                variant={ `/student/${categorySlug}` === btn.href ? 'secondary' : 'ghost'}
+                className="w-full justify-start text-base gap-3"
+                asChild
+              >
+                <Link href={btn.href}>{btn.icon}{btn.name}</Link>
+              </Button>
+            </SheetClose>
           ))}
         </nav>
         <div className="mt-auto p-4">
@@ -121,14 +135,48 @@ export default function CategoryPage() {
             <LogOut /> Sign Out
           </Button>
         </div>
+      </>
+  )
+
+
+  return (
+    <div className="flex min-h-screen bg-background text-foreground">
+      <aside className="fixed left-0 top-0 hidden h-full w-64 flex-col border-r bg-card shadow-lg md:flex">
+        <SidebarContent />
       </aside>
 
       <main className="flex-1 w-full overflow-hidden md:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-sm">
-          <div className="flex w-full max-w-lg items-center gap-4">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 md:px-6 backdrop-blur-sm">
+           <div className="flex items-center gap-2">
+            {/* Mobile Sidebar Trigger */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Toggle Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="flex w-[280px] flex-col p-0">
+                 <SidebarContent />
+              </SheetContent>
+            </Sheet>
+           </div>
+          <div className="hidden w-full max-w-lg items-center gap-4 md:flex">
             <GlobalSearch onSearchChange={setFilteredData} />
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+             {/* Mobile Search Trigger */}
+              <Dialog>
+                <DialogTrigger asChild>
+                   <Button variant="ghost" size="icon" className="md:hidden">
+                    <Search className="h-6 w-6" />
+                    <span className="sr-only">Search</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="top-[25%]">
+                   <GlobalSearch onSearchChange={setFilteredData} />
+                </DialogContent>
+              </Dialog>
             <p className="hidden text-sm text-muted-foreground sm:block">
               Welcome back, {user.displayName || 'Student'}!
             </p>
@@ -141,9 +189,9 @@ export default function CategoryPage() {
             <div className="py-4">
               <h2 className="text-3xl font-bold tracking-tight">Search Results</h2>
               {filteredData.length > 0 ? (
-                <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+                <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredData.map((item) => (
-                    <div key={item.id} className="py-4">
+                    <div key={item.id} className="py-4 flex justify-center">
                       <ContentCard item={item} />
                     </div>
                   ))}
