@@ -31,7 +31,22 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
         <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
       </div>
 
-      <div className="relative overflow-hidden">
+      <div className="relative">
+        <div
+          ref={scrollContainerRef}
+          className="overflow-hidden"
+        >
+            <div
+            className="flex flex-nowrap gap-6 transition-transform duration-500 ease-in-out"
+            style={{ willChange: 'transform' }}
+            >
+            {items.map((item, index) => (
+                <div key={index} className="flex-shrink-0">
+                <ContentCard item={item} />
+                </div>
+            ))}
+            </div>
+        </div>
         {/* Navigation Buttons */}
         <Button
           variant="outline"
@@ -55,19 +70,6 @@ const ContentRow = ({ title, items }: ContentRowProps) => {
         >
           <ChevronRight className="h-6 w-6" />
         </Button>
-
-        {/* Inner Scroll Track */}
-        <div
-          ref={scrollContainerRef}
-          className="flex flex-nowrap gap-6 transition-transform duration-500 ease-in-out"
-          style={{ willChange: 'transform' }}
-        >
-          {items.map((item, index) => (
-            <div key={index} className="flex-shrink-0">
-               <ContentCard item={item} />
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
