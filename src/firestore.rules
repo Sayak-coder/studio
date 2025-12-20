@@ -1,0 +1,96 @@
+/**
+ * This ruleset enforces a strict user-ownership and role-based model.
+ *
+ * Core Philosophy:
+ * The default posture is deny-all. Access is granted explicitly.
+ * - User Profiles (/users): Only the owner can read/write their own profile. An admin/official can read/write any profile.
+ * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users.
+ * - Content (/content): Any authenticated user can create/read. Only the author can update/delete.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for improved readability and reusability.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    /**
+     * Checks if the currently authenticated user has a specific role stored in their user document.
+     * This function securely reads the user's own role document.
+     */
+    function getUserRole(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.role;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && (getUserRole(request.auth.uid) == 'admin' || getUserRole(request.auth.uid) == 'official');
+    }
+
+    // Rules for user profiles.
+    match /users/{userId} {
+      // An admin/official can read any user profile. An owner can read their own.
+      allow get: if isAdmin() || isOwner(userId);
+      
+      // Allow an admin/official to update or delete any user profile.
+      // Also, allow a user to update their own profile.
+      allow update, delete: if isAdmin() || isOwner(userId);
+      
+      // Allow any authenticated user to create their own profile, ensuring the ID matches.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      
+      // Allow users with the 'admin' or 'official' role to list all users.
+      allow list: if isAdmin();
+    }
+
+    // Rules for academic content.
+    match /content/{contentId} {
+      /**
+       * @description Any authenticated user can read any piece of content.
+       */
+      allow get, list: if isSignedIn();
+
+      /**
+       * @description Any authenticated user can create a new piece of content,
+       *              as long as they correctly set themselves as the author.
+       */
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+
+      /**
+       * @description Only the original author of the content can update it.
+       *              The authorId and createdAt fields are immutable.
+       */
+      allow update: if isSignedIn() && resource.data.authorId == request.auth.uid
+                    && request.resource.data.authorId == resource.data.authorId
+                    && request.resource.data.createdAt == resource.data.createdAt;
+      
+      /**
+       * @description Only the original author of the content can delete it.
+       */
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+  }
+}
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow reads by anyone. This is safe because the URLs are unguessable.
+    // For stricter security, you could add `&& request.auth != null`
+    allow read: if true;
+
+    // Rules for content files.
+    // Users can only write to a path that matches their own UID.
+    // This rule ensures a user can't upload files on behalf of someone else.
+    match /content/{userId}/{contentId}/{allPaths=**} {
+      allow write: if request.auth != null 
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024 // 5MB limit
+                   && request.resource.contentType.matches('image/.*|application/pdf');
+    }
+  }
+}

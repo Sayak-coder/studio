@@ -106,12 +106,24 @@ export async function handleBackgroundUpload(
         const { downloadURL, fileType } = await uploadFile(userId, docId, file, onProgress);
         const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
         
-        await updateDoc(contentDocRef, {
+        const updatePayload = {
             fileUrl: downloadURL,
             fileType: fileType,
             fileName: file.name,
             fileSize: file.size,
             updatedAt: serverTimestamp(),
+        };
+
+        await updateDoc(contentDocRef, updatePayload).catch((serverError) => {
+           errorEmitter.emit(
+              'permission-error',
+              new FirestorePermissionError({
+                path: contentDocRef.path,
+                operation: 'update',
+                requestResourceData: updatePayload,
+              })
+            );
+            throw serverError;
         });
 
     } catch (error) {
@@ -137,7 +149,7 @@ export function uploadFile(
   onProgress: (progress: number) => void
 ): Promise<{ downloadURL: string; fileType: string }> {
   return new Promise((resolve, reject) => {
-    // New path: contents/{userId}/{contentId}/{originalFileName}
+    // New path: content/{userId}/{contentId}/{originalFileName}
     const filePath = `content/${userId}/${contentId}/${file.name}`;
     const storageRef: StorageReference = ref(storage, filePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
