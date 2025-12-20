@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -19,6 +19,7 @@ import {
   FilePlus,
   User,
   Users,
+  Star,
 } from 'lucide-react';
 
 import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -78,6 +79,11 @@ export default function CRDashboard() {
 
   const { data: myContents, isLoading: isLoadingMyContent } = useCollection<Content>(myContentQuery);
   const { data: otherContents, isLoading: isLoadingOtherContent } = useCollection<Content>(otherContentQuery);
+
+  const otherNotes = useMemo(() => otherContents?.filter(c => c.type === 'Class Notes') || [], [otherContents]);
+  const otherPyqs = useMemo(() => otherContents?.filter(c => c.type === 'PYQ') || [], [otherContents]);
+  const otherImpQs = useMemo(() => otherContents?.filter(c => c.type === 'Important Question') || [], [otherContents]);
+
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -182,12 +188,26 @@ export default function CRDashboard() {
               >
                 <Link href="#my-contributions"><User />My Contributions</Link>
               </Button>
-               <Button
+              <Button
                 variant='ghost'
                 className="w-full justify-start text-base gap-3"
                 asChild
               >
-                <Link href="#other-cr-contributions"><Users />Other Contributions</Link>
+                <Link href="#newly-added"><FileText />Newly Added Notes</Link>
+              </Button>
+              <Button
+                variant='ghost'
+                className="w-full justify-start text-base gap-3"
+                asChild
+              >
+                <Link href="#pyqs"><BookCopy />Current PYQs</Link>
+              </Button>
+              <Button
+                variant='ghost'
+                className="w-full justify-start text-base gap-3"
+                asChild
+              >
+                <Link href="#important-questions"><Star />Important Questions</Link>
               </Button>
         </nav>
         <div className="mt-auto p-4">
@@ -242,14 +262,30 @@ export default function CRDashboard() {
                 isEditable={true}
               />
            </div>
-           <div id="other-cr-contributions">
+           <div id="newly-added">
               <ContentSection 
-                title="Other CR Contributions"
-                contents={otherContents}
+                title="Newly Added Notes"
+                contents={otherNotes}
                 isLoading={isLoadingOtherContent}
                 isEditable={false}
               />
            </div>
+            <div id="pyqs">
+              <ContentSection
+                title="Current PYQs"
+                contents={otherPyqs}
+                isLoading={isLoadingOtherContent}
+                isEditable={false}
+              />
+            </div>
+            <div id="important-questions">
+              <ContentSection
+                title="Important Questions"
+                contents={otherImpQs}
+                isLoading={isLoadingOtherContent}
+                isEditable={false}
+              />
+            </div>
         </div>
       </main>
       
