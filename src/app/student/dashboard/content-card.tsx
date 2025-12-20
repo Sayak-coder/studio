@@ -32,11 +32,18 @@ const ContentCard = ({ item }: ContentCardProps) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
       </div>
       
-      <div className="relative flex flex-grow flex-col p-4">
-        <Badge variant="secondary" className="mb-2 self-start bg-black/20 text-white backdrop-blur-sm">{item.type}</Badge>
-        <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{item.subject}</p>
-        <p className="mt-4 flex-grow text-sm text-foreground/80 line-clamp-3 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 translate-y-4 group-focus-within:opacity-100 group-focus-within:translate-y-0">{item.description}</p>
+      <div className="relative grid flex-grow grid-rows-[auto_1fr_0fr] p-4 transition-all duration-300 ease-in-out group-hover:grid-rows-[auto_1fr_1fr]">
+        <div>
+            <Badge variant="secondary" className="mb-2 self-start bg-black/20 text-white backdrop-blur-sm">{item.type}</Badge>
+            <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{item.subject}</p>
+        </div>
+        
+        <div className="self-end" />
+
+        <div className="overflow-hidden">
+             <p className="mt-4 text-sm text-foreground/80 opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100">{item.description}</p>
+        </div>
       </div>
     </div>
   );
