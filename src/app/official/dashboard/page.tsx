@@ -42,7 +42,7 @@ type UserProfile = {
   id: string;
   name: string;
   email: string;
-  roles: ('student' | 'senior' | 'class-representative' | 'admin' | 'official')[];
+  roles: string[];
   disabled?: boolean;
 };
 

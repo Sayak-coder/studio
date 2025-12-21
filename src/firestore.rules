@@ -22,28 +22,29 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    // Helper function to securely get the role of the requesting user.
-    function getRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    // Helper function to securely get the roles of the requesting user.
+    function getRoles() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles;
     }
     
+    // Helper function to check if the user has one of the specified roles.
     function isOneOfRoles(roles) {
-      return isSignedIn() && getRole() in roles;
+      return isSignedIn() && getRoles().hasAny(roles);
     }
 
     // Rules for the 'users' collection.
     match /users/{userId} {
       // READ: An admin/official can read any profile. A user can read their own.
       allow get: if isOneOfRoles(['admin', 'official']) || isOwner(userId);
-
-      // LIST: Only admins or officials can list all users.
-      allow list: if isOneOfRoles(['admin', 'official']);
       
       // CREATE: A user can create their own profile, ensuring the ID matches their auth UID.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
 
-      // UPDATE/DELETE: An admin/official can modify any profile. A user can modify their own.
+      // UPDATE/DELETE: An admin/official can modify any profile. A user can modify their own (e.g. adding a role).
       allow update, delete: if isOneOfRoles(['admin', 'official']) || isOwner(userId);
+      
+      // LIST: Only admins or officials can list all users.
+      allow list: if isOneOfRoles(['admin', 'official']);
     }
 
     // Rules for academic 'content' collection.
@@ -54,32 +55,14 @@ service cloud.firestore {
       // CREATE: Any authenticated user can create content, but must set themselves as the author.
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
 
-      // UPDATE: Only the original author can update. Admins/officials can also update.
+      // UPDATE: Only the original author, an admin, or an official can update.
       // authorId and createdAt fields are immutable to maintain data integrity.
-      allow update: if (isOwner(resource.data.authorId) || isOneOfRoles(['admin', 'official']))
+      allow update: if (isOwner(resource.data.authorId) || isOneOfRoles(['admin', 'official', 'class-representative']))
                     && request.resource.data.authorId == resource.data.authorId
                     && request.resource.data.createdAt == resource.data.createdAt;
       
-      // DELETE: Only the original author or an admin/official can delete.
-      allow delete: if isOwner(resource.data.authorId) || isOneOfRoles(['admin', 'official']);
-    }
-  }
-}
-
-service firebase.storage {
-  match /b/{bucket}/o {
-    // Allow public reads on all files. URLs are unguessable, providing security by obscurity.
-    // For stricter access, you could add `&& request.auth != null`.
-    allow read;
-
-    // Rules for content files.
-    // Allow users to write files only under their own user ID path.
-    // This prevents one user from uploading files into another user's folder.
-    match /content/{userId}/{contentId}/{allPaths=**} {
-      allow write: if request.auth != null 
-                   && request.auth.uid == userId
-                   && request.resource.size < 5 * 1024 * 1024 // File size must be less than 5MB
-                   && request.resource.contentType.matches('image/.*|application/pdf'); // Allow images and PDFs
+      // DELETE: Only the original author, an admin, or an official can delete.
+      allow delete: if isOwner(resource.data.authorId) || isOneOfRoles(['admin', 'official', 'class-representative']);
     }
   }
 }

@@ -53,7 +53,7 @@ export default function OfficialSignInPage() {
         id: user.uid,
         name: `Official-${user.uid.substring(0, 5)}`,
         email: 'official@edubot.com', // Placeholder email
-        role: 'official',
+        roles: ['official'],
       }, { merge: true }); // Use merge to prevent errors on re-authentication
 
       toast({
