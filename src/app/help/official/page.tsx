@@ -7,8 +7,15 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { firebaseApp } from '@/firebase/config';
+import { FirebaseError } from 'firebase/app';
 
 const OFFICIAL_ID = 'catalyst2025';
+
+// For this demonstration, we'll use a hardcoded but non-obvious account.
+const OFFICIAL_EMAIL = 'admin.official@edubot.local';
+const OFFICIAL_PASSWORD = 'supersecretpassword!23';
 
 export default function OfficialHelpPage() {
   const router = useRouter();
@@ -16,20 +23,47 @@ export default function OfficialHelpPage() {
   const [enteredId, setEnteredId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleVerify = () => {
+  const handleVerifyAndSignIn = async () => {
     setIsLoading(true);
-    if (enteredId === OFFICIAL_ID) {
-      toast({
-        title: 'ID Verified!',
-        description: 'Redirecting to the sign-in page...',
-      });
-      // Instead of going directly to dashboard, go to a sign-in page for security.
-      router.push('/auth/signin/official');
-    } else {
+    
+    if (enteredId !== OFFICIAL_ID) {
       toast({
         variant: 'destructive',
         title: 'Invalid ID',
         description: 'The Official ID you entered is incorrect.',
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const auth = getAuth(firebaseApp);
+      await setPersistence(auth, browserLocalPersistence);
+      
+      // Sign in with the pre-defined official credentials
+      await signInWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
+
+      toast({
+        title: 'Access Granted!',
+        description: 'Redirecting to the Official Dashboard...',
+      });
+      
+      router.push('/official/dashboard');
+
+    } catch (error) {
+      console.error('Official sign-in error:', error);
+      let description = 'An unexpected error occurred. Please try again.';
+      if (error instanceof FirebaseError) {
+        if(error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+            description = "Official account not provisioned. Please contact your administrator."
+        } else {
+            description = error.message;
+        }
+      }
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Failed',
+        description: description,
       });
       setIsLoading(false);
     }
@@ -49,7 +83,7 @@ export default function OfficialHelpPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              handleVerify();
+              handleVerifyAndSignIn();
             }}
           >
             <div className="grid w-full items-center gap-2">
