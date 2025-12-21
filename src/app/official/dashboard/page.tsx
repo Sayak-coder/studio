@@ -77,22 +77,25 @@ export default function OfficialDashboard() {
   
   // Step 2: Effect to check the user's role and enable the main query.
   useEffect(() => {
-    if (isLoadingProfile || !user) return; // Wait for user object and profile to load
+    if (isLoadingProfile || isUserLoading) return; // Wait for user object and profile to load
+
+    if (!user) {
+      router.push('/help/official');
+      return;
+    }
 
     if (userProfile && (userProfile.roles.includes('official') || userProfile.roles.includes('admin'))) {
       setIsRoleVerified(true);
     } else {
-      // If profile is loaded but role is not correct, or if there's no profile
       setIsRoleVerified(false);
-      if(user) { // Only show toast if a user is logged in but has the wrong role
-          toast({
-            variant: 'destructive',
-            title: 'Access Denied',
-            description: `You do not have the required privileges for this portal.`,
-          });
-      }
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: `You do not have the required privileges for this portal.`,
+      });
+       router.push('/');
     }
-  }, [userProfile, isLoadingProfile, user, toast]);
+  }, [userProfile, isLoadingProfile, isUserLoading, user, toast, router]);
 
   // Step 3: Once role is verified, construct the query to get all users.
   const usersQuery = useMemoFirebase(() => {
@@ -166,7 +169,7 @@ export default function OfficialDashboard() {
     }
   };
 
-  if (isUserLoading || isLoadingProfile) {
+  if (isUserLoading || isLoadingProfile || (user && !isRoleVerified)) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -201,7 +204,7 @@ export default function OfficialDashboard() {
     );
   }
 
-  const filteredUsers = allUsers?.filter(u => !u.roles.includes('admin') && !u.roles.includes('official'));
+  const filteredUsers = allUsers?.filter(u => u.roles && !u.roles.includes('admin') && !u.roles.includes('official'));
 
 
   return (
@@ -271,7 +274,7 @@ export default function OfficialDashboard() {
                       <TableCell>{u.email}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {u.roles.map(role => (
+                          {u.roles && u.roles.map(role => (
                             <Badge key={role} variant={'secondary'} className='capitalize'>{role.replace('-', ' ')}</Badge>
                           ))}
                         </div>
