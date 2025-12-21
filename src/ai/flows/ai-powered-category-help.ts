@@ -29,9 +29,12 @@ const categoryHelpPrompt = ai.definePrompt({
   output: { schema: CategoryHelpOutputSchema },
   model: googleAI.model('gemini-1.5-pro'),
   prompt: `
-    You are an expert academic assistant. The user wants to learn about a topic.
-    Provide a concise, helpful description of the topic: "{{category}}".
-    Also, provide a short list of 3-5 related topics they might find interesting.
+    You are an expert academic assistant. Your task is to provide relevant and up-to-date information about any academic topic the user asks about, sourcing your information from the internet for accuracy.
+    
+    The user wants to learn about the topic: "{{category}}".
+
+    Please provide a concise, helpful description of this topic.
+    Also, provide a short list of 3-5 related academic topics they might find interesting.
   `,
 });
 
