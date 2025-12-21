@@ -136,6 +136,11 @@ export default function Home() {
       <footer className="py-6 bg-secondary/50">
         <div className="container mx-auto text-center text-muted-foreground">
           <p>EduBot — Built by students, trusted by students.</p>
+           <div className="mt-2">
+            <Link href="/help/official" className="text-sm text-primary hover:underline">
+              Official Portal
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
