@@ -40,16 +40,11 @@ export default function SignInPage() {
   const categoryTitle = category.replace(/-/g, ' ');
 
   useEffect(() => {
+    // This effect handles redirection AFTER a user is confirmed to be logged in.
     if (!isUserLoading && user) {
-      if (category === 'student') {
-        router.replace('/student/dashboard');
-      } else if (category === 'senior') {
-        router.replace('/senior/dashboard');
-      } else if (category === 'official') {
-        router.replace('/official/dashboard');
-      } else if (category === 'class-representative') {
-        router.replace('/class-representative/dashboard');
-      }
+        // We don't need to check roles here, the /help/[category] page will do that.
+        // Just redirect to the intended dashboard.
+        router.replace(`/${category}/dashboard`);
     }
   }, [user, isUserLoading, router, category]);
 
@@ -67,7 +62,7 @@ export default function SignInPage() {
     if (category === 'class-representative' && specialId !== 'cr-edubot25') {
        toast({
         variant: 'destructive',
-        title: 'Invalid ID',
+        title: 'Invalid CR ID',
         description: 'Please enter the correct CR ID to sign in.',
       });
       return;
@@ -76,7 +71,7 @@ export default function SignInPage() {
     if (category === 'senior' && specialId !== 'sen-edubot25') {
        toast({
         variant: 'destructive',
-        title: 'Invalid ID',
+        title: 'Invalid Senior ID',
         description: 'Please enter the correct Senior ID to sign in.',
       });
       return;
@@ -110,18 +105,18 @@ export default function SignInPage() {
              toast({
               variant: 'destructive',
               title: 'Access Denied',
-              description: `You do not have the required role to access the ${categoryTitle} portal. Please sign up for this role first.`,
+              description: `Your account does not have the '${categoryTitle}' role. Please sign up for this role or contact an administrator.`,
             });
             await auth.signOut();
             setIsLoading(false);
             return;
           }
       } else {
-        // This case should ideally not be hit if signup is the only way to create users.
+        // This case implies an auth user exists without a corresponding Firestore document.
         toast({
           variant: 'destructive',
           title: 'Sign In Failed',
-          description: 'No user profile found. Please sign up first.',
+          description: 'User profile not found. Please sign up first.',
         });
         await auth.signOut();
         setIsLoading(false);
@@ -132,6 +127,7 @@ export default function SignInPage() {
         title: 'Sign in successful!',
         description: 'Redirecting to your dashboard...',
       });
+      // The useEffect will handle the redirection.
 
     } catch (error) {
       console.error('Sign in error:', error);
@@ -198,6 +194,7 @@ export default function SignInPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
+                  required
                 />
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -211,6 +208,7 @@ export default function SignInPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
                     className="pr-10"
+                    required
                   />
                   <Button
                     type="button"
@@ -240,6 +238,7 @@ export default function SignInPage() {
                     value={specialId}
                     onChange={(e) => setSpecialId(e.target.value)}
                     disabled={isLoading}
+                    required
                    />
                 </div>
               )}

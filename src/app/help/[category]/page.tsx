@@ -1,42 +1,59 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+
+type UserProfile = {
+  roles: string[];
+};
 
 export default function AuthPage() {
   const router = useRouter();
   const params = useParams();
+  const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
+  const [isVerifyingRole, setIsVerifyingRole] = useState(true);
 
   const category = Array.isArray(params.category) ? params.category[0] : params.category as string;
   const categoryTitle = category.replace(/-/g, ' ') + ' Portal';
 
+  // Memoize the user document reference
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user?.uid) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user?.uid]);
+
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+
   useEffect(() => {
-    // Wait until the user's auth state is determined
-    if (isUserLoading) {
+    // Wait until both auth state and profile loading are complete
+    if (isUserLoading || isProfileLoading) {
       return;
     }
 
-    if (user) {
-      // If user is logged in, redirect to their dashboard based on the URL category
-      if (category === 'student') {
-        router.replace('/student/dashboard');
-      } else if (category === 'senior') {
-        router.replace('/senior/dashboard');
-      } else if (category === 'class-representative') {
-        router.replace('/class-representative/dashboard');
+    if (user && userProfile) {
+      // User is logged in, check their roles
+      if (userProfile.roles.includes(category)) {
+        // User has the required role, redirect to the dashboard
+        router.replace(`/${category}/dashboard`);
+      } else {
+        // User is logged in but doesn't have the role, stop loading and show options
+        setIsVerifyingRole(false);
       }
-      // Note: No redirect for 'official' here, as it has its own dedicated page.
+    } else {
+      // No user is logged in, or profile doesn't exist. Stop loading.
+      setIsVerifyingRole(false);
     }
-    // If no user, they stay on this page to see the Sign In/Sign Up options
-  }, [user, isUserLoading, router, category]);
+  }, [user, userProfile, isUserLoading, isProfileLoading, router, category]);
 
-  if (isUserLoading || user) {
-    // Show a loading state while checking auth or during redirection
+
+  if (isUserLoading || isVerifyingRole) {
+    // Show a loading state while checking auth/role or during redirection
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -45,7 +62,7 @@ export default function AuthPage() {
     );
   }
 
-  // Render this content only if there is no user and loading is complete
+  // Render this content only if not logged in or role verification is complete and unsuccessful
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center p-8 bg-background">
        <div className="absolute top-4 right-4">
