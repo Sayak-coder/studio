@@ -14,7 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect }from 'react';
 import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
@@ -60,53 +59,18 @@ export default function SignInPage() {
     setIsLoading(true);
     try {
       const auth = getAuth(firebaseApp);
-      const firestore = getFirestore(firebaseApp);
       await setPersistence(auth, browserLocalPersistence);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const authenticatedUser = userCredential.user;
+      await signInWithEmailAndPassword(auth, email, password);
       
-      const userDocRef = doc(firestore, 'users', authenticatedUser.uid);
-      const userDoc = await getDoc(userDocRef);
+      // The withAuth HOC on the dashboard will handle role verification.
+      // We no longer need to check it here.
 
-      if (userDoc.exists()) {
-         if (userDoc.data()?.disabled) {
-            await auth.signOut(); // Force sign out
-            toast({
-              variant: 'destructive',
-              title: 'Account Disabled',
-              description: 'Your account has been disabled by an administrator. Please contact support.',
-            });
-            setIsLoading(false);
-            return;
-          }
-           // Check if the user has the required role
-          const userRoles = userDoc.data()?.roles || [];
-          if (!userRoles.includes(category)) {
-             toast({
-              variant: 'destructive',
-              title: 'Access Denied',
-              description: `Your account does not have the '${categoryTitle}' role. Please sign up for this role or contact an administrator.`,
-            });
-            await auth.signOut();
-            setIsLoading(false);
-            return;
-          }
-      } else {
-        // This case implies an auth user exists without a corresponding Firestore document.
-        toast({
-          variant: 'destructive',
-          title: 'Sign In Failed',
-          description: 'User profile not found. Please sign up first.',
-        });
-        await auth.signOut();
-        setIsLoading(false);
-        return;
-      }
-      
       toast({
         title: 'Sign in successful!',
         description: 'Redirecting to your dashboard...',
       });
+
+      // Redirect immediately. The withAuth guard will take care of the rest.
       router.push(`/${category}/dashboard`);
 
     } catch (error) {
