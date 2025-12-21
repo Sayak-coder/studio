@@ -31,7 +31,6 @@ export default function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [specialId, setSpecialId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const category = Array.isArray(params.category)
@@ -54,24 +53,6 @@ export default function SignInPage() {
         variant: 'destructive',
         title: 'Missing Fields',
         description: 'Please enter both your email and password.',
-      });
-      return;
-    }
-
-    if (category === 'class-representative' && specialId !== 'cr-edubot25') {
-       toast({
-        variant: 'destructive',
-        title: 'Invalid CR ID',
-        description: 'Please enter the correct CR ID to sign in.',
-      });
-      return;
-    }
-    
-    if (category === 'senior' && specialId !== 'sen-edubot25') {
-       toast({
-        variant: 'destructive',
-        title: 'Invalid Senior ID',
-        description: 'Please enter the correct Senior ID to sign in.',
       });
       return;
     }
@@ -224,25 +205,6 @@ export default function SignInPage() {
                   </Button>
                 </div>
               </div>
-              {(category === 'class-representative' || category === 'senior') && (
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="specialId">
-                    {category === 'class-representative' ? 'Unique CR ID' : 'Unique Senior ID'}
-                  </Label>
-                  <Input 
-                    id="specialId" 
-                    placeholder={
-                        category === 'class-representative' 
-                        ? 'Your Unique CR ID' 
-                        : 'Your Unique Senior ID'
-                    }
-                    value={specialId}
-                    onChange={(e) => setSpecialId(e.target.value)}
-                    disabled={isLoading}
-                    required
-                   />
-                </div>
-              )}
               <div className="text-sm">
                 <Link
                   href={`/auth/forgot-password?category=${category}`}

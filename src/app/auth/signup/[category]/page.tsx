@@ -35,7 +35,6 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [specialId, setSpecialId] = useState('');
   const [collegeYear, setCollegeYear] = useState('');
   const [semester, setSemester] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -69,25 +68,6 @@ export default function SignUpPage() {
         variant: 'destructive',
         title: 'Passwords do not match',
         description: 'Please make sure your passwords match.',
-      });
-      return;
-    }
-    
-    // --- Role-Specific ID Validation ---
-    if (category === 'class-representative' && specialId !== 'cr-edubot25') {
-       toast({
-        variant: 'destructive',
-        title: 'Invalid CR ID',
-        description: 'Please enter the correct CR ID to sign up.',
-      });
-      return;
-    }
-    
-    if (category === 'senior' && specialId !== 'sen-edubot25') {
-       toast({
-        variant: 'destructive',
-        title: 'Invalid Senior ID',
-        description: 'Please enter the correct Senior ID to sign up.',
       });
       return;
     }
@@ -310,21 +290,6 @@ export default function SignUpPage() {
                   </Button>
                 </div>
               </div>
-              {(category === 'class-representative' || category === 'senior') && (
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="specialId">
-                     {category === 'class-representative' ? 'Unique CR ID' : 'Unique Senior ID'}
-                  </Label>
-                  <Input
-                    id="specialId"
-                    placeholder="Provided by your institution"
-                    value={specialId}
-                    onChange={(e) => setSpecialId(e.target.value)}
-                    disabled={isLoading}
-                    required
-                  />
-                </div>
-              )}
             </div>
             <Button
               type="submit"
