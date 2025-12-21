@@ -9,9 +9,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 interface ContentCardProps {
   item: Content;
-  onEdit?: (content: Content) => void;
-  onDelete?: (id: string) => void;
-  isEditable?: boolean;
+  onEdit: (content: Content) => void;
+  onDelete: (id: string) => void;
+  isEditable: boolean;
 }
 
 const ContentCard = ({ item, onEdit, onDelete, isEditable = false }: ContentCardProps) => {
@@ -30,7 +30,7 @@ const ContentCard = ({ item, onEdit, onDelete, isEditable = false }: ContentCard
 
       <div className="relative h-[160px] w-full flex-shrink-0">
         <div className="absolute top-2 right-2 z-10 flex gap-1">
-          {isEditable && onEdit && onDelete && (
+          {isEditable && (
             <>
               <TooltipProvider>
                 <Tooltip>
@@ -111,8 +111,6 @@ const ContentCard = ({ item, onEdit, onDelete, isEditable = false }: ContentCard
     </div>
   );
 
-  // If a file URL exists, wrap the entire card in an anchor tag to make it clickable.
-  // Otherwise, render the card content without a link (making it not clickable).
   if (item.fileUrl) {
     return (
       <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className="block">

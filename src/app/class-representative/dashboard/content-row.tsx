@@ -12,9 +12,9 @@ interface ContentRowProps {
   title: string;
   items: Content[] | null;
   isLoading: boolean;
-  onEdit?: (content: Content) => void;
-  onDelete?: (id: string) => void;
-  isEditable?: boolean;
+  onEdit: (content: Content) => void;
+  onDelete: (id: string) => void;
+  isEditable: boolean;
 }
 
 const ContentRow = ({ title, items, isLoading, onEdit, onDelete, isEditable }: ContentRowProps) => {

@@ -13,7 +13,6 @@ import {
   Menu,
   FilePlus,
   User,
-  Users,
   FileText,
   BookCopy,
   Star,
@@ -21,7 +20,7 @@ import {
   Search
 } from 'lucide-react';
 
-import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
 
 import { Content } from './types';
@@ -59,6 +58,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import ContentCard from './content-card';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { doc } from 'firebase/firestore';
+
+type UserProfile = {
+  role: string;
+};
 
 export default function CRDashboard() {
   const router = useRouter();
@@ -75,11 +79,46 @@ export default function CRDashboard() {
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
   
   const [filteredData, setFilteredData] = useState<Content[] | null>(null);
+  const [isRoleVerified, setIsRoleVerified] = useState(false);
 
+
+  // Step 1: Get the current user's profile to verify their role
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  
+  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
+
+  // Step 2: Verify the role and redirect if not a CR
+  useEffect(() => {
+    if (isUserLoading || isLoadingProfile) return;
+
+    if (!user) {
+      router.push('/auth/signin/class-representative');
+      return;
+    }
+
+    if (userProfile) {
+      if (userProfile.role === 'class-representative') {
+        setIsRoleVerified(true);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Access Denied',
+          description: `You are not authorized to view this page. You are logged in as a ${userProfile.role}.`,
+        });
+        router.push('/'); 
+      }
+    }
+    // If there's no user profile, they'll be redirected by the !user check after auth state settles.
+  }, [user, isUserLoading, userProfile, isLoadingProfile, router, toast]);
+
+  // Step 3: Fetch content only if the role is verified
   const allContentQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !isRoleVerified) return null;
     return query(collection(firestore, 'content'));
-  }, [firestore]);
+  }, [firestore, isRoleVerified]);
 
   const { data: allContents, isLoading: isLoadingAllContent } = useCollection<Content>(allContentQuery);
   
@@ -90,12 +129,6 @@ export default function CRDashboard() {
   const otherPyqs = useMemo(() => otherContents?.filter(c => c.type === 'PYQ') || [], [otherContents]);
   const otherImpQs = useMemo(() => otherContents?.filter(c => c.type === 'Important Question') || [], [otherContents]);
 
-
-  React.useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/auth/signin/class-representative');
-    }
-  }, [user, isUserLoading, router]);
 
   const handleSignOut = async () => {
     try {
@@ -153,11 +186,11 @@ export default function CRDashboard() {
     setEditingContent(null);
   }
 
-  if (isUserLoading || !user || isLoadingAllContent) {
+  if (isUserLoading || isLoadingProfile || !isRoleVerified) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-4 text-muted-foreground">Loading dashboard...</p>
+        <p className="ml-4 text-muted-foreground">Verifying access...</p>
       </div>
     );
   }
@@ -167,7 +200,7 @@ export default function CRDashboard() {
         <div className="flex h-16 items-center border-b px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <BrainCircuit className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">EduBot CR</span>
+            <span className="text-xl font-bold">CR Dashboard</span>
           </Link>
         </div>
         <nav className="flex-1 space-y-2 p-4">
@@ -227,7 +260,7 @@ export default function CRDashboard() {
        <div className="flex h-16 items-center border-b px-6">
          <Link href="/" className="flex items-center gap-2 font-semibold">
            <BrainCircuit className="h-8 w-8 text-primary" />
-           <span className="text-xl font-bold">EduBot CR</span>
+           <span className="text-xl font-bold">CR Dashboard</span>
          </Link>
        </div>
        <nav className="flex-1 space-y-2 p-4">
@@ -320,7 +353,7 @@ export default function CRDashboard() {
                     <MobileSidebarContent />
                 </SheetContent>
               </Sheet>
-               <h1 className="text-xl font-semibold md:hidden">EduBot CR</h1>
+               <h1 className="text-xl font-semibold md:hidden">CR Dashboard</h1>
             </div>
           
             <div className="hidden w-full max-w-lg items-center gap-4 md:flex">
@@ -359,7 +392,7 @@ export default function CRDashboard() {
                           item={item} 
                           onEdit={handleEdit}
                           onDelete={openDeleteDialog}
-                          isEditable={item.authorId === user.uid}
+                          isEditable={true}
                         />
                       </div>
                     ))}
@@ -385,26 +418,12 @@ export default function CRDashboard() {
               </div>
               <div id="newly-added">
                 <ContentRow 
-                  title="Newly Added Notes"
-                  items={otherNotes}
+                  title="Content by Other CRs"
+                  items={otherContents}
                   isLoading={isLoadingAllContent}
-                  isEditable={false}
-                />
-              </div>
-              <div id="pyqs">
-                <ContentRow
-                  title="Current PYQs"
-                  items={otherPyqs}
-                  isLoading={isLoadingAllContent}
-                  isEditable={false}
-                />
-              </div>
-              <div id="important-questions">
-                <ContentRow
-                  title="Important Questions"
-                  items={otherImpQs}
-                  isLoading={isLoadingAllContent}
-                  isEditable={false}
+                  onEdit={handleEdit}
+                  onDelete={openDeleteDialog}
+                  isEditable={true}
                 />
               </div>
             </>
