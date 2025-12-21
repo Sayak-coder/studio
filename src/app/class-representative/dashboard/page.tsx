@@ -20,7 +20,7 @@ import {
   Search
 } from 'lucide-react';
 
-import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
 
 import { Content } from './types';
@@ -58,18 +58,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import ContentCard from './content-card';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import { doc } from 'firebase/firestore';
+import withAuth from '@/hoc/withAuth';
 
-type UserProfile = {
-  roles: string[];
-};
 
-export default function CRDashboard() {
+function CRDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const { auth } = useFirebase();
   const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser(); // withAuth ensures user is available
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
@@ -79,62 +76,16 @@ export default function CRDashboard() {
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
   
   const [filteredData, setFilteredData] = useState<Content[] | null>(null);
-  const [isRoleVerified, setIsRoleVerified] = useState(false);
 
-
-  // Step 1: Get the current user's profile to verify their role
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-  
-  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
-
-  // Step 2: Verify the role and redirect if not a CR
-  useEffect(() => {
-    // Don't do anything until both auth and profile loading are finished.
-    if (isUserLoading || isLoadingProfile) {
-      return;
-    }
-
-    // If there is no authenticated user, redirect to sign-in.
-    if (!user) {
-      router.push('/auth/signin/class-representative');
-      return;
-    }
-
-    // If there IS a user, but no profile or the profile lacks the correct role.
-    if (!userProfile || !userProfile.roles.includes('class-representative')) {
-      toast({
-        variant: 'destructive',
-        title: 'Access Denied',
-        description: `You are not authorized to view this page.`,
-      });
-      router.push('/'); // Redirect to a safe page.
-      // Do NOT set isRoleVerified to true. The component will remain in the loading state until redirection is complete.
-      return;
-    }
-
-    // If all checks pass, mark the role as verified.
-    setIsRoleVerified(true);
-
-  }, [user, isUserLoading, userProfile, isLoadingProfile, router, toast]);
-
-  // Step 3: Fetch content only if the role is verified
   const allContentQuery = useMemoFirebase(() => {
-    if (!firestore || !isRoleVerified) return null;
+    if (!firestore) return null;
     return query(collection(firestore, 'content'));
-  }, [firestore, isRoleVerified]);
+  }, [firestore]);
 
   const { data: allContents, isLoading: isLoadingAllContent } = useCollection<Content>(allContentQuery);
   
   const myContents = useMemo(() => allContents?.filter(c => c.authorId === user?.uid) || [], [allContents, user?.uid]);
   const otherContents = useMemo(() => allContents?.filter(c => c.authorId !== user?.uid) || [], [allContents, user?.uid]);
-
-  const otherNotes = useMemo(() => otherContents?.filter(c => c.type === 'Class Notes') || [], [otherContents]);
-  const otherPyqs = useMemo(() => otherContents?.filter(c => c.type === 'PYQ') || [], [otherContents]);
-  const otherImpQs = useMemo(() => otherContents?.filter(c => c.type === 'Important Question') || [], [otherContents]);
-
 
   const handleSignOut = async () => {
     try {
@@ -144,7 +95,7 @@ export default function CRDashboard() {
           title: 'Signed Out',
           description: 'You have been successfully signed out.',
         });
-        router.push('/auth/signin/class-representative');
+        router.push('/help/class-representative');
       }
     } catch (error) {
       console.error('Sign out error:', error);
@@ -191,15 +142,6 @@ export default function CRDashboard() {
     setIsFormOpen(false);
     setEditingContent(null);
   }
-
-  if (isUserLoading || isLoadingProfile || !isRoleVerified) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-4 text-muted-foreground">Verifying access...</p>
-      </div>
-    );
-  }
   
   const SidebarContent = () => (
      <>
@@ -236,21 +178,7 @@ export default function CRDashboard() {
                   className="w-full justify-start text-base gap-3"
                   asChild
                 >
-                  <Link href="#newly-added"><FileText />Newly Added Notes</Link>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className="w-full justify-start text-base gap-3"
-                  asChild
-                >
-                  <Link href="#pyqs"><BookCopy />Current PYQs</Link>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className="w-full justify-start text-base gap-3"
-                  asChild
-                >
-                  <Link href="#important-questions"><Star />Important Questions</Link>
+                  <Link href="#other-contributions"><FileText />Other Contributions</Link>
                 </Button>
         </nav>
         <div className="mt-auto p-4">
@@ -303,25 +231,7 @@ export default function CRDashboard() {
                    className="w-full justify-start text-base gap-3"
                    asChild
                  >
-                   <Link href="#newly-added"><FileText />Newly Added Notes</Link>
-                 </Button>
-             </SheetClose>
-             <SheetClose asChild>
-                 <Button
-                   variant='ghost'
-                   className="w-full justify-start text-base gap-3"
-                   asChild
-                 >
-                   <Link href="#pyqs"><BookCopy />Current PYQs</Link>
-                 </Button>
-             </SheetClose>
-             <SheetClose asChild>
-                 <Button
-                   variant='ghost'
-                   className="w-full justify-start text-base gap-3"
-                   asChild
-                 >
-                   <Link href="#important-questions"><Star />Important Questions</Link>
+                   <Link href="#other-contributions"><FileText />Other Contributions</Link>
                  </Button>
              </SheetClose>
        </nav>
@@ -422,7 +332,7 @@ export default function CRDashboard() {
                   isEditable={true}
                 />
               </div>
-              <div id="newly-added">
+              <div id="other-contributions">
                 <ContentRow 
                   title="Content by Other CRs"
                   items={otherContents}
@@ -437,12 +347,12 @@ export default function CRDashboard() {
         </div>
       </main>
       
-       <ContentForm 
+       {user && <ContentForm 
           isOpen={isFormOpen}
           onClose={closeForm}
           editingContent={editingContent}
           user={user}
-       />
+       />}
 
        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
@@ -467,3 +377,5 @@ export default function CRDashboard() {
     </div>
   );
 }
+
+export default withAuth(CRDashboard, 'class-representative');

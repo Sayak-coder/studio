@@ -1,23 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useToast } from '@/hooks/use-toast';
 
 type UserProfile = {
   roles: string[];
 };
 
-export default function AuthPage() {
+// This page acts as a router based on auth state.
+export default function AuthRouterPage() {
   const router = useRouter();
   const params = useParams();
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
-  const [isVerifyingRole, setIsVerifyingRole] = useState(true);
+  const { toast } = useToast();
 
   const category = Array.isArray(params.category) ? params.category[0] : params.category as string;
   const categoryTitle = category.replace(/-/g, ' ') + ' Portal';
@@ -33,7 +35,7 @@ export default function AuthPage() {
   useEffect(() => {
     // Wait until both auth state and profile loading are complete
     if (isUserLoading || isProfileLoading) {
-      return;
+      return; // Show loading spinner while we check
     }
 
     if (user && userProfile) {
@@ -41,28 +43,24 @@ export default function AuthPage() {
       if (userProfile.roles.includes(category)) {
         // User has the required role, redirect to the dashboard
         router.replace(`/${category}/dashboard`);
-      } else {
-        // User is logged in but doesn't have the role, stop loading and show options
-        setIsVerifyingRole(false);
       }
-    } else {
-      // No user is logged in, or profile doesn't exist. Stop loading.
-      setIsVerifyingRole(false);
+      // If they don't have the role, we do nothing and let the selection page render
     }
+    // If no user, we also do nothing and let the page render.
   }, [user, userProfile, isUserLoading, isProfileLoading, router, category]);
 
 
-  if (isUserLoading || isVerifyingRole) {
-    // Show a loading state while checking auth/role or during redirection
+  // If we are still checking auth, show a loading spinner.
+  if (isUserLoading || (user && isProfileLoading)) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Checking authentication...</p>
+        <p className="mt-4 text-muted-foreground">Checking session...</p>
       </div>
     );
   }
 
-  // Render this content only if not logged in or role verification is complete and unsuccessful
+  // Render the public selection page if user is not logged in OR is logged in but doesn't have the specific role.
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center p-8 bg-background">
        <div className="absolute top-4 right-4">

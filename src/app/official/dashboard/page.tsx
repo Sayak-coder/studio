@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal } from "lucide-react"
 import { ThemeToggle } from '@/components/theme-toggle';
+import withAuth from '@/hoc/withAuth';
 
 type UserProfile = {
   id: string;
@@ -48,63 +49,24 @@ type UserProfile = {
 
 type ActionType = 'block' | 'unblock' | 'delete';
 
-export default function OfficialDashboard() {
+function OfficialDashboard() {
   const router = useRouter();
   const firestore = useFirestore();
   const { auth } = useFirebase();
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser();
   const { toast } = useToast();
-  const [isRoleVerified, setIsRoleVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [dialogState, setDialogState] = useState<{isOpen: boolean, user: UserProfile | null, action: ActionType | null}>({ isOpen: false, user: null, action: null });
 
-
-  // Redirect to login if user is not authenticated after loading
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/help/official');
-    }
-  }, [user, isUserLoading, router]);
-
-  // Step 1: Fetch the current user's profile to verify their role.
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-
-  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
-  
-  // Step 2: Effect to check the user's role and enable the main query.
-  useEffect(() => {
-    if (isLoadingProfile || isUserLoading) return; // Wait for user object and profile to load
-
-    if (!user) {
-      router.push('/help/official');
-      return;
-    }
-
-    if (userProfile && (userProfile.roles.includes('official') || userProfile.roles.includes('admin'))) {
-      setIsRoleVerified(true);
-    } else {
-      setIsRoleVerified(false);
-      toast({
-        variant: 'destructive',
-        title: 'Access Denied',
-        description: `You do not have the required privileges for this portal.`,
-      });
-       router.push('/');
-    }
-  }, [userProfile, isLoadingProfile, isUserLoading, user, toast, router]);
-
-  // Step 3: Once role is verified, construct the query to get all users.
+  // Query for all users. The withAuth HOC ensures this component only renders
+  // for an authorized official/admin, so this query is secure.
   const usersQuery = useMemoFirebase(() => {
-    // Only run this query if the user's role has been verified as official/admin
-    if (firestore && isRoleVerified) {
+    if (firestore) {
       return query(collection(firestore, 'users'));
     }
-    return null; // Otherwise, the query is null and won't run
-  }, [firestore, isRoleVerified]);
+    return null;
+  }, [firestore]);
 
   const { data: allUsers, isLoading: isLoadingUsers, error: usersError } = useCollection<UserProfile>(usersQuery);
 
@@ -169,43 +131,7 @@ export default function OfficialDashboard() {
     }
   };
 
-  if (isUserLoading || isLoadingProfile || (user && !isRoleVerified)) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-4 text-muted-foreground">Verifying credentials...</p>
-      </div>
-    );
-  }
-
-  if (user && !isLoadingProfile && !isRoleVerified) {
-     return (
-       <div className="flex h-screen w-full flex-col items-center justify-center bg-background p-4">
-         <Card className="w-full max-w-md text-center">
-            <CardHeader>
-                <CardTitle className="flex items-center justify-center gap-2 text-2xl text-destructive">
-                    <ShieldAlert className="h-8 w-8"/>
-                    Access Denied
-                </CardTitle>
-                <CardDescription>
-                    Your account does not have the required privileges for this portal.
-                </CardDescription>
-            </CardHeader>
-             <CardContent>
-                <p className="text-sm text-muted-foreground">
-                    This dashboard is for authorized personnel only. If you believe this is a mistake, please contact your administrator.
-                </p>
-                <Button variant="link" className="mt-4" onClick={() => router.push('/')}>
-                  Return to Home
-                </Button>
-            </CardContent>
-         </Card>
-      </div>
-    );
-  }
-
   const filteredUsers = allUsers?.filter(u => u.roles && !u.roles.includes('admin') && !u.roles.includes('official'));
-
 
   return (
     <div className="flex min-h-screen bg-secondary/30 text-foreground">
@@ -216,7 +142,7 @@ export default function OfficialDashboard() {
             <span className="text-xl">EduBot Official Portal</span>
           </Link>
           <div className="flex items-center gap-4">
-            <p className="hidden sm:block">Welcome, {userProfile?.name || 'Official'}</p>
+            <p className="hidden sm:block">Welcome, {user?.displayName || 'Official'}</p>
             <Button variant="ghost" onClick={handleSignOut} className="gap-2">
               <LogOut className="h-5 w-5" />
               Sign Out
@@ -243,7 +169,7 @@ export default function OfficialDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoadingUsers && isRoleVerified && (
+                  {isLoadingUsers && (
                     <TableRow>
                       <TableCell colSpan={5}>
                         <div className="flex items-center justify-center py-10">
@@ -261,7 +187,7 @@ export default function OfficialDashboard() {
                         </TableCell>
                       </TableRow>
                   )}
-                  {!isLoadingUsers && filteredUsers?.length === 0 && isRoleVerified &&(
+                  {!isLoadingUsers && filteredUsers?.length === 0 && (
                      <TableRow>
                         <TableCell colSpan={5} className="h-24 text-center">
                           No relevant users found in the system.
@@ -275,7 +201,7 @@ export default function OfficialDashboard() {
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {u.roles && u.roles.map(role => (
-                            <Badge key={role} variant={'secondary'} className='capitalize'>{role.replace('-', ' ')}</Badge>
+                            <Badge key={role} variant={'secondary'} className='capitalize'>{role.replace(/-/g, ' ')}</Badge>
                           ))}
                         </div>
                       </TableCell>
@@ -345,3 +271,6 @@ export default function OfficialDashboard() {
     </div>
   );
 }
+
+
+export default withAuth(OfficialDashboard, 'official');

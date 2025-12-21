@@ -40,10 +40,9 @@ export default function SignInPage() {
   const categoryTitle = category.replace(/-/g, ' ');
 
   useEffect(() => {
-    // This effect handles redirection AFTER a user is confirmed to be logged in.
+    // If the user is already logged in, try to redirect them to the dashboard.
+    // The dashboard's own withAuth guard will handle role verification.
     if (!isUserLoading && user) {
-        // We don't need to check roles here, the /help/[category] page will do that.
-        // Just redirect to the intended dashboard.
         router.replace(`/${category}/dashboard`);
     }
   }, [user, isUserLoading, router, category]);
@@ -127,7 +126,7 @@ export default function SignInPage() {
         title: 'Sign in successful!',
         description: 'Redirecting to your dashboard...',
       });
-      // The useEffect will handle the redirection.
+      router.push(`/${category}/dashboard`);
 
     } catch (error) {
       console.error('Sign in error:', error);
@@ -154,6 +153,7 @@ export default function SignInPage() {
     }
   };
 
+  // While checking auth state, or if user is found (and redirection is happening), show loading.
   if (isUserLoading || user) {
      return (
        <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
@@ -163,6 +163,7 @@ export default function SignInPage() {
     );
   }
 
+  // Only render the form if the user is not logged in.
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center p-4 bg-background">
        <div className="absolute top-4 right-4">

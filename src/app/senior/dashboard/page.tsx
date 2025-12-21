@@ -28,17 +28,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { ThemeToggle } from '@/components/theme-toggle';
+import withAuth from '@/hoc/withAuth';
 
-type UserProfile = {
-  roles: string[];
-};
-
-export default function SeniorDashboard() {
+function SeniorDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const { auth } = useFirebase();
   const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
+  const { user } = useUser(); // withAuth ensures user is available
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -46,44 +43,11 @@ export default function SeniorDashboard() {
 
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
-  const [isRoleVerified, setIsRoleVerified] = useState(false);
   
-  // Step 1: Get the current user's profile to verify their role
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-  
-  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
-
-  // Step 2: Verify the role and redirect if necessary
-  useEffect(() => {
-    if (isUserLoading || isLoadingProfile) return;
-
-    if (!user) {
-      router.push('/auth/signin/senior');
-      return;
-    }
-
-    if (userProfile) {
-      if (userProfile.roles.includes('senior')) {
-        setIsRoleVerified(true);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Access Denied',
-          description: `You are not authorized to view this page.`,
-        });
-        router.push('/'); 
-      }
-    }
-  }, [user, isUserLoading, userProfile, isLoadingProfile, router, toast]);
-
-  // Step 3: Fetch content only if the role is verified
   const contentQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid || !isRoleVerified) return null;
+    if (!firestore || !user?.uid) return null;
     return query(collection(firestore, 'content'), where('authorId', '==', user.uid));
-  }, [firestore, user?.uid, isRoleVerified]);
+  }, [firestore, user?.uid]);
   
   const { data: contents, isLoading: isLoadingContent } = useCollection<Content>(contentQuery);
   
@@ -96,7 +60,7 @@ export default function SeniorDashboard() {
           title: 'Signed Out',
           description: 'You have been successfully signed out.',
         });
-        router.push('/auth/signin/senior');
+        router.push('/help/senior');
       }
     } catch (error) {
       console.error('Sign out error:', error);
@@ -144,15 +108,6 @@ export default function SeniorDashboard() {
     setEditingContent(null);
   }
 
-  if (isUserLoading || isLoadingProfile || !isRoleVerified) {
-    return (
-       <div className="flex h-screen w-full items-center justify-center bg-background">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="ml-4 text-muted-foreground">Verifying access...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen bg-secondary/30 text-foreground">
       {/* Sidebar */}
@@ -171,14 +126,6 @@ export default function SeniorDashboard() {
                <Button variant="ghost" className="w-full justify-start text-base" onClick={handleAddNew}>
                 <FilePlus className="mr-3 h-5 w-5" />
                 Add Content
-              </Button>
-              <Button variant="ghost" className="w-full justify-start text-base">
-                <FileText className="mr-3 h-5 w-5" />
-                Notes
-              </Button>
-               <Button variant="ghost" className="w-full justify-start text-base">
-                <HelpCircle className="mr-3 h-5 w-5" />
-                PYQs
               </Button>
           </nav>
           <div className="mt-auto p-4">
@@ -214,12 +161,12 @@ export default function SeniorDashboard() {
         </div>
       </main>
 
-       <ContentForm 
+       {user && <ContentForm 
           isOpen={isFormOpen}
           onClose={closeForm}
           editingContent={editingContent}
           user={user}
-       />
+       />}
       
       {/* Delete Confirmation Dialog */}
        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -245,3 +192,5 @@ export default function SeniorDashboard() {
     </div>
   );
 }
+
+export default withAuth(SeniorDashboard, 'senior');

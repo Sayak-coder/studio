@@ -46,9 +46,9 @@ export default function SignUpPage() {
   const categoryTitle = category.replace(/-/g, ' ');
 
   useEffect(() => {
+    // If the user is already logged in, try to redirect them to the dashboard.
+    // The dashboard's own withAuth guard will handle role verification.
     if (!isUserLoading && user) {
-        // If user is logged in, redirect them to the correct dashboard.
-        // This handles the case where they just finished signing up or logging in.
         router.replace(`/${category}/dashboard`);
     }
   }, [user, isUserLoading, router, category]);
@@ -117,16 +117,51 @@ export default function SignUpPage() {
         title: 'Sign up successful!',
         description: "We're redirecting you to your dashboard.",
       });
-      // The useEffect will handle the redirection.
+      router.push(`/${category}/dashboard`);
 
     } catch (error) {
        if (error instanceof FirebaseError && error.code === 'auth/email-already-in-use') {
          // --- Existing User, Add New Role ---
          toast({
-            variant: 'destructive',
-            title: 'Email Already Registered',
-            description: 'This email is already in use. Please use the Sign In page to access your account.',
-          });
+            title: 'Email Already In Use',
+            description: 'Attempting to add new role to existing account...',
+         });
+         try {
+            // Step 1: Sign in the user to verify ownership
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            const userRef = doc(firestore, 'users', user.uid);
+            const userDoc = await getDoc(userRef);
+
+            // Step 2: If sign-in is successful and user doc exists, add the new role
+            if (userDoc.exists()) {
+                const currentRoles = userDoc.data().roles || [];
+                if (!currentRoles.includes(category)) {
+                    await updateDoc(userRef, {
+                        roles: arrayUnion(category)
+                    });
+                    toast({
+                        title: 'Role Added Successfully!',
+                        description: `The '${categoryTitle}' role has been added to your account.`,
+                    });
+                    router.push(`/${category}/dashboard`);
+                } else {
+                     toast({
+                        variant: 'destructive',
+                        title: 'Role Already Exists',
+                        description: `Your account already has the '${categoryTitle}' role.`,
+                    });
+                    router.push(`/${category}/dashboard`);
+                }
+            }
+         } catch(signInError) {
+             toast({
+                variant: 'destructive',
+                title: 'Authentication Failed',
+                description: 'The email is registered, but the password provided is incorrect.',
+             });
+         }
        } else {
          // --- Other Creation Errors (e.g., weak password) ---
          console.error('Sign up error:', error);
@@ -147,6 +182,7 @@ export default function SignUpPage() {
     }
   };
   
+  // While checking auth state, or if user is found (and redirection is happening), show loading.
   if (isUserLoading || user) {
      return (
        <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
@@ -156,6 +192,7 @@ export default function SignUpPage() {
     );
   }
 
+  // Only render the form if the user is not logged in.
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center p-4 bg-background">
       <div className="absolute top-4 right-4">
