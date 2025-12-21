@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { firebaseApp } from '@/firebase/config';
 import { FirebaseError } from 'firebase/app';
 
@@ -36,37 +37,68 @@ export default function OfficialHelpPage() {
       return;
     }
 
+    const auth = getAuth(firebaseApp);
+    const firestore = getFirestore(firebaseApp);
+
     try {
-      const auth = getAuth(firebaseApp);
       await setPersistence(auth, browserLocalPersistence);
       
-      // Sign in with the pre-defined official credentials
+      // Try to sign in with the pre-defined official credentials
       await signInWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
 
-      toast({
-        title: 'Access Granted!',
-        description: 'Redirecting to the Official Dashboard...',
-      });
-      
-      router.push('/official/dashboard');
-
     } catch (error) {
-      console.error('Official sign-in error:', error);
-      let description = 'An unexpected error occurred. Please try again.';
-      if (error instanceof FirebaseError) {
-        if(error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-            description = "Official account not provisioned. Please contact your administrator."
-        } else {
-            description = error.message;
+       // If the user does not exist, create them first, then sign in.
+      if (error instanceof FirebaseError && error.code === 'auth/user-not-found') {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
+            const user = userCredential.user;
+
+            // Create the corresponding Firestore document with the 'official' role.
+            const userRef = doc(firestore, 'users', user.uid);
+            await setDoc(userRef, {
+                id: user.uid,
+                email: user.email,
+                name: "Official Admin",
+                roles: ['official', 'admin'],
+                createdAt: serverTimestamp(),
+                disabled: false,
+            });
+            
+             // Now that the user is created, signInWithEmailAndPassword will succeed if called again,
+             // but createUserWithEmailAndPassword already signs the user in.
+        } catch (creationError) {
+             console.error('Official account creation error:', creationError);
+             toast({
+                variant: 'destructive',
+                title: 'Provisioning Failed',
+                description: 'Could not create the official account. Please contact support.',
+             });
+             setIsLoading(false);
+             return;
         }
+      } else {
+        // Handle other errors like wrong password for an existing account
+        console.error('Official sign-in error:', error);
+        let description = 'An unexpected error occurred during sign-in.';
+        if (error instanceof FirebaseError) {
+            description = "Authentication failed. Please check credentials or contact support.";
+        }
+        toast({
+          variant: 'destructive',
+          title: 'Authentication Failed',
+          description: description,
+        });
+        setIsLoading(false);
+        return; // Stop execution on failure
       }
-      toast({
-        variant: 'destructive',
-        title: 'Authentication Failed',
-        description: description,
-      });
-      setIsLoading(false);
     }
+    
+    // If sign-in or creation was successful, proceed.
+    toast({
+      title: 'Access Granted!',
+      description: 'Redirecting to the Official Dashboard...',
+    });
+    router.push('/official/dashboard');
   };
 
   return (
