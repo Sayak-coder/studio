@@ -135,7 +135,7 @@ export default function SignInPage() {
 
     } catch (error) {
       console.error('Sign in error:', error);
-      let description = 'Invalid credentials or CR ID.';
+      let description = 'Invalid credentials.';
 
       if (error instanceof FirebaseError) {
         switch (error.code) {

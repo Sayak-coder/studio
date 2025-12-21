@@ -125,8 +125,8 @@ export default function SignUpPage() {
        if (error instanceof FirebaseError && error.code === 'auth/email-already-in-use') {
          // This email already exists. Try to sign them in and update their role.
          try {
-           await signInWithEmailAndPassword(auth, email, password);
-           const userRef = doc(firestore, 'users', auth.currentUser!.uid);
+           const userCredential = await signInWithEmailAndPassword(auth, email, password);
+           const userRef = doc(firestore, 'users', userCredential.user.uid);
            
            // Add the new role to the 'roles' array.
            await updateDoc(userRef, {

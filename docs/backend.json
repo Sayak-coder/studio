@@ -98,7 +98,8 @@
         "type",
         "content",
         "authorId",
-        "createdAt"
+        "createdAt",
+        "authorName"
       ]
     }
   },
