@@ -66,7 +66,7 @@ export default function SignUpPage() {
       return;
     }
 
-    if (category === 'class-representative' && specialId !== 'cr_edubot25') {
+    if (category === 'class-representative' && specialId !== 'cr-edubot25') {
        toast({
         variant: 'destructive',
         title: 'Invalid ID',
@@ -75,7 +75,7 @@ export default function SignUpPage() {
       return;
     }
     
-    if (category === 'senior' && specialId !== 'sen_edubot25') {
+    if (category === 'senior' && specialId !== 'sen-edubot25') {
        toast({
         variant: 'destructive',
         title: 'Invalid ID',
