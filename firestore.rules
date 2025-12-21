@@ -1,10 +1,10 @@
 /**
- * This ruleset enforces a strict user-ownership and role-based model using custom claims.
+ * This ruleset enforces a strict user-ownership and role-based model.
  *
  * Core Philosophy:
  * The default posture is deny-all. Access is granted explicitly.
  * - User Profiles (/users): Only the owner can read/write their own profile. An admin/official can read/write any profile.
- * - User Listing (/users): Only users with an 'admin' or 'official' role claim can list all users.
+ * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users.
  * - Content (/content): Any authenticated user can create/read. Only the author can update/delete.
  */
 rules_version = '2';
@@ -19,13 +19,17 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-
+    
     /**
-     * Checks if the currently authenticated user's token has an 'admin' or 'official' role.
-     * This relies on custom claims set on the user's authentication token.
+     * Checks if the currently authenticated user has a specific role stored in their user document.
+     * This function securely reads the user's own role document.
      */
+    function getUserRole(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.role;
+    }
+    
     function isAdmin() {
-      return isSignedIn() && (request.auth.token.role == 'admin' || request.auth.token.role == 'official');
+      return isSignedIn() && (getUserRole(request.auth.uid) == 'admin' || getUserRole(request.auth.uid) == 'official');
     }
 
     // Rules for user profiles.
@@ -59,7 +63,7 @@ service cloud.firestore {
 
       /**
        * @description Only the original author of the content can update it.
-       *              The authorId and createdAt fields are immutable on content updates by the author.
+       *              The authorId and createdAt fields are immutable.
        */
       allow update: if isSignedIn() && resource.data.authorId == request.auth.uid
                     && request.resource.data.authorId == resource.data.authorId

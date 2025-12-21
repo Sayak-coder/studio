@@ -95,13 +95,7 @@
     "providers": [
       "password",
       "anonymous"
-    ],
-    "customClaims": {
-      "role": {
-        "type": "string",
-        "enum": ["student", "class-representative", "senior", "official", "admin"]
-      }
-    }
+    ]
   },
   "firestore": {
     "structure": [
