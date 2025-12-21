@@ -46,7 +46,7 @@ export default function OfficialSignInPage() {
       const userCredential = await signInAnonymously(auth);
       const user = userCredential.user;
 
-      // Step 2: Create a user profile with the 'official' role.
+      // Step 2: Create or merge a user profile with the 'official' role.
       // This document is what the dashboard's security rules will check.
       const userRef = doc(firestore, 'users', user.uid);
       await setDoc(userRef, {
@@ -54,7 +54,7 @@ export default function OfficialSignInPage() {
         name: `Official-${user.uid.substring(0, 5)}`,
         email: 'official@edubot.com', // Placeholder email
         role: 'official',
-      });
+      }, { merge: true }); // Use merge to prevent errors on re-authentication
 
       toast({
         title: 'Access Granted!',
