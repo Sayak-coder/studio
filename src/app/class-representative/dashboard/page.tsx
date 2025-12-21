@@ -92,26 +92,32 @@ export default function CRDashboard() {
 
   // Step 2: Verify the role and redirect if not a CR
   useEffect(() => {
-    if (isUserLoading || isLoadingProfile) return;
+    // Don't do anything until both auth and profile loading are finished.
+    if (isUserLoading || isLoadingProfile) {
+      return;
+    }
 
+    // If there is no authenticated user, redirect to sign-in.
     if (!user) {
       router.push('/auth/signin/class-representative');
       return;
     }
 
-    if (userProfile) {
-      if (userProfile.roles.includes('class-representative')) {
-        setIsRoleVerified(true);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Access Denied',
-          description: `You are not authorized to view this page. You are logged in with roles: ${userProfile.roles.join(', ')}.`,
-        });
-        router.push('/'); 
-      }
+    // If there IS a user, but no profile or the profile lacks the correct role.
+    if (!userProfile || !userProfile.roles.includes('class-representative')) {
+      toast({
+        variant: 'destructive',
+        title: 'Access Denied',
+        description: `You are not authorized to view this page.`,
+      });
+      router.push('/'); // Redirect to a safe page.
+      // Do NOT set isRoleVerified to true. The component will remain in the loading state until redirection is complete.
+      return;
     }
-    // If there's no user profile, they'll be redirected by the !user check after auth state settles.
+
+    // If all checks pass, mark the role as verified.
+    setIsRoleVerified(true);
+
   }, [user, isUserLoading, userProfile, isLoadingProfile, router, toast]);
 
   // Step 3: Fetch content only if the role is verified
