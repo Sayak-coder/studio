@@ -35,8 +35,8 @@ service cloud.firestore {
 
     // Rules for the 'users' collection.
     match /users/{userId} {
-      // READ: An admin/official can read any profile. A user can read their own.
-      allow get: if hasAnyRole(['admin', 'official']) || isOwner(userId);
+      // READ: Any authenticated user can read any profile to check roles. Admins/officials can also read.
+      allow get: if isSignedIn();
       
       // CREATE: A user can create their own profile, ensuring the ID matches their auth UID.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
