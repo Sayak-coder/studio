@@ -5,7 +5,7 @@
  * The default posture is deny-all. Access is granted explicitly.
  * - User Profiles (/users): Only the owner can read/write their own profile. An admin/official can read/write any profile.
  * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users. This is checked by reading the requesting user's own profile.
- * - Content (/content): Any authenticated user can create/read. Only the author can update/delete.
+ * - Content (/content): Any authenticated user can create/read. Only the author or an official/admin can update/delete.
  */
 rules_version = '2';
 
@@ -23,12 +23,12 @@ service cloud.firestore {
     }
     
     // Helper function to securely get the role of the requesting user.
-    function isRole(role) {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
     
     function isOneOfRoles(roles) {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
+      return isSignedIn() && getRole() in roles;
     }
 
     // Rules for the 'users' collection.
