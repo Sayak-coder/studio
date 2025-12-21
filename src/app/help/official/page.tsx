@@ -47,8 +47,9 @@ export default function OfficialHelpPage() {
       await signInWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
 
     } catch (error) {
-       // If the user does not exist, create them first, then sign in.
-      if (error instanceof FirebaseError && error.code === 'auth/user-not-found') {
+       // If sign-in fails (e.g., user not found, wrong password for an old account),
+       // we proceed to try and create the account.
+       if (error instanceof FirebaseError && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
             const user = userCredential.user;
@@ -64,9 +65,23 @@ export default function OfficialHelpPage() {
                 disabled: false,
             });
             
-             // Now that the user is created, signInWithEmailAndPassword will succeed if called again,
-             // but createUserWithEmailAndPassword already signs the user in.
+             // `createUserWithEmailAndPassword` already signs the user in, so we are good to go.
         } catch (creationError) {
+             // This might happen if the email exists but the password was wrong initially.
+             // In a real-world scenario, you might want to handle this differently,
+             // but for this demo, we'll assume the initial password is the source of truth.
+             if (creationError instanceof FirebaseError && creationError.code === 'auth/email-already-in-use') {
+                // This is an expected failure case if the account exists but the password was wrong.
+                // We'll proceed as the user is likely not logged in.
+                 toast({
+                    variant: 'destructive',
+                    title: 'Authentication Failed',
+                    description: 'The account exists, but the password was incorrect. Please contact support to reset.',
+                 });
+                 setIsLoading(false);
+                 return;
+             }
+             
              console.error('Official account creation error:', creationError);
              toast({
                 variant: 'destructive',
@@ -77,16 +92,12 @@ export default function OfficialHelpPage() {
              return;
         }
       } else {
-        // Handle other errors like wrong password for an existing account
+        // Handle other unexpected errors during sign-in
         console.error('Official sign-in error:', error);
-        let description = 'An unexpected error occurred during sign-in.';
-        if (error instanceof FirebaseError) {
-            description = "Authentication failed. Please check credentials or contact support.";
-        }
         toast({
           variant: 'destructive',
           title: 'Authentication Failed',
-          description: description,
+          description: 'An unexpected error occurred during sign-in.',
         });
         setIsLoading(false);
         return; // Stop execution on failure
