@@ -77,16 +77,22 @@ export default function OfficialDashboard() {
   
   // Step 2: Effect to check the user's role and enable the main query.
   useEffect(() => {
-    if (!user) return; // Wait for user object
-    if (isLoadingProfile) return; // Wait for profile to load
+    if (isLoadingProfile || !user) return; // Wait for user object and profile to load
 
     if (userProfile && (userProfile.role === 'official' || userProfile.role === 'admin')) {
       setIsRoleVerified(true);
     } else {
       // If profile is loaded but role is not correct, or if there's no profile
       setIsRoleVerified(false);
+      if(user) { // Only show toast if a user is logged in but has the wrong role
+          toast({
+            variant: 'destructive',
+            title: 'Access Denied',
+            description: `You do not have the required privileges for this portal.`,
+          });
+      }
     }
-  }, [userProfile, isLoadingProfile, user]);
+  }, [userProfile, isLoadingProfile, user, toast]);
 
   // Step 3: Once role is verified, construct the query to get all users.
   const usersQuery = useMemoFirebase(() => {
@@ -171,7 +177,7 @@ export default function OfficialDashboard() {
 
   if (user && !isLoadingProfile && !isRoleVerified) {
      return (
-       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+       <div className="flex h-screen w-full flex-col items-center justify-center bg-background p-4">
          <Card className="w-full max-w-md text-center">
             <CardHeader>
                 <CardTitle className="flex items-center justify-center gap-2 text-2xl text-destructive">
@@ -332,3 +338,5 @@ export default function OfficialDashboard() {
     </div>
   );
 }
+
+    

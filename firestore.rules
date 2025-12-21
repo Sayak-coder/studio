@@ -4,48 +4,37 @@
  * Core Philosophy:
  * The default posture is deny-all. Access is granted explicitly.
  * - User Profiles (/users): Only the owner can read/write their own profile. An admin/official can read/write any profile.
- * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users.
+ * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users. This is checked by reading the requesting user's own profile.
  * - Content (/content): Any authenticated user can create/read. Only the author can update/delete.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions for improved readability and reusability.
+    // Helper function for improved readability and reusability.
     function isSignedIn() {
       return request.auth != null;
     }
 
+    // Helper function to check if the requesting user is the owner of the document.
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    /**
-     * Checks if the currently authenticated user has a specific role stored in their user document.
-     * This function securely reads the user's own role document.
-     */
-    function getUserRole(uid) {
-      return get(/databases/$(database)/documents/users/$(uid)).data.role;
-    }
-    
-    function isAdmin() {
-      return isSignedIn() && (getUserRole(request.auth.uid) == 'admin' || getUserRole(request.auth.uid) == 'official');
-    }
-
     // Rules for user profiles.
     match /users/{userId} {
-      // An admin/official can read any user profile. An owner can read their own.
-      allow get: if isAdmin() || isOwner(userId);
+      // An official/admin can read any profile. A user can read their own profile.
+      allow get: if (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'official']) || isOwner(userId);
       
-      // Allow an admin/official to update or delete any user profile.
-      // Also, allow a user to update their own profile.
-      allow update, delete: if isAdmin() || isOwner(userId);
+      // An official/admin can update or delete any profile. A user can update their own.
+      allow update, delete: if (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'official']) || isOwner(userId);
       
-      // Allow any authenticated user to create their own profile, ensuring the ID matches.
+      // A user can create their own profile, ensuring the ID matches their auth UID.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       
-      // Allow users with the 'admin' or 'official' role to list all users.
-      allow list: if isAdmin();
+      // Allow users with 'admin' or 'official' role to list all users.
+      // This rule is secure because it only checks the requesting user's role document.
+      allow list: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'official'];
     }
 
     // Rules for academic content.
@@ -77,19 +66,4 @@ service cloud.firestore {
   }
 }
 
-service firebase.storage {
-  match /b/{bucket}/o {
-    // Allow public read access to all files. This is safe because URLs are unguessable.
-    allow read: if true;
-
-    // Rules for content files.
-    // Users can only write to a path that corresponds to their own UID.
-    // This prevents one user from overwriting another user's files.
-    match /content/{userId}/{contentId}/{allPaths=**} {
-      allow write: if request.auth != null 
-                   && request.auth.uid == userId
-                   && request.resource.size < 5 * 1024 * 1024 // 5MB limit
-                   && request.resource.contentType.matches('image/.*|application/pdf');
-    }
-  }
-}
+    
