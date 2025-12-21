@@ -41,15 +41,15 @@ export default function SignInPage() {
 
   useEffect(() => {
     if (!isUserLoading && user) {
-        if (category === 'student') {
-            router.replace('/student/dashboard');
-        } else if (category === 'senior') {
-            router.replace('/senior/dashboard');
-        } else if (category === 'official') {
-            router.replace('/official/dashboard');
-        } else if (category === 'class-representative') {
-            router.replace('/class-representative/dashboard');
-        }
+      if (category === 'student') {
+        router.replace('/student/dashboard');
+      } else if (category === 'senior') {
+        router.replace('/senior/dashboard');
+      } else if (category === 'official') {
+        router.replace('/official/dashboard');
+      } else if (category === 'class-representative') {
+        router.replace('/class-representative/dashboard');
+      }
     }
   }, [user, isUserLoading, router, category]);
 
@@ -135,7 +135,7 @@ export default function SignInPage() {
 
     } catch (error) {
       console.error('Sign in error:', error);
-      let description = 'An unexpected error occurred. Please try again.';
+      let description = 'Invalid credentials or CR ID.';
 
       if (error instanceof FirebaseError) {
         switch (error.code) {
@@ -225,24 +225,18 @@ export default function SignInPage() {
                   </Button>
                 </div>
               </div>
-              {category === 'class-representative' && (
+              {(category === 'class-representative' || category === 'senior') && (
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="crId">Unique CR ID</Label>
+                  <Label htmlFor="specialId">
+                    {category === 'class-representative' ? 'Unique CR ID' : 'Unique Senior ID'}
+                  </Label>
                   <Input 
-                    id="crId" 
-                    placeholder="Your Unique CR ID" 
-                    value={specialId}
-                    onChange={(e) => setSpecialId(e.target.value)}
-                    disabled={isLoading}
-                   />
-                </div>
-              )}
-               {category === 'senior' && (
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="seniorId">Unique Senior ID</Label>
-                  <Input 
-                    id="seniorId" 
-                    placeholder="Your Unique Senior ID" 
+                    id="specialId" 
+                    placeholder={
+                        category === 'class-representative' 
+                        ? 'Your Unique CR ID' 
+                        : 'Your Unique Senior ID'
+                    }
                     value={specialId}
                     onChange={(e) => setSpecialId(e.target.value)}
                     disabled={isLoading}

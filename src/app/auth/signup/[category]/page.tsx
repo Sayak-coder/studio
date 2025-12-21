@@ -17,7 +17,7 @@ import { getAuth, createUserWithEmailAndPassword, updateProfile, signInWithEmail
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { useUser } from '@/firebase';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -113,6 +113,7 @@ export default function SignUpPage() {
         roles: [category], // Use 'roles' array
         collegeYear: collegeYear || null,
         semester: semester || null,
+        createdAt: serverTimestamp()
       });
 
       toast({
@@ -124,23 +125,13 @@ export default function SignUpPage() {
        if (error instanceof FirebaseError && error.code === 'auth/email-already-in-use') {
          // This email already exists. Try to sign them in and update their role.
          try {
-           const userCredential = await signInWithEmailAndPassword(auth, email, password);
-           const userRef = doc(firestore, 'users', userCredential.user.uid);
-           const userDoc = await getDoc(userRef);
-
-           const updateData: { roles: any, collegeYear?: string, semester?: string } = {
-             roles: arrayUnion(category)
-           };
-
-           if (userDoc.exists() && !userDoc.data().collegeYear && collegeYear) {
-             updateData.collegeYear = collegeYear;
-           }
-            if (userDoc.exists() && !userDoc.data().semester && semester) {
-             updateData.semester = semester;
-           }
-
+           await signInWithEmailAndPassword(auth, email, password);
+           const userRef = doc(firestore, 'users', auth.currentUser!.uid);
+           
            // Add the new role to the 'roles' array.
-           await updateDoc(userRef, updateData);
+           await updateDoc(userRef, {
+             roles: arrayUnion(category)
+           });
            
            toast({
               title: 'Role Added!',
@@ -216,6 +207,7 @@ export default function SignUpPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   disabled={isLoading}
+                  required
                 />
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -227,6 +219,7 @@ export default function SignUpPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
+                  required
                 />
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -260,6 +253,7 @@ export default function SignUpPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
                     className="pr-10"
+                    required
                   />
                    <Button
                     type="button"
@@ -285,6 +279,7 @@ export default function SignUpPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={isLoading}
                     className="pr-10"
+                    required
                   />
                    <Button
                     type="button"
@@ -299,27 +294,18 @@ export default function SignUpPage() {
                   </Button>
                 </div>
               </div>
-              {category === 'class-representative' && (
+              {(category === 'class-representative' || category === 'senior') && (
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="crId">Unique CR ID</Label>
+                  <Label htmlFor="specialId">
+                     {category === 'class-representative' ? 'Unique CR ID' : 'Unique Senior ID'}
+                  </Label>
                   <Input
-                    id="crId"
+                    id="specialId"
                     placeholder="Provided by your institution"
                     value={specialId}
                     onChange={(e) => setSpecialId(e.target.value)}
                     disabled={isLoading}
-                  />
-                </div>
-              )}
-              {category === 'senior' && (
-                <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="seniorId">Unique Senior ID</Label>
-                  <Input
-                    id="seniorId"
-                    placeholder="Provided by your institution"
-                    value={specialId}
-                    onChange={(e) => setSpecialId(e.target.value)}
-                    disabled={isLoading}
+                    required
                   />
                 </div>
               )}
