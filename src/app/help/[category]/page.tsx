@@ -22,7 +22,7 @@ export default function AuthPage() {
     }
 
     if (user) {
-      // If user is logged in, redirect to their dashboard
+      // If user is logged in, redirect to their dashboard based on the URL category
       if (category === 'student') {
         router.replace('/student/dashboard');
       } else if (category === 'senior') {
@@ -30,10 +30,9 @@ export default function AuthPage() {
       } else if (category === 'class-representative') {
         router.replace('/class-representative/dashboard');
       }
-      // Add other role-based redirects here if needed
-      // For class-representative, it would be router.replace('/cr/dashboard');
+      // Note: No redirect for 'official' here, as it has its own dedicated page.
     }
-    // If no user, they stay on this page to sign in or sign up
+    // If no user, they stay on this page to see the Sign In/Sign Up options
   }, [user, isUserLoading, router, category]);
 
   if (isUserLoading || user) {
@@ -46,6 +45,7 @@ export default function AuthPage() {
     );
   }
 
+  // Render this content only if there is no user and loading is complete
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center p-8 bg-background">
        <div className="absolute top-4 right-4">
