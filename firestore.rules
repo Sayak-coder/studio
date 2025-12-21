@@ -20,21 +20,27 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+
+    // Helper function to securely check the role of the requesting user from their Firestore document.
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
     
     // Rules for user profiles.
     match /users/{userId} {
       // An official/admin can read any profile. A user can read their own profile.
-      allow get: if (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'official']) || isOwner(userId);
+      allow get: if getRole() in ['admin', 'official'] || isOwner(userId);
       
       // An official/admin can update or delete any profile. A user can update their own.
-      allow update, delete: if (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'official']) || isOwner(userId);
+      allow update, delete: if getRole() in ['admin', 'official'] || isOwner(userId);
       
       // A user can create their own profile, ensuring the ID matches their auth UID.
+      // THIS IS THE CRITICAL FIX: Allows a newly authenticated user to write their own document.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       
       // Allow users with 'admin' or 'official' role to list all users.
       // This rule is secure because it only checks the requesting user's role document.
-      allow list: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'official'];
+      allow list: if getRole() in ['admin', 'official'];
     }
 
     // Rules for academic content.
