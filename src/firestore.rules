@@ -3,9 +3,9 @@
  *
  * Core Philosophy:
  * The default posture is deny-all. Access is granted explicitly.
- * - User Profiles (/users): Only the owner can read/write their own profile. An admin/official can read/write any profile.
- * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users. This is checked by reading the requesting user's own profile.
- * - Content (/content): Any authenticated user can create/read. Only the author or an official/admin can update/delete.
+ * - User Profiles (/users): Only the owner can read/write their own profile. An admin can read/write any profile.
+ * - User Listing (/users): Only users with an 'admin' role can list all users.
+ * - Content (/content): Any authenticated user can create/read. Only the author, CR, or an admin can update/delete.
  */
 rules_version = '2';
 
@@ -24,27 +24,32 @@ service cloud.firestore {
     
     // Helper function to securely get the roles of the requesting user.
     function getRoles() {
+      // Safely access roles, return empty list if document or roles do not exist.
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles;
     }
     
     // Helper function to check if the user has one of the specified roles.
-    function isOneOfRoles(roles) {
-      return isSignedIn() && getRoles().hasAny(roles);
+    function hasAnyRole(allowedRoles) {
+      return isSignedIn() && getRoles().hasAny(allowedRoles);
     }
 
     // Rules for the 'users' collection.
     match /users/{userId} {
-      // READ: An admin/official can read any profile. A user can read their own.
-      allow get: if isOneOfRoles(['admin', 'official']) || isOwner(userId);
+      // READ: An admin can read any profile. A user can read their own.
+      allow get: if hasAnyRole(['admin']) || isOwner(userId);
       
       // CREATE: A user can create their own profile, ensuring the ID matches their auth UID.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
 
-      // UPDATE/DELETE: An admin/official can modify any profile. A user can modify their own (e.g. adding a role).
-      allow update, delete: if isOneOfRoles(['admin', 'official']) || isOwner(userId);
+      // UPDATE: An admin can modify any profile. A user can modify their own.
+      // This is crucial for adding new roles to the 'roles' array.
+      allow update: if hasAnyRole(['admin']) || isOwner(userId);
+
+      // DELETE: An admin can delete any profile. A user can delete their own.
+      allow delete: if hasAnyRole(['admin']) || isOwner(userId);
       
-      // LIST: Only admins or officials can list all users.
-      allow list: if isOneOfRoles(['admin', 'official']);
+      // LIST: Only admins can list all users.
+      allow list: if hasAnyRole(['admin']);
     }
 
     // Rules for academic 'content' collection.
@@ -55,14 +60,14 @@ service cloud.firestore {
       // CREATE: Any authenticated user can create content, but must set themselves as the author.
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
 
-      // UPDATE: Only the original author, an admin, or an official can update.
+      // UPDATE: Only the original author, an admin, or a CR can update.
       // authorId and createdAt fields are immutable to maintain data integrity.
-      allow update: if (isOwner(resource.data.authorId) || isOneOfRoles(['admin', 'official', 'class-representative']))
+      allow update: if (isOwner(resource.data.authorId) || hasAnyRole(['admin', 'class-representative']))
                     && request.resource.data.authorId == resource.data.authorId
                     && request.resource.data.createdAt == resource.data.createdAt;
       
-      // DELETE: Only the original author, an admin, or an official can delete.
-      allow delete: if isOwner(resource.data.authorId) || isOneOfRoles(['admin', 'official', 'class-representative']);
+      // DELETE: Only the original author, an admin, or a CR can delete.
+      allow delete: if isOwner(resource.data.authorId) || hasAnyRole(['admin', 'class-representative']);
     }
   }
 }

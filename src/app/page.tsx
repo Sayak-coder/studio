@@ -35,13 +35,6 @@ export default function Home() {
       cta: 'Enter as Senior',
       href: '/help/senior',
     },
-    {
-      name: 'Official Portal',
-      icon: <Briefcase className="h-10 w-10 text-primary" />,
-      description: 'Access and manage all user data with administrative privileges.',
-      cta: 'Enter as Official',
-      href: '/help/official',
-    },
   ];
 
   return (
@@ -97,7 +90,7 @@ export default function Home() {
         {/* Main Interaction Section */}
         <section className="py-12 md:py-24">
           <div className="container px-4 md:px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
               {portals.map((portal, index) => (
                 <Card
                   key={portal.name}
