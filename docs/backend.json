@@ -19,15 +19,18 @@
           "type": "string",
           "description": "The display name of the user."
         },
-        "role": {
-          "type": "string",
-          "description": "The role of the user (Student, Class Representative, Senior, admin)."
+        "roles": {
+          "type": "array",
+          "description": "The roles of the user (e.g., student, class-representative, senior, admin).",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
         "id",
         "email",
-        "role",
+        "roles",
         "name"
       ]
     },

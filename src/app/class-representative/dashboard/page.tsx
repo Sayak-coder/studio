@@ -61,7 +61,7 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { doc } from 'firebase/firestore';
 
 type UserProfile = {
-  role: string;
+  roles: string[];
 };
 
 export default function CRDashboard() {
@@ -100,13 +100,13 @@ export default function CRDashboard() {
     }
 
     if (userProfile) {
-      if (userProfile.role === 'class-representative') {
+      if (userProfile.roles.includes('class-representative')) {
         setIsRoleVerified(true);
       } else {
         toast({
           variant: 'destructive',
           title: 'Access Denied',
-          description: `You are not authorized to view this page. You are logged in as a ${userProfile.role}.`,
+          description: `You are not authorized to view this page. You are logged in with roles: ${userProfile.roles.join(', ')}.`,
         });
         router.push('/'); 
       }

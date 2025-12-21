@@ -42,7 +42,7 @@ type UserProfile = {
   id: string;
   name: string;
   email: string;
-  role: 'student' | 'senior' | 'class-representative' | 'admin' | 'official';
+  roles: ('student' | 'senior' | 'class-representative' | 'admin' | 'official')[];
   disabled?: boolean;
 };
 
@@ -79,7 +79,7 @@ export default function OfficialDashboard() {
   useEffect(() => {
     if (isLoadingProfile || !user) return; // Wait for user object and profile to load
 
-    if (userProfile && (userProfile.role === 'official' || userProfile.role === 'admin')) {
+    if (userProfile && (userProfile.roles.includes('official') || userProfile.roles.includes('admin'))) {
       setIsRoleVerified(true);
     } else {
       // If profile is loaded but role is not correct, or if there's no profile
@@ -201,7 +201,7 @@ export default function OfficialDashboard() {
     );
   }
 
-  const filteredUsers = allUsers?.filter(u => ['student', 'class-representative', 'senior'].includes(u.role));
+  const filteredUsers = allUsers?.filter(u => !u.roles.includes('admin') && !u.roles.includes('official'));
 
 
   return (
@@ -234,7 +234,7 @@ export default function OfficialDashboard() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
+                    <TableHead>Roles</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -270,7 +270,11 @@ export default function OfficialDashboard() {
                       <TableCell className="font-medium">{u.name}</TableCell>
                       <TableCell>{u.email}</TableCell>
                       <TableCell>
-                        <Badge variant={(u.role === 'admin' || u.role === 'official') ? 'default' : 'secondary'} className='capitalize'>{u.role}</Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {u.roles.map(role => (
+                            <Badge key={role} variant={'secondary'} className='capitalize'>{role.replace('-', ' ')}</Badge>
+                          ))}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={u.disabled ? 'destructive' : 'default'} className="bg-opacity-80">
@@ -338,5 +342,3 @@ export default function OfficialDashboard() {
     </div>
   );
 }
-
-    

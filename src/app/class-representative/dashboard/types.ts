@@ -6,12 +6,12 @@ export type Content = {
   content: string;
   authorId: string;
   authorName: string;
-  role: string;
+  roles: string[];
   fileUrl?: string;
   fileType?: string;
 };
 
-export const initialFormData: Omit<Content, 'id' | 'authorId' | 'authorName' | 'role'> = {
+export const initialFormData: Omit<Content, 'id' | 'authorId' | 'authorName' | 'roles'> = {
   title: '',
   subject: '',
   type: 'Class Notes',

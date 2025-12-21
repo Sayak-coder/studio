@@ -32,7 +32,7 @@ interface ContentFormProps {
 }
 
 type UserProfile = {
-  role: string;
+  roles: string[];
 };
 
 
@@ -116,20 +116,18 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
         content: formData.content,
         authorId: user.uid,
         authorName: user.displayName || 'Anonymous',
-        role: userProfile.role,
+        roles: userProfile.roles,
       };
       
       const documentId = await createOrUpdateContent(firestore, contentData, editingContent?.id);
 
-      toast({
-        title: 'Success!',
-        description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}. Starting file upload...`,
-      });
-
-      // If a file was selected, start the upload in the background.
       if (fileToUpload) {
         setSubmissionState('uploading');
-        
+         toast({
+          title: 'Content Saved!',
+          description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}. Starting file upload...`,
+        });
+
         handleBackgroundUpload(
           firestore,
           user.uid,
@@ -155,6 +153,10 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
           }
         );
       } else {
+        toast({
+          title: 'Success!',
+          description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}.`,
+        });
         // If there's no file, just close the form.
         setSubmissionState('success');
         onClose();

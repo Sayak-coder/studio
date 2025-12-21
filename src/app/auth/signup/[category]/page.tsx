@@ -13,11 +13,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useUser } from '@/firebase';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -54,7 +54,6 @@ export default function SignUpPage() {
         } else if (category === 'class-representative') {
             router.replace('/class-representative/dashboard');
         }
-        // Redirect logic for other roles can be added here
     }
   }, [user, isUserLoading, router, category]);
 
@@ -96,28 +95,10 @@ export default function SignUpPage() {
     }
     
     setIsLoading(true);
+    const auth = getAuth(firebaseApp);
+    const firestore = getFirestore(firebaseApp);
     try {
-      const auth = getAuth(firebaseApp);
-      const firestore = getFirestore(firebaseApp);
-
-      // Check if user email is already registered and blocked
-      const usersRef = collection(firestore, 'users');
-      const q = query(usersRef, where('email', '==', email));
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        const existingUserDoc = querySnapshot.docs[0];
-        if (existingUserDoc.data()?.disabled) {
-          toast({
-            variant: 'destructive',
-            title: 'Account Disabled',
-            description: 'This email is associated with a disabled account. Please contact support.',
-          });
-          setIsLoading(false);
-          return;
-        }
-      }
-
+      // First, try to create a new user.
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
       await updateProfile(userCredential.user, { displayName: name });
@@ -127,7 +108,7 @@ export default function SignUpPage() {
         id: userCredential.user.uid,
         email: userCredential.user.email,
         name: name,
-        role: category,
+        roles: [category], // Use 'roles' array
       });
 
       toast({
@@ -135,25 +116,48 @@ export default function SignUpPage() {
         description: "We're redirecting you to your dashboard.",
       });
 
-      // Redirection is now handled by the useEffect hook
     } catch (error) {
-       console.error('Sign up error:', error);
-       let description = 'An unexpected error occurred. Please try again.';
-       if (error instanceof FirebaseError) {
-         if (error.code === 'auth/email-already-in-use') {
-           description = 'This email is already registered. Please sign in instead.';
-         } else if (error.code === 'auth/weak-password') {
-            description = 'Your password is too weak. Please choose a stronger one.';
+       if (error instanceof FirebaseError && error.code === 'auth/email-already-in-use') {
+         // This email already exists. Try to sign them in and update their role.
+         try {
+           const userCredential = await signInWithEmailAndPassword(auth, email, password);
+           const userRef = doc(firestore, 'users', userCredential.user.uid);
+
+           // Add the new role to the 'roles' array.
+           await updateDoc(userRef, {
+             roles: arrayUnion(category)
+           });
+           
+           toast({
+              title: 'Role Added!',
+              description: `You have successfully been registered as a ${categoryTitle}.`,
+            });
+           
+         } catch (signInError) {
+           // This could be a wrong password for an existing account.
+           toast({
+              variant: 'destructive',
+              title: 'Sign Up Failed',
+              description: 'This email is already registered. Please check your password or sign in.',
+            });
          }
-          else {
-           description = error.message;
+       } else {
+         // Handle other errors (weak password, etc.)
+         console.error('Sign up error:', error);
+         let description = 'An unexpected error occurred. Please try again.';
+         if (error instanceof FirebaseError) {
+           if (error.code === 'auth/weak-password') {
+              description = 'Your password is too weak. Please choose a stronger one.';
+           } else {
+             description = error.message;
+           }
          }
+          toast({
+           variant: 'destructive',
+           title: 'Sign Up Failed',
+           description,
+         });
        }
-        toast({
-         variant: 'destructive',
-         title: 'Sign Up Failed',
-         description,
-       });
     } finally {
       setIsLoading(false);
     }

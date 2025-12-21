@@ -9,7 +9,7 @@ import {
   doc,
 } from 'firebase/firestore';
 import { PlusCircle, Book, Edit, LogOut, Trash2, Loader2, BrainCircuit, LayoutDashboard, FilePlus, HelpCircle, FileText } from 'lucide-react';
-import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
 
 import { Content } from './types';
@@ -29,6 +29,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { ThemeToggle } from '@/components/theme-toggle';
 
+type UserProfile = {
+  roles: string[];
+};
 
 export default function SeniorDashboard() {
   const router = useRouter();
@@ -43,19 +46,47 @@ export default function SeniorDashboard() {
 
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
+  const [isRoleVerified, setIsRoleVerified] = useState(false);
+  
+  // Step 1: Get the current user's profile to verify their role
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  
+  const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
 
+  // Step 2: Verify the role and redirect if necessary
+  useEffect(() => {
+    if (isUserLoading || isLoadingProfile) return;
+
+    if (!user) {
+      router.push('/auth/signin/senior');
+      return;
+    }
+
+    if (userProfile) {
+      if (userProfile.roles.includes('senior')) {
+        setIsRoleVerified(true);
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Access Denied',
+          description: `You are not authorized to view this page.`,
+        });
+        router.push('/'); 
+      }
+    }
+  }, [user, isUserLoading, userProfile, isLoadingProfile, router, toast]);
+
+  // Step 3: Fetch content only if the role is verified
   const contentQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
+    if (!firestore || !user?.uid || !isRoleVerified) return null;
     return query(collection(firestore, 'content'), where('authorId', '==', user.uid));
-  }, [firestore, user?.uid]);
+  }, [firestore, user?.uid, isRoleVerified]);
   
   const { data: contents, isLoading: isLoadingContent } = useCollection<Content>(contentQuery);
   
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/auth/signin/senior');
-    }
-  }, [user, isUserLoading, router]);
 
   const handleSignOut = async () => {
     try {
@@ -113,10 +144,11 @@ export default function SeniorDashboard() {
     setEditingContent(null);
   }
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || isLoadingProfile || !isRoleVerified) {
     return (
        <div className="flex h-screen w-full items-center justify-center bg-background">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="ml-4 text-muted-foreground">Verifying access...</p>
       </div>
     );
   }

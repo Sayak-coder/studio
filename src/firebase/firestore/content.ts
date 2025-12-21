@@ -30,7 +30,7 @@ type ContentData = {
   content: string;
   authorId: string;
   authorName: string;
-  role: string;
+  roles: string[];
 };
 
 /**

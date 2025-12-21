@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect }from 'react';
 import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
@@ -104,16 +104,28 @@ export default function SignInPage() {
             setIsLoading(false);
             return;
           }
+           // Check if the user has the required role
+          const userRoles = userDoc.data()?.roles || [];
+          if (!userRoles.includes(category)) {
+             toast({
+              variant: 'destructive',
+              title: 'Access Denied',
+              description: `You do not have the required role to access the ${categoryTitle} portal. Please sign up for this role first.`,
+            });
+            await auth.signOut();
+            setIsLoading(false);
+            return;
+          }
       } else {
-        // If the user document doesn't exist, create it.
-        // This handles the case where an account was deleted from Firestore but not Auth.
-         await setDoc(userDocRef, {
-            id: authenticatedUser.uid,
-            email: authenticatedUser.email,
-            name: authenticatedUser.displayName || email.split('@')[0], // Use display name or derive from email
-            role: category,
-            disabled: false,
+        // This case should ideally not be hit if signup is the only way to create users.
+        toast({
+          variant: 'destructive',
+          title: 'Sign In Failed',
+          description: 'No user profile found. Please sign up first.',
         });
+        await auth.signOut();
+        setIsLoading(false);
+        return;
       }
       
       toast({
