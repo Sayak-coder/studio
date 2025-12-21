@@ -40,7 +40,7 @@ export default function AuthRouterPage() {
 
     if (user && userProfile) {
       // User is logged in, check their roles
-      if (userProfile.roles.includes(category)) {
+      if (userProfile.roles && userProfile.roles.includes(category)) {
         // User has the required role, redirect to the dashboard
         router.replace(`/${category}/dashboard`);
       }
