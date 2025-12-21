@@ -25,6 +25,14 @@
           "items": {
             "type": "string"
           }
+        },
+        "collegeYear": {
+          "type": "string",
+          "description": "The user's current year in college."
+        },
+        "semester": {
+          "type": "string",
+          "description": "The user's current semester."
         }
       },
       "required": [

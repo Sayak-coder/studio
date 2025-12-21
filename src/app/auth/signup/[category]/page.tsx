@@ -36,6 +36,8 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [specialId, setSpecialId] = useState('');
+  const [collegeYear, setCollegeYear] = useState('');
+  const [semester, setSemester] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const category = Array.isArray(params.category)
@@ -109,6 +111,8 @@ export default function SignUpPage() {
         email: userCredential.user.email,
         name: name,
         roles: [category], // Use 'roles' array
+        collegeYear: collegeYear || null,
+        semester: semester || null,
       });
 
       toast({
@@ -122,11 +126,21 @@ export default function SignUpPage() {
          try {
            const userCredential = await signInWithEmailAndPassword(auth, email, password);
            const userRef = doc(firestore, 'users', userCredential.user.uid);
+           const userDoc = await getDoc(userRef);
+
+           const updateData: { roles: any, collegeYear?: string, semester?: string } = {
+             roles: arrayUnion(category)
+           };
+
+           if (userDoc.exists() && !userDoc.data().collegeYear && collegeYear) {
+             updateData.collegeYear = collegeYear;
+           }
+            if (userDoc.exists() && !userDoc.data().semester && semester) {
+             updateData.semester = semester;
+           }
 
            // Add the new role to the 'roles' array.
-           await updateDoc(userRef, {
-             roles: arrayUnion(category)
-           });
+           await updateDoc(userRef, updateData);
            
            toast({
               title: 'Role Added!',
@@ -212,6 +226,26 @@ export default function SignUpPage() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="collegeYear">College Year</Label>
+                <Input
+                  id="collegeYear"
+                  placeholder="e.g., 2nd Year"
+                  value={collegeYear}
+                  onChange={(e) => setCollegeYear(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="semester">Semester</Label>
+                <Input
+                  id="semester"
+                  placeholder="e.g., 4th Semester"
+                  value={semester}
+                  onChange={(e) => setSemester(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
