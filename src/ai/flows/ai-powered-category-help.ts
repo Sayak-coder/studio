@@ -28,8 +28,9 @@ const categoryHelpPrompt = ai.definePrompt({
   input: { schema: CategoryHelpInputSchema },
   output: { schema: CategoryHelpOutputSchema },
   model: googleAI.model('gemini-1.5-pro'),
+  tools: [googleAI.googleSearchTool],
   prompt: `
-    You are an expert academic assistant. Your task is to provide relevant and up-to-date information about any academic topic the user asks about, sourcing your information from the internet for accuracy.
+    You are an expert academic assistant. Your task is to provide relevant and up-to-date information about any academic topic the user asks about, sourcing your information from Google Search for accuracy.
     
     The user wants to learn about the topic: "{{category}}".
 
