@@ -26,7 +26,7 @@ export const creatorsData: Creator[] = [
     id: '2',
     name: 'Sayak Biswas',
     bio: 'The creative visionary behind EduBot’s stunning visuals, dedicated to making learning beautiful and intuitive.',
-    photoUrl: 'https://picsum.photos/seed/sayak/200/200',
+    photoUrl: 'https://storage.googleapis.com/res-a-dev-team-1/image-497945e3-4632-411a-8533-e024226f9038.jpeg',
     socials: {
       linkedin: 'https://www.linkedin.com/',
       github: 'https://github.com/',
