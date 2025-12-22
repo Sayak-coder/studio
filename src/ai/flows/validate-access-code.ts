@@ -83,7 +83,7 @@ const validateAccessCodeFlow = ai.defineFlow(
       // Return a successful validation result
       return { isValid: true, role: data.role };
 
-    } catch (error)셔
+    } catch (error) {
       console.error('Error validating access code:', error);
       // We return a generic error to the client to avoid leaking implementation details.
       return { isValid: false, role: '', reason: 'An internal server error occurred during validation.' };
