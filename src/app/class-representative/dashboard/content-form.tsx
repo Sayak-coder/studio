@@ -18,7 +18,7 @@ import { Progress } from "@/components/ui/progress"
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Content, initialFormData } from './types';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { createOrUpdateContent, handleBackgroundUpload } from '@/firebase/firestore/content';
 import { FirebaseError } from 'firebase/app';
 
