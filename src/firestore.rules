@@ -1,3 +1,4 @@
+
 /**
  * This ruleset enforces a strict user-ownership and role-based model.
  *
@@ -25,7 +26,10 @@ service cloud.firestore {
     // Helper function to securely get the roles of the requesting user.
     // Returns an empty list if the user doc or roles field doesn't exist.
     function getRoles() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles;
+      // Use exists() to prevent errors if the document doesn't exist yet.
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+             ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles
+             : [];
     }
 
     // Helper function to check if the user is an admin or official.
@@ -35,10 +39,10 @@ service cloud.firestore {
     
     // Rules for the 'users' collection.
     match /users/{userId} {
-      // READ, UPDATE, DELETE: A user can only manage their own profile. Admins/officials can manage any.
-      allow get, update, delete: if isOwner(userId) || isPrivilegedUser();
+      // A user can read, update, or delete their OWN profile. Admins/officials have full access.
+      allow read, update, delete: if isOwner(userId) || isPrivilegedUser();
       
-      // CREATE: A user can create their own profile, ensuring the ID matches their auth UID.
+      // A user can create their own profile document, ensuring the ID matches their auth UID.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       
       // LIST: Only admins or officials can list all users.

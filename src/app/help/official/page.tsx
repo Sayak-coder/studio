@@ -41,8 +41,8 @@ export default function OfficialHelpPage() {
 
     try {
       await setPersistence(auth, browserLocalPersistence);
-      // Try to sign in first
       await signInWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
+      
       toast({
         title: 'Access Granted!',
         description: 'Redirecting to the Official Dashboard...',
@@ -50,8 +50,8 @@ export default function OfficialHelpPage() {
       router.push('/official/dashboard');
 
     } catch (error) {
-      // If user not found, create the user
       if (error instanceof FirebaseError && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
+        // If the user does not exist, create the account and profile
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
           const user = userCredential.user;
@@ -71,7 +71,9 @@ export default function OfficialHelpPage() {
             title: 'Official Account Provisioned!',
             description: 'Redirecting to the dashboard...',
           });
+          // Redirect AFTER the profile has been created
           router.push('/official/dashboard');
+
         } catch (creationError) {
           console.error('Official account creation error:', creationError);
           toast({
@@ -79,18 +81,18 @@ export default function OfficialHelpPage() {
             title: 'Provisioning Failed',
             description: 'Could not create the official account. Please contact support.',
           });
+          setIsLoading(false);
         }
       } else {
-        // Handle other sign-in errors
+        // Handle other unexpected sign-in errors
         console.error('Official sign-in error:', error);
         toast({
           variant: 'destructive',
           title: 'Authentication Failed',
-          description: 'An unexpected error occurred during sign-in.',
+          description: 'An unexpected error occurred during sign-in. Please try again.',
         });
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
