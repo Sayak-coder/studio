@@ -3,9 +3,9 @@
  *
  * Core Philosophy:
  * The default posture is deny-all. Access is granted explicitly.
- * - User Profiles (/users): Any signed-in user can read any profile to check roles. Only the owner or an admin can write to a profile.
+ * - User Profiles (/users): Any signed-in user can create their own profile. A user can only read, update, or delete their own profile. An admin/official can perform any action on any profile.
  * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users.
- * - Content (/content): Any authenticated user can create/read. Only the author, CR, or an official/admin can update/delete.
+ * - Content (/content): Any authenticated user can read/create. Only the author, an official, or an admin can update/delete. The anonymous CR user has special privileges.
  */
 rules_version = '2';
 
@@ -23,32 +23,26 @@ service cloud.firestore {
     }
     
     // Helper function to securely get the roles of the requesting user.
+    // Returns an empty list if the user doc or roles field doesn't exist.
     function getRoles() {
-      // Safely access roles, return empty list if document or roles do not exist.
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles;
     }
-    
-    // Helper function to check if the user has one of the specified roles.
-    function hasAnyRole(allowedRoles) {
-      return isSignedIn() && getRoles().hasAny(allowedRoles);
-    }
 
+    // Helper function to check if the user is an admin or official.
+    function isPrivilegedUser() {
+        return isSignedIn() && getRoles().hasAny(['admin', 'official']);
+    }
+    
     // Rules for the 'users' collection.
     match /users/{userId} {
-      // READ: Any authenticated user can read any profile to check roles. This is necessary for role-based logic in the app.
-      allow get: if isSignedIn();
+      // READ, UPDATE, DELETE: A user can only manage their own profile. Admins/officials can manage any.
+      allow get, update, delete: if isOwner(userId) || isPrivilegedUser();
       
       // CREATE: A user can create their own profile, ensuring the ID matches their auth UID.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-
-      // UPDATE: An admin/official can modify any profile. A user can modify their own.
-      allow update: if hasAnyRole(['admin', 'official']) || isOwner(userId);
-
-      // DELETE: An admin/official can delete any profile. A user can delete their own.
-      allow delete: if hasAnyRole(['admin', 'official']) || isOwner(userId);
       
       // LIST: Only admins or officials can list all users.
-      allow list: if hasAnyRole(['admin', 'official']);
+      allow list: if isPrivilegedUser();
     }
 
     // Rules for academic 'content' collection.
@@ -56,17 +50,17 @@ service cloud.firestore {
       // READ: Any authenticated user can read any piece of content.
       allow get, list: if isSignedIn();
 
-      // CREATE: Any authenticated user can create content, but must set themselves as the author.
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      // CREATE: An authenticated user can create content if they set themselves as the author.
+      allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
 
-      // UPDATE: Only the original author, an admin, an official, or a CR can update.
+      // UPDATE: Only the original author, an admin, or an official can update.
       // authorId and createdAt fields are immutable to maintain data integrity.
-      allow update: if (isOwner(resource.data.authorId) || hasAnyRole(['admin', 'official', 'class-representative']))
+      allow update: if (isOwner(resource.data.authorId) || isPrivilegedUser())
                     && request.resource.data.authorId == resource.data.authorId
                     && request.resource.data.createdAt == resource.data.createdAt;
       
-      // DELETE: Only the original author, an admin, an official, or a CR can delete.
-      allow delete: if isOwner(resource.data.authorId) || hasAnyRole(['admin', 'official', 'class-representative']);
+      // DELETE: Only the original author, an admin, or an official can delete.
+      allow delete: if isOwner(resource.data.authorId) || isPrivilegedUser();
     }
   }
 }

@@ -19,7 +19,8 @@ import {
     Home,
     File,
     Users,
-    User as UserIcon
+    User as UserIcon,
+    FilePlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -144,6 +145,9 @@ function StudentDashboard() {
         </div>
         <nav className="flex-1 space-y-2 p-4">
               <Button variant={view === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('all')}><Home />Dashboard</Button>
+              <Button variant="ghost" className="w-full justify-start text-base gap-3" onClick={handleAddNew}>
+                <FilePlus />Add Content
+              </Button>
                <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />My Contributions</Button>
                <Button variant={view === 'others' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('others')}><Users />Others' Contributions</Button>
         </nav>
@@ -166,6 +170,11 @@ function StudentDashboard() {
        <nav className="flex-1 space-y-2 p-4">
             <SheetClose asChild>
                <Button variant={view === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('all')}><Home />Dashboard</Button>
+            </SheetClose>
+            <SheetClose asChild>
+              <Button variant="ghost" className="w-full justify-start text-base gap-3" onClick={handleAddNew}>
+                <FilePlus />Add Content
+              </Button>
             </SheetClose>
             <SheetClose asChild>
               <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />My Contributions</Button>
