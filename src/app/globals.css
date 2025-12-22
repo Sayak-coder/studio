@@ -156,5 +156,23 @@
   .dark .content-card:focus-within .card-glass-pane {
     background-color: hsla(var(--secondary) / 0.4);
   }
+
+  .animated-gradient-background {
+    background: linear-gradient(-45deg, hsl(var(--primary)/0.1), hsl(var(--accent)/0.1), hsl(var(--background)), hsl(var(--secondary)/0.5));
+    background-size: 400% 400%;
+    animation: gradient-flow 15s ease infinite;
+  }
+
+  @keyframes gradient-flow {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
   
 }

@@ -44,18 +44,9 @@ export default function Home() {
       </header>
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative py-24 md:py-32 text-center animate-fade-in-down overflow-hidden">
-           <div className="absolute top-0 left-0 w-full h-full z-[-1]">
-            <video
-                src="https://videos.pexels.com/video-files/853873/853873-hd_1920_1080_25fps.mp4"
-                autoPlay
-                loop
-                muted
-                className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/50"></div>
-          </div>
-          <div className="container px-4 md:px-6">
+        <section className="relative py-24 md:py-32 text-center animate-fade-in-down overflow-hidden animated-gradient-background">
+           <div className="absolute inset-0 bg-background/50 dark:bg-background/70"></div>
+          <div className="container relative px-4 md:px-6">
             <a href="#about-edubot" className="inline-flex justify-center items-center gap-4 cursor-pointer">
               <BrainCircuit className="h-12 w-12 md:h-16 md:w-16 text-primary" />
               <h1 className="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
