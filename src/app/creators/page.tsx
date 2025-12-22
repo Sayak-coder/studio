@@ -46,7 +46,6 @@ export default function CreatorsPage() {
                   <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-accent animate-pulse-slow"></div>
                 </div>
                 <h3 className="text-2xl font-bold text-foreground">{creator.name}</h3>
-                <p className="text-sm text-primary font-medium">{creator.role}</p>
                 <p className="mt-4 text-muted-foreground text-sm flex-grow min-h-[60px]">{creator.bio}</p>
                 <div className="mt-6 flex gap-4">
                   <a href={creator.socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
