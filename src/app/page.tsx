@@ -35,13 +35,6 @@ export default function Home() {
       cta: 'Enter as Senior',
       href: '/help/senior',
     },
-     {
-      name: 'Official Portal',
-      icon: <Briefcase className="h-10 w-10 text-primary" />,
-      description: 'Oversee content, manage user access, and maintain platform integrity.',
-      cta: 'Enter as Official',
-      href: '/help/official',
-    },
   ];
 
   return (
