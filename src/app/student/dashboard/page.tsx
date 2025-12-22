@@ -182,6 +182,14 @@ function StudentDashboard() {
      </>
  );
 
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+        <LoadingSpinner className="mb-4" dotClassName="w-6 h-6" />
+        <p className="mt-4 text-muted-foreground">Verifying access...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -314,5 +322,3 @@ function StudentDashboard() {
 }
 
 export default withAuth(StudentDashboard, 'student');
-
-    
