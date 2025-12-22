@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from "@/components/ui/progress"
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Content, initialFormData } from './types';
@@ -44,7 +43,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   const [formData, setFormData] = useState(initialFormData);
   const [submissionState, setSubmissionState] = useState<SubmissionState>('idle');
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -68,7 +66,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
       setFormData(initialFormData);
     }
     setFileToUpload(null);
-    setUploadProgress(null);
     setSubmissionState('idle');
   }, [editingContent, isOpen]);
 
@@ -123,24 +120,29 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
 
       if (fileToUpload) {
         setSubmissionState('uploading');
-         toast({
+        toast({
           title: 'Content Saved!',
-          description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}. Starting file upload...`,
+          description: `Starting file upload for "${fileToUpload.name}"...`,
         });
+
+        // Close the form immediately for a faster UX
+        onClose();
 
         handleBackgroundUpload(
           firestore,
           user.uid,
           documentId,
           fileToUpload,
-          (progress) => setUploadProgress(progress), // Progress callback
+          (progress) => {
+            // Can be used to update a global progress indicator in a real app
+            console.log(`Upload Progress for ${documentId}: ${progress}%`);
+          },
           () => { // Completion callback
             toast({
               title: 'Upload Complete',
               description: `Your file "${fileToUpload.name}" has been attached.`,
             });
-            setSubmissionState('success');
-            onClose(); // Close the form on successful upload
+            // UI has already moved on.
           },
           (uploadError) => { // Error callback
             console.error("Background upload failed:", uploadError);
@@ -149,7 +151,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
               title: 'Upload Failed',
               description: 'Your file could not be attached. Please try editing the content to upload it again.'
             });
-            setSubmissionState('error');
           }
         );
       } else {
@@ -157,7 +158,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
           title: 'Success!',
           description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}.`,
         });
-        // If there's no file, just close the form.
         setSubmissionState('success');
         onClose();
       }
@@ -173,7 +173,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   const isSubmitting = submissionState === 'saving' || submissionState === 'uploading';
 
   const getButtonText = () => {
-    if (submissionState === 'uploading') return 'Uploading File...';
     if (submissionState === 'saving') return 'Saving Content...';
     return editingContent ? 'Update' : 'Save Contribution';
   }
@@ -233,12 +232,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
                 Current file: <a href={formData.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">{formData.fileUrl.split('%2F').pop()?.split('?')[0] || 'View File'}</a>
               </div>
             )}
-           {uploadProgress !== null && submissionState === 'uploading' && (
-             <div className="col-start-2 col-span-2">
-                <Progress value={uploadProgress} className="w-full" />
-                <p className="text-sm text-muted-foreground mt-1 text-center">{Math.round(uploadProgress)}% uploaded</p>
-             </div>
-           )}
+           {/* Progress bar is removed as the dialog closes immediately. */}
         </div>
         <DialogFooter>
           <DialogClose asChild>

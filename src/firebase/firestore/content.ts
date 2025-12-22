@@ -121,17 +121,20 @@ export function handleBackgroundUpload(
         updatedAt: serverTimestamp(),
       };
       
+      // Perform the update without awaiting it.
       updateDoc(contentDocRef, updatePayload)
         .then(() => {
-          onComplete();
+          onComplete(); // Still call onComplete for success feedback.
         })
         .catch((updateError) => {
+           // The UI has already moved on, but we need to handle the error.
            console.error("Document update failed after upload:", updateError);
            errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: contentDocRef.path,
               operation: 'update',
               requestResourceData: updatePayload,
            }));
+           // Call the original error handler to show a toast, even if delayed.
            onError(updateError);
         });
     })

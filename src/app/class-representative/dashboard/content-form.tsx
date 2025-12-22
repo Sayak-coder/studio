@@ -95,39 +95,43 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
     setSubmissionState('saving');
     
     try {
-      // For anonymous CR access, roles are not fetched from a user profile
       const contentData = {
         title: formData.title,
         subject: formData.subject,
         type: formData.type,
         content: formData.content,
         authorId: user.uid,
-        authorName: "Class Representative", // Generic name for code-based access
-        roles: ['class-representative'], // Assign role directly
+        authorName: user.displayName || "Class Representative", // Use display name or fallback
+        roles: ['class-representative'], // Assign role directly for now
       };
       
       const documentId = await createOrUpdateContent(firestore, contentData, editingContent?.id);
 
       if (fileToUpload) {
         setSubmissionState('uploading');
-         toast({
+        toast({
           title: 'Content Saved!',
-          description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}. Starting file upload...`,
+          description: `Starting file upload for "${fileToUpload.name}"...`,
         });
+
+        // Close the form immediately for a faster UX
+        onClose(); 
 
         handleBackgroundUpload(
           firestore,
           user.uid,
           documentId,
           fileToUpload,
-          (progress) => setUploadProgress(progress), // Progress callback
+          (progress) => {
+             // In a real app, you might use a global state to show progress somewhere else
+             console.log(`Upload Progress for ${documentId}: ${progress}%`);
+          },
           () => { // Completion callback
             toast({
               title: 'Upload Complete',
               description: `Your file "${fileToUpload.name}" has been attached.`,
             });
-            setSubmissionState('success');
-            onClose(); // Close the form on successful upload
+            // No need to change state or close form, it's already done
           },
           (uploadError) => { // Error callback
             console.error("Background upload failed:", uploadError);
@@ -136,7 +140,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
               title: 'Upload Failed',
               description: 'Your file could not be attached. Please try editing the content to upload it again.'
             });
-            setSubmissionState('error');
+             // No need to set state to error, UI has moved on
           }
         );
       } else {
@@ -160,8 +164,8 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   const isSubmitting = submissionState === 'saving' || submissionState === 'uploading';
 
   const getButtonText = () => {
-    if (submissionState === 'uploading') return 'Uploading File...';
     if (submissionState === 'saving') return 'Saving Content...';
+    // Uploading state is now handled in the background, so we don't need a special button text for it.
     return editingContent ? 'Update' : 'Save Contribution';
   }
 
@@ -220,12 +224,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
                 Current file: <a href={formData.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">{formData.fileUrl.split('%2F').pop()?.split('?')[0] || 'View File'}</a>
               </div>
             )}
-           {uploadProgress !== null && submissionState === 'uploading' && (
-             <div className="col-start-2 col-span-2">
-                <Progress value={uploadProgress} className="w-full" />
-                <p className="text-sm text-muted-foreground mt-1 text-center">{Math.round(uploadProgress)}% uploaded</p>
-             </div>
-           )}
+           {/* Progress bar is removed as the dialog closes immediately */}
         </div>
         <DialogFooter>
           <DialogClose asChild>
