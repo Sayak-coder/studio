@@ -3,7 +3,7 @@
  *
  * Core Philosophy:
  * The default posture is deny-all. Access is granted explicitly.
- * - User Profiles (/users): Only the owner can write their own profile. An admin/official can read/write any profile. Any signed-in user can read a profile to check roles.
+ * - User Profiles (/users): Any signed-in user can read any profile to check roles. Only the owner or an admin can write to a profile.
  * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users.
  * - Content (/content): Any authenticated user can create/read. Only the author, CR, or an official/admin can update/delete.
  */
