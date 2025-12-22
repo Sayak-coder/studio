@@ -13,8 +13,6 @@ import { FirebaseError } from 'firebase/app';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const OFFICIAL_ID = 'catalyst2025';
-
-// For this demonstration, we'll use a hardcoded but non-obvious account.
 const OFFICIAL_EMAIL = 'admin.official@edubot.local';
 const OFFICIAL_PASSWORD = 'supersecretpassword!23';
 
@@ -26,7 +24,7 @@ export default function OfficialHelpPage() {
 
   const handleVerifyAndSignIn = async () => {
     setIsLoading(true);
-    
+
     if (enteredId !== OFFICIAL_ID) {
       toast({
         variant: 'destructive',
@@ -39,85 +37,53 @@ export default function OfficialHelpPage() {
 
     const auth = getAuth(firebaseApp);
     const firestore = getFirestore(firebaseApp);
+    let isSuccess = false;
 
     try {
       await setPersistence(auth, browserLocalPersistence);
-      
-      // Try to sign in with the pre-defined official credentials
       await signInWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
-      
-      // On successful sign-in, redirect to dashboard.
-      toast({
-        title: 'Access Granted!',
-        description: 'Redirecting to the Official Dashboard...',
-      });
-      router.push('/official/dashboard');
-      return; // Stop execution after successful login and redirect
-
+      isSuccess = true;
     } catch (error) {
-       // If sign-in fails (e.g., user not found, wrong password for an old account),
-       // we proceed to try and create the account.
-       if (error instanceof FirebaseError && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
+      if (error instanceof FirebaseError && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
-            const user = userCredential.user;
-
-            // Create the corresponding Firestore document with the 'official' role.
-            const userRef = doc(firestore, 'users', user.uid);
-            await setDoc(userRef, {
-                id: user.uid,
-                email: user.email,
-                name: "Official Admin",
-                roles: ['official', 'admin'],
-                createdAt: serverTimestamp(),
-                disabled: false,
-            });
-            
-             // `createUserWithEmailAndPassword` already signs the user in, so we are good to go.
+          const userCredential = await createUserWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
+          const user = userCredential.user;
+          const userRef = doc(firestore, 'users', user.uid);
+          await setDoc(userRef, {
+            id: user.uid,
+            email: user.email,
+            name: "Official Admin",
+            roles: ['official', 'admin'],
+            createdAt: serverTimestamp(),
+            disabled: false,
+          });
+          isSuccess = true;
         } catch (creationError) {
-             // This might happen if the email exists but the password was wrong initially.
-             // In a real-world scenario, you might want to handle this differently,
-             // but for this demo, we'll assume the initial password is the source of truth.
-             if (creationError instanceof FirebaseError && creationError.code === 'auth/email-already-in-use') {
-                // This is an expected failure case if the account exists but the password was wrong.
-                // We'll proceed as the user is likely not logged in.
-                 toast({
-                    variant: 'destructive',
-                    title: 'Authentication Failed',
-                    description: 'The account exists, but the password was incorrect. Please contact support to reset.',
-                 });
-                 setIsLoading(false);
-                 return;
-             }
-             
-             console.error('Official account creation error:', creationError);
-             toast({
-                variant: 'destructive',
-                title: 'Provisioning Failed',
-                description: 'Could not create the official account. Please contact support.',
-             });
-             setIsLoading(false);
-             return;
+          console.error('Official account creation error:', creationError);
+          toast({
+            variant: 'destructive',
+            title: 'Provisioning Failed',
+            description: 'Could not create the official account. Please contact support.',
+          });
         }
       } else {
-        // Handle other unexpected errors during sign-in
         console.error('Official sign-in error:', error);
         toast({
           variant: 'destructive',
           title: 'Authentication Failed',
           description: 'An unexpected error occurred during sign-in.',
         });
-        setIsLoading(false);
-        return; // Stop execution on failure
+      }
+    } finally {
+      setIsLoading(false);
+      if (isSuccess) {
+        toast({
+          title: 'Access Granted!',
+          description: 'Redirecting to the Official Dashboard...',
+        });
+        router.push('/official/dashboard');
       }
     }
-    
-    // If sign-in or creation was successful, proceed.
-    toast({
-      title: 'Access Granted!',
-      description: 'Redirecting to the Official Dashboard...',
-    });
-    router.push('/official/dashboard');
   };
 
   return (
