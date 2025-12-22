@@ -37,7 +37,7 @@ export const creatorsData: Creator[] = [
     id: '3',
     name: 'Kaniska Bose',
     bio: 'The powerhouse ensuring EduBot runs smoothly, managing data and infrastructure with precision and skill.',
-    photoUrl: 'https://storage.googleapis.com/res-a-dev-team-1/image-4976779a-88a4-4a41-8608-ac52277d34b1.png',
+    photoUrl: 'https://storage.googleapis.com/res-a-dev-team-1/image-49e0b16f-9721-4f10-91a5-378b4a7807d7.png',
     socials: {
       linkedin: 'https://www.linkedin.com/',
       github: 'https://github.com/',
