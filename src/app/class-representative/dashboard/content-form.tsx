@@ -19,7 +19,7 @@ import { Progress } from "@/components/ui/progress"
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Content, initialFormData } from './types';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { createOrUpdateContent, handleBackgroundUpload } from '@/firebase/firestore/content';
 import { FirebaseError } from 'firebase/app';
 import { doc } from 'firebase/firestore';
@@ -28,8 +28,12 @@ interface ContentFormProps {
   isOpen: boolean;
   onClose: () => void;
   editingContent: Content | null;
-  user: User | null; // User can be null
+  user: User;
 }
+
+type UserProfile = {
+  roles: string[];
+};
 
 type SubmissionState = 'idle' | 'saving' | 'uploading' | 'success' | 'error';
 
@@ -40,6 +44,14 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   const [submissionState, setSubmissionState] = useState<SubmissionState>('idle');
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
 
   useEffect(() => {
     if (editingContent) {
@@ -87,7 +99,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   };
 
   const handleSubmit = async () => {
-    if (!firestore) return;
+    if (!user || !firestore || !userProfile) return;
     if (!formData.title || !formData.subject || !formData.content) {
       toast({ variant: 'destructive', title: 'Missing Fields', description: 'Please fill out Title, Subject, and Content.' });
       return;
@@ -96,33 +108,28 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
     setSubmissionState('saving');
     
     try {
-      // Use a generic authorId and authorName since there's no logged-in user
-      const authorId = 'cr-portal';
-      const authorName = 'Class Representative';
-
       const contentData = {
         title: formData.title,
         subject: formData.subject,
         type: formData.type,
         content: formData.content,
-        authorId: authorId,
-        authorName: authorName,
-        roles: ['class-representative'],
+        authorId: user.uid,
+        authorName: user.displayName || 'Anonymous',
+        roles: userProfile.roles,
       };
       
       const documentId = await createOrUpdateContent(firestore, contentData, editingContent?.id);
 
-      // If a file was selected, start the upload in the background.
       if (fileToUpload) {
         setSubmissionState('uploading');
          toast({
-            title: 'Content Saved!',
-            description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}. Starting file upload...`,
-          });
-        
+          title: 'Content Saved!',
+          description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}. Starting file upload...`,
+        });
+
         handleBackgroundUpload(
           firestore,
-          authorId, // Use generic authorId
+          user.uid,
           documentId,
           fileToUpload,
           (progress) => setUploadProgress(progress), // Progress callback
@@ -145,7 +152,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
           }
         );
       } else {
-         toast({
+        toast({
           title: 'Success!',
           description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}.`,
         });

@@ -14,10 +14,10 @@ interface ContentRowProps {
   isLoading: boolean;
   onEdit: (content: Content) => void;
   onDelete: (id: string) => void;
-  isEditable: boolean;
+  currentUserId?: string;
 }
 
-const ContentRow = ({ title, items, isLoading, onEdit, onDelete, isEditable }: ContentRowProps) => {
+const ContentRow = ({ title, items, isLoading, onEdit, onDelete, currentUserId }: ContentRowProps) => {
   const { scrollContainerRef, scrollLeft, scrollRight, canScrollLeft, canScrollRight } = useHorizontalScroll();
   
   if (isLoading) {
@@ -79,7 +79,7 @@ const ContentRow = ({ title, items, isLoading, onEdit, onDelete, isEditable }: C
               item={item} 
               onEdit={onEdit} 
               onDelete={onDelete} 
-              isEditable={isEditable}
+              isEditable={item.authorId === currentUserId}
             />
             </div>
         ))}

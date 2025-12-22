@@ -14,7 +14,7 @@ interface ContentCardProps {
   isEditable: boolean;
 }
 
-const ContentCard = ({ item, onEdit, onDelete, isEditable = false }: ContentCardProps) => {
+const ContentCard = ({ item, onEdit, onDelete, isEditable }: ContentCardProps) => {
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
   const CardInnerContent = (

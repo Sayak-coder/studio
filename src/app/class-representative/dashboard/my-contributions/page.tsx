@@ -1,11 +1,12 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   collection,
   query,
+  where,
 } from 'firebase/firestore';
-
 import {
   Loader2,
   BrainCircuit,
@@ -20,10 +21,9 @@ import { useCollection, useFirestore, useUser } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
 import withAuth from '@/hoc/withAuth';
 
-import { Content } from './types';
-import ContentForm from './content-form';
-import ContentRow from './content-row';
-import GlobalSearch from './global-search';
+import { Content } from '../types';
+import ContentForm from '../content-form';
+import ContentCard from '../content-card';
 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -44,12 +44,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import ContentCard from './content-card';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import Link from 'next/link';
 
 
-function CRDashboard() {
+function MyContributionsPage() {
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -61,20 +59,13 @@ function CRDashboard() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
-  
-  const [filteredData, setFilteredData] = useState<Content[] | null>(null);
 
-  const allContentQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'content'));
-  }, [firestore]);
+  const myContentQuery = useMemo(() => {
+    if (!firestore || !user?.uid) return null;
+    return query(collection(firestore, 'content'), where('authorId', '==', user.uid));
+  }, [firestore, user?.uid]);
 
-  const { data: allContents, isLoading: isLoadingAllContent } = useCollection<Content>(allContentQuery);
-  
-  const notes = useMemo(() => allContents?.filter(c => c.type === 'Class Notes') || [], [allContents]);
-  const pyqs = useMemo(() => allContents?.filter(c => c.type === 'PYQ') || [], [allContents]);
-  const importantQuestions = useMemo(() => allContents?.filter(c => c.type === 'Important Question') || [], [allContents]);
-
+  const { data: myContents, isLoading: isLoadingMyContent } = useCollection<Content>(myContentQuery);
 
   const handleAddNew = () => {
     setEditingContent(null);
@@ -121,13 +112,13 @@ function CRDashboard() {
           </Link>
         </div>
         <nav className="flex-1 space-y-2 p-4">
-              <Button variant='secondary' className="w-full justify-start text-base gap-3" asChild>
+              <Button variant='ghost' className="w-full justify-start text-base gap-3" asChild>
                 <Link href="/class-representative/dashboard"><Home />Dashboard</Link>
               </Button>
               <Button variant='ghost' className="w-full justify-start text-base gap-3" onClick={handleAddNew}>
                 <FilePlus />Add Content
               </Button>
-               <Button variant='ghost' className="w-full justify-start text-base gap-3" asChild>
+               <Button variant='secondary' className="w-full justify-start text-base gap-3" asChild>
                 <Link href="/class-representative/dashboard/my-contributions"><User />Your Contributions</Link>
               </Button>
                <Button variant='ghost' className="w-full justify-start text-base gap-3" asChild>
@@ -152,7 +143,7 @@ function CRDashboard() {
        </div>
        <nav className="flex-1 space-y-2 p-4">
             <SheetClose asChild>
-               <Button variant='secondary' className="w-full justify-start text-base gap-3" asChild>
+               <Button variant='ghost' className="w-full justify-start text-base gap-3" asChild>
                 <Link href="/class-representative/dashboard"><Home />Dashboard</Link>
               </Button>
             </SheetClose>
@@ -162,7 +153,7 @@ function CRDashboard() {
                  </Button>
              </SheetClose>
             <SheetClose asChild>
-              <Button variant='ghost' className="w-full justify-start text-base gap-3" asChild>
+              <Button variant='secondary' className="w-full justify-start text-base gap-3" asChild>
                 <Link href="/class-representative/dashboard/my-contributions"><User />Your Contributions</Link>
               </Button>
             </SheetClose>
@@ -204,13 +195,9 @@ function CRDashboard() {
                     <MobileSidebarContent />
                 </SheetContent>
               </Sheet>
-               <h1 className="text-xl font-semibold md:hidden">CR Dashboard</h1>
+               <h1 className="text-xl font-semibold">Your Contributions</h1>
             </div>
           
-            <div className="hidden w-full max-w-lg items-center gap-4 md:flex">
-              <GlobalSearch onSearchChange={setFilteredData} allContent={allContents || []} />
-            </div>
-
             <div className="flex items-center gap-2 md:gap-4">
               <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user?.displayName || 'Class Rep'}!</p>
               <ThemeToggle />
@@ -218,63 +205,30 @@ function CRDashboard() {
         </header>
 
         <div className="flex-1 space-y-12 p-4 md:p-8">
-          {filteredData !== null ? (
-            <div className="py-4">
-              <h2 className="text-3xl font-bold tracking-tight">Search Results</h2>
-              {filteredData.length > 0 ? (
-                 <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {filteredData.map((item) => (
+            {isLoadingMyContent ? (
+                <div className="flex h-64 w-full flex-col items-center justify-center bg-background">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <p className="mt-4 text-muted-foreground">Loading your contributions...</p>
+                </div>
+            ) : myContents && myContents.length > 0 ? (
+                 <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {myContents.map((item) => (
                       <div key={item.id} className="py-4 flex justify-center">
                         <ContentCard 
                           item={item} 
                           onEdit={handleEdit}
                           onDelete={openDeleteDialog}
-                          isEditable={item.authorId === user?.uid}
+                          isEditable={true}
                         />
                       </div>
                     ))}
                   </div>
-              ) : (
+            ) : (
                 <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
-                  <h3 className="text-2xl font-bold tracking-tight">No Results Found</h3>
-                  <p className="text-muted-foreground mt-2">Try adjusting your search terms.</p>
+                  <h3 className="text-2xl font-bold tracking-tight">No Contributions Found</h3>
+                  <p className="text-muted-foreground mt-2">You haven't added any content yet. Click "Add Content" to get started.</p>
                 </div>
-              )}
-            </div>
-          ) : (
-            <>
-              <div id="notes">
-                <ContentRow
-                  title="Class Notes"
-                  items={notes}
-                  isLoading={isLoadingAllContent}
-                  onEdit={handleEdit}
-                  onDelete={openDeleteDialog}
-                  currentUserId={user?.uid}
-                />
-              </div>
-              <div id="pyqs">
-                <ContentRow 
-                  title="Previous Year Questions"
-                  items={pyqs}
-                  isLoading={isLoadingAllContent}
-                  onEdit={handleEdit}
-                  onDelete={openDeleteDialog}
-                  currentUserId={user?.uid}
-                />
-              </div>
-              <div id="imp-questions">
-                <ContentRow 
-                  title="Important Questions"
-                  items={importantQuestions}
-                  isLoading={isLoadingAllContent}
-                  onEdit={handleEdit}
-                  onDelete={openDeleteDialog}
-                  currentUserId={user?.uid}
-                />
-              </div>
-            </>
-          )}
+            )}
         </div>
       </main>
       
@@ -309,4 +263,4 @@ function CRDashboard() {
   );
 }
 
-export default withAuth(CRDashboard, 'class-representative');
+export default withAuth(MyContributionsPage, 'class-representative');
