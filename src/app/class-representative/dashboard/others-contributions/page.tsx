@@ -3,6 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+// This is now a redirect component. The filtering logic is handled in the main dashboard page.
 export default function OthersContributionsRedirect() {
     const router = useRouter();
     React.useEffect(() => {

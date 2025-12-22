@@ -18,26 +18,40 @@ import { Progress } from "@/components/ui/progress"
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Content, initialFormData } from './types';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { createOrUpdateContent, handleBackgroundUpload } from '@/firebase/firestore/content';
 import { FirebaseError } from 'firebase/app';
+import { User } from 'firebase/auth';
+import { doc } from 'firebase/firestore';
 
 interface ContentFormProps {
   isOpen: boolean;
   onClose: () => void;
   editingContent: Content | null;
-  user: null; // User is null in code-based access
+  user: User;
 }
 
 type SubmissionState = 'idle' | 'saving' | 'uploading' | 'success' | 'error';
 
-export default function ContentForm({ isOpen, onClose, editingContent }: ContentFormProps) {
+type UserProfile = {
+  roles: string[];
+};
+
+export default function ContentForm({ isOpen, onClose, editingContent, user }: ContentFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [formData, setFormData] = useState(initialFormData);
   const [submissionState, setSubmissionState] = useState<SubmissionState>('idle');
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+  
+  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
+
 
   useEffect(() => {
     if (editingContent) {
@@ -85,7 +99,7 @@ export default function ContentForm({ isOpen, onClose, editingContent }: Content
   };
 
   const handleSubmit = async () => {
-    if (!firestore) return;
+    if (!user || !firestore || !userProfile) return;
     if (!formData.title || !formData.subject || !formData.content) {
       toast({ variant: 'destructive', title: 'Missing Fields', description: 'Please fill out Title, Subject, and Content.' });
       return;
@@ -99,9 +113,9 @@ export default function ContentForm({ isOpen, onClose, editingContent }: Content
         subject: formData.subject,
         type: formData.type,
         content: formData.content,
-        authorId: 'class-representative-access',
-        authorName: 'Class Representative',
-        roles: ['class-representative'],
+        authorId: user.uid,
+        authorName: user.displayName || 'Anonymous',
+        roles: userProfile.roles,
       };
       
       const documentId = await createOrUpdateContent(firestore, contentData, editingContent?.id);
@@ -115,7 +129,7 @@ export default function ContentForm({ isOpen, onClose, editingContent }: Content
 
         handleBackgroundUpload(
           firestore,
-          'class-representative-access',
+          user.uid,
           documentId,
           fileToUpload,
           (progress) => setUploadProgress(progress), // Progress callback
