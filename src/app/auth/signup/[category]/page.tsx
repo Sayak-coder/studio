@@ -19,8 +19,9 @@ import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
 import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { useUser } from '@/firebase';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 
 export default function SignUpPage() {
@@ -166,7 +167,7 @@ export default function SignUpPage() {
   if (isUserLoading || user) {
      return (
        <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <LoadingSpinner className="mb-4" dotClassName="w-6 h-6" />
         <p className="mt-4 text-muted-foreground">Checking authentication...</p>
       </div>
     );
@@ -296,7 +297,7 @@ export default function SignUpPage() {
               className="w-full mt-4"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing Up...' : 'Sign Up'}
+              {isLoading ? <LoadingSpinner /> : 'Sign Up'}
             </Button>
           </form>
         </CardContent>

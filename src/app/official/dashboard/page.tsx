@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { collection, query, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { BrainCircuit, Loader2, Users, ShieldAlert, LogOut, UserX, UserCheck, Trash2 } from 'lucide-react';
+import { BrainCircuit, Users, ShieldAlert, LogOut, UserX, UserCheck, Trash2 } from 'lucide-react';
 import { useFirestore, useUser, useMemoFirebase, useDoc, useCollection, useFirebase } from '@/firebase';
 import {
   Table,
@@ -38,6 +38,7 @@ import {
 import { MoreHorizontal } from "lucide-react"
 import { ThemeToggle } from '@/components/theme-toggle';
 import withAuth from '@/hoc/withAuth';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 type UserProfile = {
   id: string;
@@ -173,8 +174,8 @@ function OfficialDashboard() {
                     <TableRow>
                       <TableCell colSpan={5}>
                         <div className="flex items-center justify-center py-10">
-                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                           <p className="ml-4 text-muted-foreground">Loading user data...</p>
+                          <LoadingSpinner className="mr-4" />
+                           <p className="text-muted-foreground">Loading user data...</p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -263,7 +264,7 @@ function OfficialDashboard() {
               disabled={isSubmitting}
               className={dialogState.action === 'delete' || dialogState.action === 'block' ? 'bg-destructive hover:bg-destructive/90' : ''}
             >
-              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : `Yes, ${dialogState.action}`}
+              {isSubmitting ? <LoadingSpinner /> : `Yes, ${dialogState.action}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

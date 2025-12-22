@@ -5,9 +5,9 @@ import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 type UserProfile = {
   roles: string[];
@@ -54,7 +54,7 @@ export default function AuthRouterPage() {
   if (isUserLoading || (user && isProfileLoading)) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <LoadingSpinner className="mb-4" dotClassName="w-6 h-6" />
         <p className="mt-4 text-muted-foreground">Checking session...</p>
       </div>
     );

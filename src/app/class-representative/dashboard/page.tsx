@@ -6,7 +6,6 @@ import {
   query,
 } from 'firebase/firestore';
 import {
-  Loader2,
   BrainCircuit,
   Menu,
   FilePlus,
@@ -45,6 +44,7 @@ import {
 import ContentCard from './content-card';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Link from 'next/link';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 // NOTE: This dashboard now works with an anonymous user session
 // The `withAuth` HOC is removed. Access is controlled by the entry page.
@@ -133,7 +133,7 @@ function CRDashboard() {
   if (isUserLoading) {
      return (
         <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <LoadingSpinner className="mb-4" dotClassName="w-6 h-6" />
           <p className="mt-4 text-muted-foreground">Initializing session...</p>
         </div>
       );
@@ -317,7 +317,7 @@ function CRDashboard() {
               disabled={isDeleting}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Yes, delete'}
+              {isDeleting ? <LoadingSpinner /> : 'Yes, delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

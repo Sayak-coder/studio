@@ -8,7 +8,7 @@ import {
   where,
   doc,
 } from 'firebase/firestore';
-import { PlusCircle, Book, Edit, LogOut, Trash2, Loader2, BrainCircuit, LayoutDashboard, FilePlus, HelpCircle, FileText } from 'lucide-react';
+import { PlusCircle, Book, Edit, LogOut, Trash2, BrainCircuit, LayoutDashboard, FilePlus, HelpCircle, FileText } from 'lucide-react';
 import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
 
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { ThemeToggle } from '@/components/theme-toggle';
 import withAuth from '@/hoc/withAuth';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 function SeniorDashboard() {
   const router = useRouter();
@@ -184,7 +185,7 @@ function SeniorDashboard() {
               disabled={isDeleting}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Yes, delete'}
+              {isDeleting ? <LoadingSpinner /> : 'Yes, delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

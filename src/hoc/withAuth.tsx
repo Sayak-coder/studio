@@ -3,8 +3,8 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 type UserProfile = {
   roles?: string[];
@@ -86,7 +86,7 @@ const withAuth = <P extends object>(
     if (isUserLoading || isProfileLoading) {
       return (
         <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <LoadingSpinner className="mb-4" dotClassName="w-6 h-6" />
           <p className="mt-4 text-muted-foreground">Verifying access...</p>
         </div>
       );
@@ -100,7 +100,7 @@ const withAuth = <P extends object>(
     // Fallback: This will show the loading spinner during the brief moment of redirection.
     return (
         <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <LoadingSpinner className="mb-4" dotClassName="w-6 h-6" />
           <p className="mt-4 text-muted-foreground">Redirecting...</p>
         </div>
       );

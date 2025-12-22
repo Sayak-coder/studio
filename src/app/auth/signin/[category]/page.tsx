@@ -18,8 +18,9 @@ import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
 import { useUser } from '@/firebase';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function SignInPage() {
   const params = useParams();
@@ -102,7 +103,7 @@ export default function SignInPage() {
   if (isUserLoading || user) {
      return (
        <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <LoadingSpinner className="mb-4" dotClassName="w-6 h-6" />
         <p className="mt-4 text-muted-foreground">Checking authentication...</p>
       </div>
     );
@@ -183,7 +184,7 @@ export default function SignInPage() {
               className="w-full mt-4"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {isLoading ? <LoadingSpinner /> : 'Sign In'}
             </Button>
           </form>
         </CardContent>

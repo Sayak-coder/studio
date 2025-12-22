@@ -5,12 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { firebaseApp } from '@/firebase/config';
 import { FirebaseError } from 'firebase/app';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const OFFICIAL_ID = 'catalyst2025';
 
@@ -141,7 +141,7 @@ export default function OfficialHelpPage() {
               />
             </div>
             <Button type="submit" className="mt-4 w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : 'Verify & Proceed'}
+              {isLoading ? <LoadingSpinner /> : 'Verify & Proceed'}
             </Button>
           </form>
         </CardContent>

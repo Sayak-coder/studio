@@ -5,11 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { getAuth, signInAnonymously } from 'firebase/auth';
 import { firebaseApp } from '@/firebase/config';
 import { useUser } from '@/firebase';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const CR_ACCESS_CODE = 'cr@catalyst';
 
@@ -74,7 +74,7 @@ export default function CRHelpPage() {
   if (isUserLoading || (!isUserLoading && user)) {
      return (
        <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <LoadingSpinner className="mb-4" dotClassName="w-6 h-6" />
         <p className="mt-4 text-muted-foreground">Initializing session...</p>
       </div>
     );
@@ -110,7 +110,7 @@ export default function CRHelpPage() {
               />
             </div>
             <Button type="submit" className="mt-4 w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : 'Verify & Proceed'}
+              {isLoading ? <LoadingSpinner /> : 'Verify & Proceed'}
             </Button>
           </form>
         </CardContent>

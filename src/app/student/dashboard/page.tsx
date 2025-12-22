@@ -7,8 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
     Book, 
     FileText, 
-    LogOut,
-    Loader2, 
+    LogOut, 
     BrainCircuit, 
     Video, 
     Star,
@@ -41,6 +40,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 
 const DashboardSection = ({ title, items }: { title: string, items: ImagePlaceholder[] }) => {
@@ -145,8 +145,9 @@ export default function StudentDashboard() {
 
   if (isUserLoading || !user) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+        <LoadingSpinner className="mb-4" dotClassName="w-6 h-6" />
+        <p className="mt-4 text-muted-foreground">Loading...</p>
       </div>
     );
   }
