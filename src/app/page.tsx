@@ -47,7 +47,7 @@ export default function Home() {
         <section className="relative py-24 md:py-32 text-center animate-fade-in-down overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-full z-[-1]">
             <video
-                src="https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4"
+                src="https://videos.pexels.com/video-files/853873/853873-hd_1920_1080_25fps.mp4"
                 autoPlay
                 loop
                 muted
