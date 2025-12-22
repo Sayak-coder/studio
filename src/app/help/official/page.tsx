@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,7 +13,7 @@ import { firebaseApp } from '@/firebase/config';
 import { FirebaseError } from 'firebase/app';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
-const OFFICIAL_ID = 'catalyst2025';
+const OFFICIAL_ID = 'catalyst2026';
 const OFFICIAL_EMAIL = 'admin.official@edubot.local';
 const OFFICIAL_PASSWORD = 'supersecretpassword!23';
 
