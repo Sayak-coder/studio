@@ -35,6 +35,13 @@ export default function Home() {
       cta: 'Enter as Senior',
       href: '/help/senior',
     },
+     {
+      name: 'Official Portal',
+      icon: <Briefcase className="h-10 w-10 text-primary" />,
+      description: 'Oversee content, manage user access, and maintain platform integrity.',
+      cta: 'Enter as Official',
+      href: '/help/official',
+    },
   ];
 
   return (
@@ -86,7 +93,7 @@ export default function Home() {
         {/* Main Interaction Section */}
         <section className="py-12 md:py-24">
           <div className="container px-4 md:px-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-center">
               {portals.map((portal, index) => (
                 <Card
                   key={portal.name}
@@ -132,11 +139,6 @@ export default function Home() {
       <footer className="py-6 bg-secondary/50">
         <div className="container mx-auto text-center text-muted-foreground">
           <p>EduBot — Built by students, trusted by students.</p>
-           <div className="mt-2">
-            <Link href="/help/official" className="text-sm text-primary hover:underline">
-              Official Portal
-            </Link>
-          </div>
         </div>
       </footer>
     </div>
