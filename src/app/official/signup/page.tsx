@@ -9,18 +9,13 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { firebaseApp } from '@/firebase/config';
 import { FirebaseError } from 'firebase/app';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Eye, EyeOff } from 'lucide-react';
 
-type AccessCode = {
-  role: string;
-  isActive: boolean;
-  isSingleUse: boolean;
-  used: boolean;
-};
+const OFFICIAL_ACCESS_CODE = 'catalyst2025';
 
 export default function OfficialSignupPage() {
   const router = useRouter();
@@ -46,19 +41,12 @@ export default function OfficialSignupPage() {
 
     try {
       // 1. Validate Access Code
-      const codeRef = doc(firestore, 'accessCodes', accessCode);
-      const codeSnap = await getDoc(codeRef);
-
-      if (!codeSnap.exists()) {
+      if (accessCode !== OFFICIAL_ACCESS_CODE) {
         throw new Error('Invalid or expired access code.');
       }
+      
+      const role = 'official'; // The role for this portal
 
-      const codeData = codeSnap.data() as AccessCode;
-      
-      if (!codeData.isActive || (codeData.isSingleUse && codeData.used)) {
-        throw new Error('Access code already used or is inactive.');
-      }
-      
       // 2. Create Firebase Auth User
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -70,25 +58,20 @@ export default function OfficialSignupPage() {
         id: user.uid,
         email: user.email,
         name: name,
-        roles: [codeData.role, 'official'], // Assign role from code
+        roles: [role],
         accessCodeUsed: accessCode,
         createdAt: serverTimestamp(),
         status: 'active',
         disabled: false
       });
-      
-      // 4. Invalidate the access code if it is single-use
-      if (codeData.isSingleUse) {
-         await setDoc(codeRef, { used: true }, { merge: true });
-      }
 
       toast({
         title: 'Account Created Successfully!',
         description: "We're redirecting you to your dashboard.",
       });
 
-      // 5. Redirect to the appropriate dashboard
-      router.push(`/${codeData.role}/dashboard`);
+      // 4. Redirect to the appropriate dashboard
+      router.push(`/${role}/dashboard`);
 
     } catch (error) {
       console.error('Official sign up error:', error);
