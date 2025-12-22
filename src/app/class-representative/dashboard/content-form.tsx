@@ -1,6 +1,5 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { User } from 'firebase/auth';
 import {
   Dialog,
   DialogContent,
@@ -22,36 +21,23 @@ import { Content, initialFormData } from './types';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { createOrUpdateContent, handleBackgroundUpload } from '@/firebase/firestore/content';
 import { FirebaseError } from 'firebase/app';
-import { doc } from 'firebase/firestore';
 
 interface ContentFormProps {
   isOpen: boolean;
   onClose: () => void;
   editingContent: Content | null;
-  user: User;
+  user: null; // User is null in code-based access
 }
-
-type UserProfile = {
-  roles: string[];
-};
 
 type SubmissionState = 'idle' | 'saving' | 'uploading' | 'success' | 'error';
 
-export default function ContentForm({ isOpen, onClose, editingContent, user }: ContentFormProps) {
+export default function ContentForm({ isOpen, onClose, editingContent }: ContentFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [formData, setFormData] = useState(initialFormData);
   const [submissionState, setSubmissionState] = useState<SubmissionState>('idle');
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
-  
-  const { data: userProfile } = useDoc<UserProfile>(userDocRef);
-
 
   useEffect(() => {
     if (editingContent) {
@@ -99,7 +85,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   };
 
   const handleSubmit = async () => {
-    if (!user || !firestore || !userProfile) return;
+    if (!firestore) return;
     if (!formData.title || !formData.subject || !formData.content) {
       toast({ variant: 'destructive', title: 'Missing Fields', description: 'Please fill out Title, Subject, and Content.' });
       return;
@@ -113,9 +99,9 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
         subject: formData.subject,
         type: formData.type,
         content: formData.content,
-        authorId: user.uid,
-        authorName: user.displayName || 'Anonymous',
-        roles: userProfile.roles,
+        authorId: 'class-representative-access',
+        authorName: 'Class Representative',
+        roles: ['class-representative'],
       };
       
       const documentId = await createOrUpdateContent(firestore, contentData, editingContent?.id);
@@ -129,7 +115,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
 
         handleBackgroundUpload(
           firestore,
-          user.uid,
+          'class-representative-access',
           documentId,
           fileToUpload,
           (progress) => setUploadProgress(progress), // Progress callback

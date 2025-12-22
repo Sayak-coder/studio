@@ -14,7 +14,7 @@ interface ContentRowProps {
   isLoading: boolean;
   onEdit: (content: Content) => void;
   onDelete: (id: string) => void;
-  currentUserId?: string;
+  currentUserId?: string; // This can be a dummy string or undefined in code-access mode
 }
 
 const ContentRow = ({ title, items, isLoading, onEdit, onDelete, currentUserId }: ContentRowProps) => {
@@ -78,8 +78,10 @@ const ContentRow = ({ title, items, isLoading, onEdit, onDelete, currentUserId }
             <ContentCard 
               item={item} 
               onEdit={onEdit} 
-              onDelete={onDelete} 
-              isEditable={item.authorId === currentUserId}
+              onDelete={onDelete}
+              // In code-access mode, all content is editable.
+              // If currentUserId is passed (auth mode), it compares IDs.
+              isEditable={currentUserId ? item.authorId === currentUserId : true}
             />
             </div>
         ))}

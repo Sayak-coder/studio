@@ -16,9 +16,8 @@ import {
   Users
 } from 'lucide-react';
 
-import { useCollection, useFirestore, useUser } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
-import withAuth from '@/hoc/withAuth';
 
 import { Content } from './types';
 import ContentForm from './content-form';
@@ -53,7 +52,6 @@ function CRDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user } = useUser();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
@@ -212,7 +210,7 @@ function CRDashboard() {
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
-              <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user?.displayName || 'Class Rep'}!</p>
+              <p className="text-sm text-muted-foreground hidden sm:block">Welcome, Class Rep!</p>
               <ThemeToggle />
             </div>
         </header>
@@ -229,7 +227,7 @@ function CRDashboard() {
                           item={item} 
                           onEdit={handleEdit}
                           onDelete={openDeleteDialog}
-                          isEditable={item.authorId === user?.uid}
+                          isEditable={true} // All content is editable in code-based access
                         />
                       </div>
                     ))}
@@ -250,7 +248,7 @@ function CRDashboard() {
                   isLoading={isLoadingAllContent}
                   onEdit={handleEdit}
                   onDelete={openDeleteDialog}
-                  currentUserId={user?.uid}
+                  currentUserId="cr-user" // Dummy ID
                 />
               </div>
               <div id="pyqs">
@@ -260,7 +258,7 @@ function CRDashboard() {
                   isLoading={isLoadingAllContent}
                   onEdit={handleEdit}
                   onDelete={openDeleteDialog}
-                  currentUserId={user?.uid}
+                  currentUserId="cr-user" // Dummy ID
                 />
               </div>
               <div id="imp-questions">
@@ -270,7 +268,7 @@ function CRDashboard() {
                   isLoading={isLoadingAllContent}
                   onEdit={handleEdit}
                   onDelete={openDeleteDialog}
-                  currentUserId={user?.uid}
+                  currentUserId="cr-user" // Dummy ID
                 />
               </div>
             </>
@@ -278,12 +276,12 @@ function CRDashboard() {
         </div>
       </main>
       
-       { user && <ContentForm 
+       <ContentForm 
           isOpen={isFormOpen}
           onClose={closeForm}
           editingContent={editingContent}
-          user={user}
-       />}
+          user={null} // Pass null for user in code-based access
+       />
 
        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
@@ -309,4 +307,4 @@ function CRDashboard() {
   );
 }
 
-export default withAuth(CRDashboard, 'class-representative');
+export default CRDashboard;
