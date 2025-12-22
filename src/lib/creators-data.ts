@@ -13,9 +13,9 @@ export type Creator = {
 export const creatorsData: Creator[] = [
   {
     id: '1',
-    name: 'Soumojit Biswas',
+    name: 'Soumojit Das',
     bio: 'The architect of EduBot, crafting seamless user experiences with a passion for clean code and innovative solutions.',
-    photoUrl: 'https://picsum.photos/seed/soumojit/200/200',
+    photoUrl: 'https://storage.googleapis.com/res-a-dev-team-1/image-49e0c71a-e9d6-444a-952a-30277a064b59.jpeg',
     socials: {
       linkedin: 'https://www.linkedin.com/',
       github: 'https://github.com/',
@@ -37,7 +37,7 @@ export const creatorsData: Creator[] = [
     id: '3',
     name: 'Kaniska Bose',
     bio: 'The powerhouse ensuring EduBot runs smoothly, managing data and infrastructure with precision and skill.',
-    photoUrl: 'https://storage.googleapis.com/res-a-dev-team-1/image-e5559092-2358-451e-b816-c7759d57a224.png',
+    photoUrl: 'https://storage.googleapis.com/res-a-dev-team-1/image-a4178568-b8d0-435e-990a-5b1216a61763.png',
     socials: {
       linkedin: 'https://www.linkedin.com/',
       github: 'https://github.com/',
