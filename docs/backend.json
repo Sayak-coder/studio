@@ -11,7 +11,10 @@
           "description": "Unique identifier for the User entity."
         },
         "email": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Email address of the user (optional for anonymous users).",
           "format": "email"
         },
@@ -35,12 +38,12 @@
           "description": "The user's current semester."
         },
         "accessCodeUsed": {
-            "type": "string",
-            "description": "The access code used by the user to sign up, if applicable."
+          "type": "string",
+          "description": "The access code used by the user to sign up, if applicable."
         },
         "status": {
-            "type": "string",
-            "description": "The status of the user's account (e.g., active, disabled)."
+          "type": "string",
+          "description": "The status of the user's account (e.g., active, disabled)."
         }
       },
       "required": [
@@ -66,7 +69,11 @@
         "type": {
           "type": "string",
           "description": "The type of content.",
-          "enum": ["Class Notes", "PYQ", "Important Question"]
+          "enum": [
+            "Class Notes",
+            "PYQ",
+            "Important Question"
+          ]
         },
         "content": {
           "type": "string",
@@ -110,18 +117,45 @@
       ]
     },
     "AccessCode": {
-        "title": "Access Code",
-        "description": "Represents a single-use or multi-use access code for signing up with special roles.",
-        "type": "object",
-        "properties": {
-            "code": { "type": "string", "description": "The access code string itself." },
-            "role": { "type": "string", "description": "The role to be assigned upon using this code (e.g., 'official')." },
-            "isActive": { "type": "boolean", "description": "Whether the code is currently active and can be used." },
-            "isSingleUse": { "type": "boolean", "description": "If true, the code can only be used once." },
-            "used": { "type": "boolean", "description": "If the single-use code has been used." },
-            "expiresAt": { "type": "string", "format": "date-time", "description": "An optional expiration date for the code." }
+      "title": "Access Code",
+      "description": "Represents a single-use or multi-use access code for signing up with special roles.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The access code string itself."
         },
-        "required": ["code", "role", "isActive", "isSingleUse"]
+        "roles": {
+          "type": "array",
+          "description": "The roles to be assigned upon using this code (e.g., ['official']).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the code is currently active and can be used."
+        },
+        "isSingleUse": {
+          "type": "boolean",
+          "description": "If true, the code can only be used once."
+        },
+        "used": {
+          "type": "boolean",
+          "description": "If the single-use code has been used."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "An optional expiration date for the code."
+        }
+      },
+      "required": [
+        "code",
+        "roles",
+        "isActive",
+        "isSingleUse"
+      ]
     }
   },
   "auth": {
@@ -165,18 +199,23 @@
         }
       },
       {
-          "path": "/accessCodes/{codeId}",
-          "definition": {
-              "entityName": "AccessCode",
-              "schema": { "$ref": "#/backend/entities/AccessCode" },
-              "description": "Stores access codes for special sign-ups. These should only be readable by authenticated users during signup and not be listable.",
-              "params": [{
-                  "name": "codeId",
-                  "description": "The document ID, which is the access code string itself."
-              }]
-          }
+        "path": "/accessCodes/{codeId}",
+        "definition": {
+          "entityName": "AccessCode",
+          "schema": {
+            "$ref": "#/backend/entities/AccessCode"
+          },
+          "description": "Stores access codes for special sign-ups. These should only be readable by authenticated users during signup and not be listable.",
+          "params": [
+            {
+              "name": "codeId",
+              "description": "The document ID, which is the access code string itself."
+            }
+          ]
+        }
       }
     ],
     "reasoning": "This Firestore structure prioritizes security and scalability. User data is isolated under `/users/{userId}` with strict ownership rules. The top-level `/content` collection stores all academic materials. Security rules for `/content` will ensure that while any authenticated user can create content, only the original author (authorId) can update or delete their own contributions. A new `/accessCodes` collection is added to manage signups for privileged roles, with rules to prevent enumeration."
   }
 }
+    
