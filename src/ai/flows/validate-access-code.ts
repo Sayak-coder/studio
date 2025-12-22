@@ -5,7 +5,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getFirestore, doc, getDoc, writeBatch, Timestamp } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { initAdmin } from '@/firebase/server';
 
 // --- Input and Output Schemas ---
@@ -43,13 +43,13 @@ const validateAccessCodeFlow = ai.defineFlow(
     const admin = initAdmin();
     const db = getFirestore(admin);
 
-    const accessCodeRef = doc(db, 'accessCodes', code);
+    const accessCodeRef = db.collection('accessCodes').doc(code);
 
     try {
-      const docSnap = await getDoc(accessCodeRef);
+      const docSnap = await accessCodeRef.get();
 
       // 1. Check if the code exists
-      if (!docSnap.exists()) {
+      if (!docSnap.exists) {
         return { isValid: false, role: '', reason: 'Unauthorized access code.' };
       }
 
@@ -75,7 +75,7 @@ const validateAccessCodeFlow = ai.defineFlow(
       // --- Validation successful, now consume the code ---
       // For single-use codes, mark as used.
       if (data.isSingleUse === true) {
-        const batch = writeBatch(db);
+        const batch = db.batch();
         batch.update(accessCodeRef, { used: true });
         await batch.commit();
       }
