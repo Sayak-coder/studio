@@ -45,6 +45,14 @@ export default function OfficialHelpPage() {
       
       // Try to sign in with the pre-defined official credentials
       await signInWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
+      
+      // On successful sign-in, redirect to dashboard.
+      toast({
+        title: 'Access Granted!',
+        description: 'Redirecting to the Official Dashboard...',
+      });
+      router.push('/official/dashboard');
+      return; // Stop execution after successful login and redirect
 
     } catch (error) {
        // If sign-in fails (e.g., user not found, wrong password for an old account),
