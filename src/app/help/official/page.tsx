@@ -38,18 +38,26 @@ export default function OfficialHelpPage() {
 
     const auth = getAuth(firebaseApp);
     const firestore = getFirestore(firebaseApp);
-    let isSuccess = false;
 
     try {
       await setPersistence(auth, browserLocalPersistence);
+      // Try to sign in first
       await signInWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
-      isSuccess = true;
+      toast({
+        title: 'Access Granted!',
+        description: 'Redirecting to the Official Dashboard...',
+      });
+      router.push('/official/dashboard');
+
     } catch (error) {
+      // If user not found, create the user
       if (error instanceof FirebaseError && (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential')) {
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, OFFICIAL_EMAIL, OFFICIAL_PASSWORD);
           const user = userCredential.user;
           const userRef = doc(firestore, 'users', user.uid);
+          
+          // CRITICAL: Await the setDoc to ensure the profile exists before redirecting
           await setDoc(userRef, {
             id: user.uid,
             email: user.email,
@@ -58,7 +66,12 @@ export default function OfficialHelpPage() {
             createdAt: serverTimestamp(),
             disabled: false,
           });
-          isSuccess = true;
+
+          toast({
+            title: 'Official Account Provisioned!',
+            description: 'Redirecting to the dashboard...',
+          });
+          router.push('/official/dashboard');
         } catch (creationError) {
           console.error('Official account creation error:', creationError);
           toast({
@@ -68,6 +81,7 @@ export default function OfficialHelpPage() {
           });
         }
       } else {
+        // Handle other sign-in errors
         console.error('Official sign-in error:', error);
         toast({
           variant: 'destructive',
@@ -77,13 +91,6 @@ export default function OfficialHelpPage() {
       }
     } finally {
       setIsLoading(false);
-      if (isSuccess) {
-        toast({
-          title: 'Access Granted!',
-          description: 'Redirecting to the Official Dashboard...',
-        });
-        router.push('/official/dashboard');
-      }
     }
   };
 
