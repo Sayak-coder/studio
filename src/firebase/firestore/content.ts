@@ -90,6 +90,7 @@ export async function createOrUpdateContent(
 /**
  * Handles the file upload process as a separate step after content creation.
  * It uploads the file and then updates the corresponding document with the file's metadata.
+ * This function is designed to be called without being awaited, allowing the UI to proceed.
  * @param firestore The Firestore instance.
  * @param userId The current user's ID.
  * @param docId The ID of the document to associate the file with.
@@ -110,8 +111,12 @@ export function handleBackgroundUpload(
   // This function is intentionally not async and does not return a promise
   // to ensure it runs in the background without blocking the UI.
   
-  uploadFile(userId, docId, file, onProgress)
-    .then(({ downloadURL, fileType }) => {
+  const uploadAndLinkFile = async () => {
+    try {
+      // 1. Upload the file and get its URL
+      const { downloadURL, fileType } = await uploadFile(userId, docId, file, onProgress);
+
+      // 2. Prepare the payload to update the Firestore document
       const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
       const updatePayload = {
         fileUrl: downloadURL,
@@ -120,28 +125,31 @@ export function handleBackgroundUpload(
         fileSize: file.size,
         updatedAt: serverTimestamp(),
       };
-      
-      // Perform the update without awaiting it.
-      updateDoc(contentDocRef, updatePayload)
-        .then(() => {
-          onComplete(); // Still call onComplete for success feedback.
-        })
-        .catch((updateError) => {
-           // The UI has already moved on, but we need to handle the error.
-           console.error("Document update failed after upload:", updateError);
-           errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: contentDocRef.path,
-              operation: 'update',
-              requestResourceData: updatePayload,
-           }));
-           // Call the original error handler to show a toast, even if delayed.
-           onError(updateError);
-        });
-    })
-    .catch((uploadError) => {
-      console.error("Background upload failed:", uploadError);
-      onError(uploadError as Error);
-    });
+
+      // 3. Reliably update the document and wait for it to complete
+      await updateDoc(contentDocRef, updatePayload);
+
+      // 4. Signal completion
+      onComplete();
+
+    } catch (error: any) {
+      console.error("Background upload and linking failed:", error);
+      // If the error is a permission error during the updateDoc phase, emit it.
+      if (error.code && error.code.startsWith('permission-denied')) {
+        const path = doc(firestore, CONTENT_COLLECTION, docId).path;
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: path,
+          operation: 'update',
+          requestResourceData: { fileUrl: '...' }, // Payload is known at a high level
+        }));
+      }
+      // Notify the caller of the failure so it can show a toast.
+      onError(error);
+    }
+  };
+
+  // Execute the async function without awaiting it from the caller.
+  uploadAndLinkFile();
 }
 
 

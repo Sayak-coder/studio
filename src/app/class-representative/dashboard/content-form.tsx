@@ -161,7 +161,7 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
     }
   };
   
-  const isSubmitting = submissionState === 'saving' || submissionState === 'uploading';
+  const isSubmitting = submissionState === 'saving';
 
   const getButtonText = () => {
     if (submissionState === 'saving') return 'Saving Content...';
