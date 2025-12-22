@@ -70,11 +70,11 @@ const config = {
         "fade-in-down": {
           "0%": {
             opacity: "0",
-            transform: "translateY(-10px)"
+            transform: "translateY(-20px) scale(0.95)"
           },
           "100%": {
             opacity: "1",
-            transform: "translateY(0)"
+            transform: "translateY(0) scale(1)"
           }
         },
         "fade-in-up": {
@@ -91,7 +91,7 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in-down": "fade-in-down 0.5s ease-out forwards",
+        "fade-in-down": "fade-in-down 0.6s ease-in-out forwards",
         "fade-in-up": "fade-in-up 0.5s ease-out forwards",
       },
     },
