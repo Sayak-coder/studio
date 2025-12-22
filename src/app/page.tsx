@@ -55,18 +55,13 @@ export default function Home() {
             </a>
             <div className="mt-4 text-lg md:text-xl text-muted-foreground animate-fade-in-up [animation-delay:0.2s]">
               Smarter exam preparation, powered by{' '}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent cursor-pointer">
-                      Catalyst
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Code. Collaborate. Conquer.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Button variant="link" asChild className="p-0 text-lg md:text-xl font-bold">
+                <Link href="/creators">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent cursor-pointer">
+                    Catalyst
+                  </span>
+                </Link>
+              </Button>
             </div>
              {/* AI-Powered Study Helper Section */}
             <div className="mt-12 max-w-2xl mx-auto">
