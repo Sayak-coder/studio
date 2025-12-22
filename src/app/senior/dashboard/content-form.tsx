@@ -120,23 +120,19 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
 
       if (fileToUpload) {
         setSubmissionState('uploading');
+        // Close the form immediately for a faster UX
+        onClose();
+
         toast({
           title: 'Content Saved!',
           description: `Starting file upload for "${fileToUpload.name}"...`,
         });
-
-        // Close the form immediately for a faster UX
-        onClose();
 
         handleBackgroundUpload(
           firestore,
           user.uid,
           documentId,
           fileToUpload,
-          (progress) => {
-            // Can be used to update a global progress indicator in a real app
-            console.log(`Upload Progress for ${documentId}: ${progress}%`);
-          },
           () => { // Completion callback
             toast({
               title: 'Upload Complete',

@@ -95,7 +95,6 @@ export async function createOrUpdateContent(
  * @param userId The current user's ID.
  * @param docId The ID of the document to associate the file with.
  * @param file The file to be uploaded.
- * @param onProgress A callback function to track upload progress.
  * @param onComplete A callback function for when the upload succeeds.
  * @param onError A callback function for when the upload fails.
  */
@@ -104,7 +103,6 @@ export function handleBackgroundUpload(
   userId: string,
   docId: string,
   file: File,
-  onProgress: (progress: number) => void,
   onComplete: () => void,
   onError: (error: Error) => void
 ): void {
@@ -113,8 +111,8 @@ export function handleBackgroundUpload(
   
   const uploadAndLinkFile = async () => {
     try {
-      // 1. Upload the file and get its URL
-      const { downloadURL, fileType } = await uploadFile(userId, docId, file, onProgress);
+      // 1. Upload the file and get its URL. We no longer need progress tracking here.
+      const { downloadURL, fileType } = await uploadFile(userId, docId, file, () => {});
 
       // 2. Prepare the payload to update the Firestore document
       const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
@@ -126,7 +124,8 @@ export function handleBackgroundUpload(
         updatedAt: serverTimestamp(),
       };
 
-      // 3. Reliably update the document and wait for it to complete
+      // 3. Reliably update the document and wait for it to complete.
+      // This part runs in the background and does not block the UI.
       await updateDoc(contentDocRef, updatePayload);
 
       // 4. Signal completion
@@ -158,7 +157,7 @@ export function handleBackgroundUpload(
  * @param userId - The ID of the user uploading the file.
  * @param contentId - The ID of the content document.
  * @param file - The file to upload.
- * @param onProgress - Callback to report upload progress.
+ * @param onProgress - Callback to report upload progress (can be an empty function if not needed).
  * @returns A promise that resolves with the download URL and file type.
  */
 export function uploadFile(

@@ -38,7 +38,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
   const [formData, setFormData] = useState(initialFormData);
   const [submissionState, setSubmissionState] = useState<SubmissionState>('idle');
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   useEffect(() => {
     if (editingContent) {
@@ -54,7 +53,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
       setFormData(initialFormData);
     }
     setFileToUpload(null);
-    setUploadProgress(null);
     setSubmissionState('idle');
   }, [editingContent, isOpen]);
 
@@ -95,37 +93,37 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
     setSubmissionState('saving');
     
     try {
+      // For anonymous CR, use a placeholder UID, otherwise use the real one.
+      const authorId = user.isAnonymous ? 'cr-anonymous-access' : user.uid;
+      const authorName = user.displayName || "Class Representative";
+      
       const contentData = {
         title: formData.title,
         subject: formData.subject,
         type: formData.type,
         content: formData.content,
-        authorId: user.uid,
-        authorName: user.displayName || "Class Representative", // Use display name or fallback
-        roles: ['class-representative'], // Assign role directly for now
+        authorId: authorId,
+        authorName: authorName,
+        roles: user.isAnonymous ? ['class-representative'] : [], // Simplified
       };
       
       const documentId = await createOrUpdateContent(firestore, contentData, editingContent?.id);
 
       if (fileToUpload) {
         setSubmissionState('uploading');
+        // Close the form immediately for a faster UX
+        onClose(); 
+
         toast({
           title: 'Content Saved!',
           description: `Starting file upload for "${fileToUpload.name}"...`,
         });
 
-        // Close the form immediately for a faster UX
-        onClose(); 
-
         handleBackgroundUpload(
           firestore,
-          user.uid,
+          authorId,
           documentId,
           fileToUpload,
-          (progress) => {
-             // In a real app, you might use a global state to show progress somewhere else
-             console.log(`Upload Progress for ${documentId}: ${progress}%`);
-          },
           () => { // Completion callback
             toast({
               title: 'Upload Complete',
