@@ -4,10 +4,7 @@ import { useRouter } from 'next/navigation';
 import {
   collection,
   query,
-  where
 } from 'firebase/firestore';
-import { User } from 'firebase/auth';
-
 import {
   Loader2,
   BrainCircuit,
@@ -18,10 +15,8 @@ import {
   Users,
   LogOut,
 } from 'lucide-react';
-
 import { useCollection, useFirestore, useMemoFirebase, useUser, useFirebase } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
-import withAuth from '@/hoc/withAuth';
 
 import { Content } from './types';
 import ContentForm from './content-form';
@@ -51,13 +46,14 @@ import ContentCard from './content-card';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Link from 'next/link';
 
-
+// NOTE: This dashboard now works with an anonymous user session
+// The `withAuth` HOC is removed. Access is controlled by the entry page.
 function CRDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
   const { auth } = useFirebase();
-  const { user } = useUser(); // Guaranteed to be available by withAuth
+  const { user, isUserLoading } = useUser(); // User will be an anonymous user
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
@@ -76,8 +72,10 @@ function CRDashboard() {
 
   const { data: allContents, isLoading: isLoadingAllContent } = useCollection<Content>(allContentQuery);
   
-  const myContributions = useMemo(() => allContents?.filter(c => c.authorId === user?.uid) || [], [allContents, user]);
-  const othersContributions = useMemo(() => allContents?.filter(c => c.authorId !== user?.uid) || [], [allContents, user]);
+  // "My Contributions" for anonymous CR is all contributions made by any anonymous CR.
+  // In a real multi-CR scenario, this would need refinement.
+  const myContributions = useMemo(() => allContents?.filter(c => c.authorName === 'Class Representative') || [], [allContents]);
+  const othersContributions = useMemo(() => allContents?.filter(c => c.authorName !== 'Class Representative') || [], [allContents, user]);
 
   const notes = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'Class Notes') || [], [allContents, myContributions, othersContributions, view]);
   const pyqs = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'PYQ') || [], [allContents, myContributions, othersContributions, view]);
@@ -87,7 +85,7 @@ function CRDashboard() {
     if (!auth) return;
     try {
       await auth.signOut();
-      toast({ title: 'Signed Out', description: 'You have been successfully signed out.' });
+      toast({ title: 'Session Ended', description: 'You have been signed out of the CR portal.' });
       router.replace('/help/class-representative');
     } catch (error) {
       console.error('Sign out error:', error);
@@ -132,6 +130,15 @@ function CRDashboard() {
     setEditingContent(null);
   }
   
+  if (isUserLoading) {
+     return (
+        <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">Initializing session...</p>
+        </div>
+      );
+  }
+  
   const SidebarContent = () => (
      <>
         <div className="flex h-16 items-center border-b px-6">
@@ -145,12 +152,12 @@ function CRDashboard() {
               <Button variant='ghost' className="w-full justify-start text-base gap-3" onClick={handleAddNew}>
                 <FilePlus />Add Content
               </Button>
-               <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />Your Contributions</Button>
+               <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />CR Contributions</Button>
                <Button variant={view === 'others' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('others')}><Users />Others' Contributions</Button>
         </nav>
         <div className="mt-auto p-4">
            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-             <LogOut /> Sign Out
+             <LogOut /> End Session
           </Button>
         </div>
       </>
@@ -174,7 +181,7 @@ function CRDashboard() {
                  </Button>
              </SheetClose>
             <SheetClose asChild>
-              <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />Your Contributions</Button>
+              <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />CR Contributions</Button>
             </SheetClose>
             <SheetClose asChild>
               <Button variant={view === 'others' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('others')}><Users />Others' Contributions</Button>
@@ -182,7 +189,7 @@ function CRDashboard() {
        </nav>
        <div className="mt-auto p-4">
           <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-             <LogOut /> Sign Out
+             <LogOut /> End Session
           </Button>
        </div>
      </>
@@ -220,7 +227,7 @@ function CRDashboard() {
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
-              <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user?.displayName || 'Class Rep'}!</p>
+              <p className="text-sm text-muted-foreground hidden sm:block">Welcome, Class Rep!</p>
               <ThemeToggle />
             </div>
         </header>
@@ -237,7 +244,7 @@ function CRDashboard() {
                           item={item} 
                           onEdit={handleEdit}
                           onDelete={openDeleteDialog}
-                          isEditable={item.authorId === user?.uid}
+                          isEditable={item.authorName === 'Class Representative'}
                         />
                       </div>
                     ))}
@@ -319,4 +326,4 @@ function CRDashboard() {
   );
 }
 
-export default withAuth(CRDashboard, 'class-representative');
+export default CRDashboard;

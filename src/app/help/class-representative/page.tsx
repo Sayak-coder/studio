@@ -1,92 +1,130 @@
 'use client';
-
-import Link from 'next/link';
-import { useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { useToast } from '@/hooks/use-toast';
+import { getAuth, signInAnonymously } from 'firebase/auth';
+import { firebaseApp } from '@/firebase/config';
+import { useUser } from '@/firebase';
 
-type UserProfile = {
-  roles: string[];
-};
+const CR_ACCESS_CODE = 'cr@catalyst';
 
-// This page acts as a router based on auth state for the Class Representative.
-export default function CRAuthRouterPage() {
+export default function CRHelpPage() {
   const router = useRouter();
-  const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  
-  const category = 'class-representative';
-  const categoryTitle = 'Class Representative Portal';
-
-  // Memoize the user document reference
-  const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user?.uid]);
-
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+  const { user, isUserLoading } = useUser();
+  const [enteredCode, setEnteredCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Wait until both auth state and profile loading are complete
-    if (isUserLoading || isProfileLoading) {
-      return; // Show loading spinner while we check
+    // If an anonymous user session already exists, they might be coming back.
+    // Redirect them to the dashboard directly.
+    if (!isUserLoading && user?.isAnonymous) {
+      router.replace('/class-representative/dashboard');
+    }
+  }, [user, isUserLoading, router]);
+
+
+  const handleVerifyAndSignIn = async () => {
+    setIsLoading(true);
+    
+    if (enteredCode !== CR_ACCESS_CODE) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Code',
+        description: 'The access code you entered is incorrect.',
+      });
+      setIsLoading(false);
+      return;
     }
 
-    if (user && userProfile) {
-      // User is logged in, check their roles
-      if (userProfile.roles && userProfile.roles.includes(category)) {
-        // User has the required role, redirect to the dashboard
-        router.replace(`/${category}/dashboard`);
-      }
-      // If they don't have the role, we do nothing and let the selection page render
+    const auth = getAuth(firebaseApp);
+    
+    try {
+      // Sign in anonymously. This creates a temporary user session.
+      // This session is necessary to satisfy Firestore security rules
+      // that require an authenticated user (request.auth != null).
+      await signInAnonymously(auth);
+
+      toast({
+        title: 'Access Granted!',
+        description: 'Redirecting to the CR Dashboard...',
+      });
+      // The onAuthStateChanged listener will pick up the new anonymous user,
+      // and this component will re-render, triggering the useEffect
+      // to redirect to the dashboard.
+      router.push('/class-representative/dashboard');
+
+    } catch (error) {
+      console.error('Anonymous sign-in error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Failed',
+        description: 'Could not create a session. Please try again.',
+      });
+      setIsLoading(false);
     }
-    // If no user, we also do nothing and let the page render.
-  }, [user, userProfile, isUserLoading, isProfileLoading, router, category]);
-
-
-  // If we are still checking auth, show a loading spinner.
-  if (isUserLoading || (user && isProfileLoading)) {
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+  };
+  
+  // While checking auth or if user is found (and redirection is happening), show loading.
+  if (isUserLoading || (!isUserLoading && user)) {
+     return (
+       <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Checking session...</p>
+        <p className="mt-4 text-muted-foreground">Initializing session...</p>
       </div>
     );
   }
 
-  // Render the public selection page if user is not logged in OR is logged in but doesn't have the specific role.
+
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center p-8 bg-background">
-       <div className="absolute top-4 right-4">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
+      <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-      <div className="w-full max-w-md text-center">
-        <h1 className="text-4xl font-bold mb-8 capitalize bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">{categoryTitle}</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Link
-            href={`/auth/signin/${category}`}
-            className="p-6 bg-card/80 backdrop-blur-sm border rounded-lg hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 text-foreground"
+      <Card className="w-full max-w-sm bg-card/80 backdrop-blur-sm">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">CR Portal Entry</CardTitle>
+          <CardDescription>Please enter the unique access code to proceed.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleVerifyAndSignIn();
+            }}
           >
-            <h2 className="text-2xl font-semibold">Sign In</h2>
-            <p className="text-muted-foreground mt-2">Existing CR? Log in here.</p>
-          </Link>
-          <Link
-            href={`/auth/signup/${category}`}
-            className="p-6 bg-card/80 backdrop-blur-sm border rounded-lg hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 text-foreground"
-          >
-            <h2 className="text-2xl font-semibold">Sign Up</h2>
-            <p className="text-muted-foreground mt-2">New CR? Create an account.</p>
-          </Link>
-        </div>
-        <Link href="/" className="mt-8 inline-block text-primary hover:underline">
-          &larr; Back to Home
-        </Link>
-      </div>
+            <div className="grid w-full items-center gap-2">
+              <Input
+                id="accessCode"
+                type="password" // Use password type to obscure the code
+                placeholder="Enter Access Code"
+                value={enteredCode}
+                onChange={(e) => setEnteredCode(e.target.value)}
+                disabled={isLoading}
+                required
+              />
+            </div>
+            <Button type="submit" className="mt-4 w-full" disabled={isLoading}>
+              {isLoading ? <Loader2 className="animate-spin" /> : 'Verify & Proceed'}
+            </Button>
+          </form>
+        </CardContent>
+         <CardFooter className="flex justify-center">
+            <Button
+                variant="link"
+                onClick={() => router.push('/')}
+                className="text-primary"
+                disabled={isLoading}
+            >
+                &larr; Back to Home
+            </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }
