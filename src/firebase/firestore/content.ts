@@ -103,18 +103,13 @@ export function handleBackgroundUpload(
   userId: string,
   docId: string,
   file: File,
-  onComplete: () => void,
+  onComplete: (downloadURL: string) => void,
   onError: (error: Error) => void
 ): void {
-  // This function is intentionally not async and does not return a promise
-  // to ensure it runs in the background without blocking the UI.
-  
   const uploadAndLinkFile = async () => {
     try {
-      // 1. Upload the file and get its URL. We no longer need progress tracking here.
-      const { downloadURL, fileType } = await uploadFile(userId, docId, file, () => {});
+      const { downloadURL, fileType } = await uploadFile(userId, docId, file);
 
-      // 2. Prepare the payload to update the Firestore document
       const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
       const updatePayload = {
         fileUrl: downloadURL,
@@ -123,31 +118,28 @@ export function handleBackgroundUpload(
         fileSize: file.size,
         updatedAt: serverTimestamp(),
       };
-
-      // 3. Reliably update the document and wait for it to complete.
-      // This part runs in the background and does not block the UI.
+      
+      // Reliably update the document, but don't block the UI thread for it.
+      // The `await` here is inside an async function that isn't awaited by the caller,
+      // so it correctly runs in the background.
       await updateDoc(contentDocRef, updatePayload);
 
-      // 4. Signal completion
-      onComplete();
+      onComplete(downloadURL);
 
     } catch (error: any) {
       console.error("Background upload and linking failed:", error);
-      // If the error is a permission error during the updateDoc phase, emit it.
       if (error.code && error.code.startsWith('permission-denied')) {
         const path = doc(firestore, CONTENT_COLLECTION, docId).path;
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: path,
           operation: 'update',
-          requestResourceData: { fileUrl: '...' }, // Payload is known at a high level
+          requestResourceData: { fileUrl: '...' },
         }));
       }
-      // Notify the caller of the failure so it can show a toast.
       onError(error);
     }
   };
 
-  // Execute the async function without awaiting it from the caller.
   uploadAndLinkFile();
 }
 
@@ -157,14 +149,12 @@ export function handleBackgroundUpload(
  * @param userId - The ID of the user uploading the file.
  * @param contentId - The ID of the content document.
  * @param file - The file to upload.
- * @param onProgress - Callback to report upload progress (can be an empty function if not needed).
  * @returns A promise that resolves with the download URL and file type.
  */
 export function uploadFile(
   userId: string,
   contentId: string,
-  file: File,
-  onProgress: (progress: number) => void
+  file: File
 ): Promise<{ downloadURL: string; fileType: string }> {
   return new Promise((resolve, reject) => {
     const filePath = `content/${userId}/${contentId}/${file.name}`;
@@ -174,8 +164,8 @@ export function uploadFile(
     uploadTask.on(
       'state_changed',
       (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        onProgress(progress);
+        // Progress can be monitored here if needed in the future,
+        // but for a pure background task, it's not necessary for the UI.
       },
       (error) => {
         console.error('Upload failed:', error);

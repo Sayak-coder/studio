@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from "@/components/ui/progress"
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Content, initialFormData } from './types';
@@ -30,7 +29,7 @@ interface ContentFormProps {
   user: User;
 }
 
-type SubmissionState = 'idle' | 'saving' | 'uploading' | 'success' | 'error';
+type SubmissionState = 'idle' | 'saving' | 'error';
 
 export default function ContentForm({ isOpen, onClose, editingContent, user }: ContentFormProps) {
   const { toast } = useToast();
@@ -93,7 +92,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
     setSubmissionState('saving');
     
     try {
-      // For anonymous CR, use a placeholder UID, otherwise use the real one.
       const authorId = user.isAnonymous ? 'cr-anonymous-access' : user.uid;
       const authorName = user.displayName || "Class Representative";
       
@@ -104,19 +102,17 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
         content: formData.content,
         authorId: authorId,
         authorName: authorName,
-        roles: user.isAnonymous ? ['class-representative'] : [], // Simplified
+        roles: user.isAnonymous ? ['class-representative'] : [],
       };
       
       const documentId = await createOrUpdateContent(firestore, contentData, editingContent?.id);
 
       if (fileToUpload) {
-        setSubmissionState('uploading');
-        // Close the form immediately for a faster UX
         onClose(); 
 
         toast({
           title: 'Content Saved!',
-          description: `Starting file upload for "${fileToUpload.name}"...`,
+          description: `Uploading "${fileToUpload.name}" in the background...`,
         });
 
         handleBackgroundUpload(
@@ -124,21 +120,19 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
           authorId,
           documentId,
           fileToUpload,
-          () => { // Completion callback
+          (downloadURL) => { 
             toast({
               title: 'Upload Complete',
-              description: `Your file "${fileToUpload.name}" has been attached.`,
+              description: `Your file has been attached successfully.`,
             });
-            // No need to change state or close form, it's already done
           },
-          (uploadError) => { // Error callback
+          (uploadError) => { 
             console.error("Background upload failed:", uploadError);
             toast({
               variant: 'destructive',
               title: 'Upload Failed',
               description: 'Your file could not be attached. Please try editing the content to upload it again.'
             });
-             // No need to set state to error, UI has moved on
           }
         );
       } else {
@@ -146,8 +140,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
           title: 'Success!',
           description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}.`,
         });
-        // If there's no file, just close the form.
-        setSubmissionState('success');
         onClose();
       }
 
@@ -156,14 +148,17 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
       console.error("Content submission error:", error);
       const errorMessage = error instanceof FirebaseError ? error.message : 'Could not save your content. Please try again.';
       toast({ variant: 'destructive', title: 'Something went wrong', description: errorMessage });
+    } finally {
+        if (!fileToUpload) {
+            setSubmissionState('idle');
+        }
     }
   };
   
   const isSubmitting = submissionState === 'saving';
 
   const getButtonText = () => {
-    if (submissionState === 'saving') return 'Saving Content...';
-    // Uploading state is now handled in the background, so we don't need a special button text for it.
+    if (isSubmitting) return 'Saving...';
     return editingContent ? 'Update' : 'Save Contribution';
   }
 
@@ -222,7 +217,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
                 Current file: <a href={formData.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">{formData.fileUrl.split('%2F').pop()?.split('?')[0] || 'View File'}</a>
               </div>
             )}
-           {/* Progress bar is removed as the dialog closes immediately */}
         </div>
         <DialogFooter>
           <DialogClose asChild>

@@ -35,7 +35,7 @@ type UserProfile = {
 };
 
 
-type SubmissionState = 'idle' | 'saving' | 'uploading' | 'success' | 'error';
+type SubmissionState = 'idle' | 'saving' | 'error';
 
 export default function ContentForm({ isOpen, onClose, editingContent, user }: ContentFormProps) {
   const { toast } = useToast();
@@ -119,13 +119,11 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
       const documentId = await createOrUpdateContent(firestore, contentData, editingContent?.id);
 
       if (fileToUpload) {
-        setSubmissionState('uploading');
-        // Close the form immediately for a faster UX
         onClose();
 
         toast({
           title: 'Content Saved!',
-          description: `Starting file upload for "${fileToUpload.name}"...`,
+          description: `Uploading "${fileToUpload.name}" in the background...`,
         });
 
         handleBackgroundUpload(
@@ -133,14 +131,13 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
           user.uid,
           documentId,
           fileToUpload,
-          () => { // Completion callback
+          (downloadURL) => { 
             toast({
               title: 'Upload Complete',
-              description: `Your file "${fileToUpload.name}" has been attached.`,
+              description: `Your file has been attached successfully.`,
             });
-            // UI has already moved on.
           },
-          (uploadError) => { // Error callback
+          (uploadError) => {
             console.error("Background upload failed:", uploadError);
             toast({
               variant: 'destructive',
@@ -154,7 +151,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
           title: 'Success!',
           description: `Your content has been ${editingContent?.id ? 'updated' : 'saved'}.`,
         });
-        setSubmissionState('success');
         onClose();
       }
 
@@ -163,13 +159,17 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
       console.error("Content submission error:", error);
       const errorMessage = error instanceof FirebaseError ? error.message : 'Could not save your content. Please try again.';
       toast({ variant: 'destructive', title: 'Something went wrong', description: errorMessage });
+    } finally {
+        if (!fileToUpload) {
+            setSubmissionState('idle');
+        }
     }
   };
   
   const isSubmitting = submissionState === 'saving';
 
   const getButtonText = () => {
-    if (submissionState === 'saving') return 'Saving Content...';
+    if (isSubmitting) return 'Saving...';
     return editingContent ? 'Update' : 'Save Contribution';
   }
 
@@ -228,7 +228,6 @@ export default function ContentForm({ isOpen, onClose, editingContent, user }: C
                 Current file: <a href={formData.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">{formData.fileUrl.split('%2F').pop()?.split('?')[0] || 'View File'}</a>
               </div>
             )}
-           {/* Progress bar is removed as the dialog closes immediately. */}
         </div>
         <DialogFooter>
           <DialogClose asChild>
