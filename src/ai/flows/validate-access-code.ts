@@ -81,7 +81,7 @@ const validateAccessCodeFlow = ai.defineFlow(
       }
 
       // Return a successful validation result
-      return { isValid: true, roles: data.roles };
+      return { isValid: true, roles: data.roles || [] };
 
     } catch (error) {
       console.error('Error validating access code:', error);
@@ -90,5 +90,3 @@ const validateAccessCodeFlow = ai.defineFlow(
     }
   }
 );
-
-    

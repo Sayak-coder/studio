@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { getAuth, signInAnonymously } from 'firebase/auth';
-import { getFirestore, doc, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { firebaseApp } from '@/firebase/config';
-import { FirebaseError } from 'firebase/app';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Eye, EyeOff } from 'lucide-react';
 import { validateAccessCode, ValidateAccessCodeOutput } from '@/ai/flows/validate-access-code';
@@ -41,7 +40,7 @@ export default function OfficialHelpPage() {
         throw new Error(validationResult.reason || 'Unauthorized access code.');
       }
       
-      const { role } = validationResult;
+      const { roles } = validationResult;
       
       // 2. Sign in anonymously
       const userCredential = await signInAnonymously(auth);
@@ -52,8 +51,8 @@ export default function OfficialHelpPage() {
       await setDoc(userRef, {
         id: user.uid,
         email: null, // No email for anonymous access
-        name: `${role.charAt(0).toUpperCase() + role.slice(1)} User`, // e.g., "Official User"
-        roles: [role],
+        name: `${roles[0].charAt(0).toUpperCase() + roles[0].slice(1)} User`, // e.g., "Official User"
+        roles: roles,
         accessCodeUsed: accessCode,
         createdAt: serverTimestamp(),
         status: 'active',
@@ -62,11 +61,11 @@ export default function OfficialHelpPage() {
       
       toast({
         title: 'Access Granted!',
-        description: `Redirecting you to the ${role} dashboard.`,
+        description: `Redirecting you to the ${roles[0]} dashboard.`,
       });
 
       // 4. Redirect to the appropriate dashboard
-      router.push(`/${role}/dashboard`);
+      router.push(`/${roles[0]}/dashboard`);
 
     } catch (error) {
       console.error('Official access error:', error);
