@@ -16,7 +16,7 @@ import {
   Users
 } from 'lucide-react';
 
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
 
 import { Content } from './types';
@@ -62,7 +62,7 @@ function CRDashboard() {
   
   const [filteredData, setFilteredData] = useState<Content[] | null>(null);
 
-  const allContentQuery = useMemo(() => {
+  const allContentQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'content'));
   }, [firestore]);
