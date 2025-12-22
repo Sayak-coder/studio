@@ -7,7 +7,6 @@ import {
   query,
 } from 'firebase/firestore';
 import {
-  LogOut,
   Loader2,
   BrainCircuit,
   Menu,
@@ -17,10 +16,11 @@ import {
   BookCopy,
   Star,
   LayoutDashboard,
-  Search
+  Search,
+  Home
 } from 'lucide-react';
 
-import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
 
 import { Content } from './types';
@@ -58,15 +58,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import ContentCard from './content-card';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import withAuth from '@/hoc/withAuth';
 
 
 function CRDashboard() {
   const router = useRouter();
   const { toast } = useToast();
-  const { auth } = useFirebase();
   const firestore = useFirestore();
-  const { user } = useUser(); // withAuth ensures user is available
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
@@ -84,28 +81,10 @@ function CRDashboard() {
 
   const { data: allContents, isLoading: isLoadingAllContent } = useCollection<Content>(allContentQuery);
   
-  const myContents = useMemo(() => allContents?.filter(c => c.authorId === user?.uid) || [], [allContents, user?.uid]);
-  const otherContents = useMemo(() => allContents?.filter(c => c.authorId !== user?.uid) || [], [allContents, user?.uid]);
+  const notes = useMemo(() => allContents?.filter(c => c.type === 'Class Notes') || [], [allContents]);
+  const pyqs = useMemo(() => allContents?.filter(c => c.type === 'PYQ') || [], [allContents]);
+  const importantQuestions = useMemo(() => allContents?.filter(c => c.type === 'Important Question') || [], [allContents]);
 
-  const handleSignOut = async () => {
-    try {
-      if (auth) {
-        await auth.signOut();
-        toast({
-          title: 'Signed Out',
-          description: 'You have been successfully signed out.',
-        });
-        router.push('/help/class-representative');
-      }
-    } catch (error) {
-      console.error('Sign out error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Sign Out Failed',
-        description: 'Could not sign you out. Please try again.',
-      });
-    }
-  };
 
   const handleAddNew = () => {
     setEditingContent(null);
@@ -166,24 +145,10 @@ function CRDashboard() {
                 >
                   <FilePlus />Add Content
                 </Button>
-                <Button
-                  variant='ghost'
-                  className="w-full justify-start text-base gap-3"
-                  asChild
-                >
-                  <Link href="#my-contributions"><User />My Contributions</Link>
-                </Button>
-                <Button
-                  variant='ghost'
-                  className="w-full justify-start text-base gap-3"
-                  asChild
-                >
-                  <Link href="#other-contributions"><FileText />Other Contributions</Link>
-                </Button>
         </nav>
         <div className="mt-auto p-4">
-          <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-            <LogOut /> Sign Out
+           <Button variant="ghost" asChild className="w-full justify-start text-base gap-3">
+             <Link href="/"><Home /> Back to Home</Link>
           </Button>
         </div>
       </>
@@ -216,28 +181,10 @@ function CRDashboard() {
                    <FilePlus />Add Content
                  </Button>
              </SheetClose>
-             <SheetClose asChild>
-                 <Button
-                   variant='ghost'
-                   className="w-full justify-start text-base gap-3"
-                   asChild
-                 >
-                   <Link href="#my-contributions"><User />My Contributions</Link>
-                 </Button>
-             </SheetClose>
-             <SheetClose asChild>
-                 <Button
-                   variant='ghost'
-                   className="w-full justify-start text-base gap-3"
-                   asChild
-                 >
-                   <Link href="#other-contributions"><FileText />Other Contributions</Link>
-                 </Button>
-             </SheetClose>
        </nav>
        <div className="mt-auto p-4">
-         <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-           <LogOut /> Sign Out
+         <Button variant="ghost" asChild className="w-full justify-start text-base gap-3">
+           <Link href="/"><Home /> Back to Home</Link>
          </Button>
        </div>
      </>
@@ -291,7 +238,7 @@ function CRDashboard() {
                    <GlobalSearch onSearchChange={setFilteredData} allContent={allContents || []} />
                 </DialogContent>
               </Dialog>
-              <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user.displayName || 'CR'}!</p>
+              <p className="text-sm text-muted-foreground hidden sm:block">Welcome, Class Representative!</p>
               <ThemeToggle />
             </div>
         </header>
@@ -322,20 +269,30 @@ function CRDashboard() {
             </div>
           ) : (
             <>
-              <div id="my-contributions">
+              <div id="notes">
                 <ContentRow
-                  title="My Contributions"
-                  items={myContents}
+                  title="Class Notes"
+                  items={notes}
                   isLoading={isLoadingAllContent}
                   onEdit={handleEdit}
                   onDelete={openDeleteDialog}
                   isEditable={true}
                 />
               </div>
-              <div id="other-contributions">
+              <div id="pyqs">
                 <ContentRow 
-                  title="Content by Other CRs"
-                  items={otherContents}
+                  title="Previous Year Questions"
+                  items={pyqs}
+                  isLoading={isLoadingAllContent}
+                  onEdit={handleEdit}
+                  onDelete={openDeleteDialog}
+                  isEditable={true}
+                />
+              </div>
+              <div id="imp-questions">
+                <ContentRow 
+                  title="Important Questions"
+                  items={importantQuestions}
                   isLoading={isLoadingAllContent}
                   onEdit={handleEdit}
                   onDelete={openDeleteDialog}
@@ -347,12 +304,12 @@ function CRDashboard() {
         </div>
       </main>
       
-       {user && <ContentForm 
+       <ContentForm 
           isOpen={isFormOpen}
           onClose={closeForm}
           editingContent={editingContent}
-          user={user}
-       />}
+          user={null}
+       />
 
        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
@@ -378,4 +335,4 @@ function CRDashboard() {
   );
 }
 
-export default withAuth(CRDashboard, 'class-representative');
+export default CRDashboard;

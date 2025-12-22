@@ -5,7 +5,7 @@ export type Content = {
   type: 'Class Notes' | 'PYQ' | 'Important Question';
   content: string;
   authorId: string;
-  authorName: string;
+  authorName?: string; // Made optional
   roles: string[];
   fileUrl?: string;
   fileType?: string;
