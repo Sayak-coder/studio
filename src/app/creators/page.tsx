@@ -1,4 +1,6 @@
+'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowLeft, Github, Linkedin, Twitter } from 'lucide-react';
@@ -33,14 +35,16 @@ export default function CreatorsPage() {
             <Card
               key={creator.id}
               className="group relative overflow-hidden rounded-xl bg-card/60 backdrop-blur-md border-border/20 shadow-lg transition-all duration-300 transform hover:shadow-primary/20 hover:-translate-y-2 animate-fade-in-up"
-              style={{ animationDelay: `${index * 0.2}s`, animationFillMode: 'backwards' }}
+              style={{ animationDelay: `${index * 0.25}s`, animationFillMode: 'backwards' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="relative p-6 flex flex-col items-center text-center">
                 <div className="relative mb-4">
-                  <img
+                  <Image
                     src={creator.photoUrl}
                     alt={creator.name}
+                    width={128}
+                    height={128}
                     className="w-32 h-32 rounded-full object-cover border-4 border-primary/50 shadow-md transition-transform duration-300 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-accent animate-pulse-slow"></div>
