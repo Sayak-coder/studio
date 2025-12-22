@@ -1,8 +1,8 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useUser, useFirebase } from '@/firebase';
+import { useUser, useFirebase, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { 
     Book, 
@@ -15,324 +15,304 @@ import {
     ChevronLeft,
     ChevronRight,
     Menu,
-    Search
+    Search,
+    Home,
+    File,
+    Users,
+    User as UserIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ImagePlaceholder, PlaceHolderImages } from '@/lib/placeholder-images';
-import ContentRow from './content-row';
-import ContentCard from './content-card';
-import { ThemeToggle } from '@/components/theme-toggle';
-import GlobalSearch from './global-search';
-import { cn } from '@/lib/utils';
-import { useHorizontalScroll } from '@/hooks/use-horizontal-scroll';
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
   SheetClose,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+} from '@/components/ui/sheet';
 import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import { ThemeToggle } from '@/components/theme-toggle';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import withAuth from '@/hoc/withAuth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import GlobalSearch from '@/app/class-representative/dashboard/global-search';
+import { Content } from '@/app/class-representative/dashboard/types';
+import ContentCard from '@/app/class-representative/dashboard/content-card';
+import ContentForm from '@/app/class-representative/dashboard/content-form';
+import ContentRow from '@/app/class-representative/dashboard/content-row';
+import { deleteContent } from '@/firebase/firestore/content';
+import { collection, query } from 'firebase/firestore';
 
 
-const DashboardSection = ({ title, items }: { title: string, items: ImagePlaceholder[] }) => {
-  const { scrollContainerRef, scrollLeft, scrollRight, canScrollLeft, canScrollRight } = useHorizontalScroll();
-  
-  if (!items || items.length === 0) {
-    return null;
-  }
-
-  return (
-    <section className="relative">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
-        <div className="hidden items-center gap-2 md:flex">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={scrollLeft}
-            disabled={!canScrollLeft}
-            className={cn(
-              'h-9 w-9 cursor-pointer rounded-full bg-background/80 backdrop-blur-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50',
-            )}
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={scrollRight}
-            disabled={!canScrollRight}
-            className={cn(
-              'h-9 w-9 cursor-pointer rounded-full bg-background/80 backdrop-blur-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50',
-            )}
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </Button>
-        </div>
-      </div>
-      <ContentRow items={items} scrollContainerRef={scrollContainerRef} />
-    </section>
-  );
-};
-
-
-export default function StudentDashboard() {
+function StudentDashboard() {
   const router = useRouter();
   const { toast } = useToast();
+  const firestore = useFirestore();
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
-  const [filteredData, setFilteredData] = useState<ImagePlaceholder[] | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/auth/signin/student');
-    }
-  }, [user, isUserLoading, router]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingContent, setEditingContent] = useState<Content | null>(null);
+
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
+  
+  const [filteredData, setFilteredData] = useState<Content[] | null>(null);
+  const [view, setView] = useState<'all' | 'my' | 'others'>('all');
+
+  const allContentQuery = useMemoFirebase(() => {
+    // IMPORTANT: Only create the query if the user is authenticated.
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'content'));
+  }, [firestore, user]);
+
+  const { data: allContents, isLoading: isLoadingAllContent } = useCollection<Content>(allContentQuery);
+  
+  const myContributions = useMemo(() => allContents?.filter(c => c.authorId === user?.uid) || [], [allContents, user]);
+  const othersContributions = useMemo(() => allContents?.filter(c => c.authorId !== user?.uid) || [], [allContents, user]);
+
+  const notes = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'Class Notes') || [], [allContents, myContributions, othersContributions, view]);
+  const pyqs = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'PYQ') || [], [allContents, myContributions, othersContributions, view]);
+  const importantQuestions = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'Important Question') || [], [allContents, myContributions, othersContributions, view]);
 
   const handleSignOut = async () => {
+    if (!auth) return;
     try {
-      if (auth) {
-        await auth.signOut();
-        toast({
-          title: 'Signed Out',
-          description: 'You have been successfully signed out.',
-        });
-        router.push('/auth/signin/student');
-      }
+      await auth.signOut();
+      toast({ title: 'Session Ended', description: 'You have been signed out.' });
+      router.replace('/help/student');
     } catch (error) {
       console.error('Sign out error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Sign Out Failed',
-        description: 'Could not sign you out. Please try again.',
-      });
+      toast({ variant: 'destructive', title: 'Sign Out Failed', description: 'Could not sign you out.' });
     }
   };
-  
-  const handleCategoryClick = (category: string | null) => {
-    setSelectedCategory(category);
-    setFilteredData(null); // Reset search when a category is clicked
+
+
+  const handleAddNew = () => {
+    setEditingContent(null);
+    setIsFormOpen(true);
+  }
+
+  const handleEdit = (content: Content) => {
+    setEditingContent(content);
+    setIsFormOpen(true);
   };
 
-  const getFilteredContent = () => {
-    if (!selectedCategory) return null;
-    const categoryTypeMap = {
-      'notes': 'Class Notes',
-      'pyq': 'PYQ',
-      'imp-questions': 'Important Question',
-      'videos': 'Video',
-    };
-    const type = categoryTypeMap[selectedCategory as keyof typeof categoryTypeMap];
-    return PlaceHolderImages.filter(item => item.type === type);
+  const openDeleteDialog = (id: string) => {
+    setDeletingContentId(id);
+    setIsDeleteDialogOpen(true);
   };
-  
-  const newlyAdded = PlaceHolderImages.filter(item => item.type === 'Class Notes');
-  const currentYearPYQs = PlaceHolderImages.filter(item => item.type === 'PYQ');
-  const mostImportant = PlaceHolderImages.filter(item => item.type === 'Important Question');
-  const continueWatching = PlaceHolderImages.filter(item => item.type === 'Video');
 
-  if (isUserLoading || !user) {
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
-        <LoadingSpinner className="mb-4" dotClassName="w-6 h-6" />
-        <p className="mt-4 text-muted-foreground">Loading...</p>
-      </div>
-    );
+  const handleConfirmDelete = async () => {
+    if (!deletingContentId || !firestore) return;
+    setIsDeleting(true);
+    try {
+      await deleteContent(firestore, deletingContentId);
+      toast({ title: 'Content Deleted', description: 'The selected item has been successfully deleted.' });
+      setIsDeleteDialogOpen(false);
+      setDeletingContentId(null);
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast({ variant: 'destructive', title: 'Deletion Failed', description: 'Could not delete the content. Please try again.' });
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setEditingContent(null);
   }
   
-  const sidebarButtons = [
-    { name: 'Dashboard', icon: <LayoutDashboard />, href: '/student/dashboard', category: null },
-    { name: 'Class Notes', icon: <FileText />, href: '/student/notes', category: 'notes' },
-    { name: 'PYQs', icon: <Book />, href: '/student/pyq', category: 'pyq' },
-    { name: 'Important Questions', icon: <Star />, href: '/student/imp-questions', category: 'imp-questions' },
-    { name: 'Video Links', icon: <Video />, href: '/student/videos', category: 'videos' },
-  ];
-
-  const categoryContent = getFilteredContent();
-  const categoryTitle = sidebarButtons.find(btn => btn.category === selectedCategory)?.name;
   
   const SidebarContent = () => (
-      <>
+     <>
         <div className="flex h-16 items-center border-b px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <BrainCircuit className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">EduBot</span>
+            <span className="text-xl font-bold">Student Dashboard</span>
           </Link>
         </div>
         <nav className="flex-1 space-y-2 p-4">
-          {sidebarButtons.map(btn => (
-             <Button 
-                key={btn.name}
-                variant={btn.href === '/student/dashboard' && selectedCategory === null ? 'secondary' : 'ghost'} 
-                className="w-full justify-start text-base gap-3"
-                asChild
-            >
-              <Link href={btn.href}>
-                {btn.icon}
-                {btn.name}
-              </Link>
-            </Button>
-          ))}
+              <Button variant={view === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('all')}><Home />Dashboard</Button>
+               <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />My Contributions</Button>
+               <Button variant={view === 'others' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('others')}><Users />Others' Contributions</Button>
         </nav>
         <div className="mt-auto p-4">
-          <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-            <LogOut />
-            Sign Out
+           <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
+             <LogOut /> End Session
           </Button>
         </div>
       </>
   );
-  
+
   const MobileSidebarContent = () => (
-       <>
-        <div className="flex h-16 items-center border-b px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <BrainCircuit className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">EduBot</span>
-          </Link>
-        </div>
-        <nav className="flex-1 space-y-2 p-4">
-          {sidebarButtons.map(btn => (
-            <SheetClose asChild key={btn.name}>
-             <Button 
-                variant={btn.href === '/student/dashboard' && selectedCategory === null ? 'secondary' : 'ghost'} 
-                className="w-full justify-start text-base gap-3"
-                asChild
-            >
-              <Link href={btn.href}>
-                {btn.icon}
-                {btn.name}
-              </Link>
-            </Button>
+    <>
+       <div className="flex h-16 items-center border-b px-6">
+         <Link href="/" className="flex items-center gap-2 font-semibold">
+           <BrainCircuit className="h-8 w-8 text-primary" />
+           <span className="text-xl font-bold">Student Dashboard</span>
+         </Link>
+       </div>
+       <nav className="flex-1 space-y-2 p-4">
+            <SheetClose asChild>
+               <Button variant={view === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('all')}><Home />Dashboard</Button>
             </SheetClose>
-          ))}
-        </nav>
-        <div className="mt-auto p-4">
+            <SheetClose asChild>
+              <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />My Contributions</Button>
+            </SheetClose>
+            <SheetClose asChild>
+              <Button variant={view === 'others' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('others')}><Users />Others' Contributions</Button>
+            </SheetClose>
+       </nav>
+       <div className="mt-auto p-4">
           <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-            <LogOut />
-            Sign Out
+             <LogOut /> End Session
           </Button>
-        </div>
-      </>
-  )
+       </div>
+     </>
+ );
 
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
-      {/* Sidebar - Desktop */}
-      <aside className="fixed left-0 top-0 hidden h-full w-64 flex-col border-r bg-card shadow-lg md:flex">
-        <SidebarContent />
+       <aside className="fixed left-0 top-0 hidden h-full w-64 flex-col border-r bg-card shadow-lg md:flex">
+          <SidebarContent />
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 w-full overflow-hidden md:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 md:px-6 backdrop-blur-sm">
+      <main className="flex-1 w-full overflow-y-auto md:pl-64">
+         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 md:px-6 backdrop-blur-sm">
            <div className="flex items-center gap-2">
-            {/* Mobile Sidebar Trigger */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Toggle Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="flex w-[280px] flex-col p-0">
-                 <SheetHeader className="p-4 border-b">
-                    <SheetTitle className="sr-only">Main Menu</SheetTitle>
-                 </SheetHeader>
-                 <MobileSidebarContent />
-              </SheetContent>
-            </Sheet>
-             <h1 className="text-xl font-semibold md:hidden">EduBot</h1>
-           </div>
-
-          <div className="hidden w-full max-w-lg items-center gap-4 md:flex">
-              <GlobalSearch onSearchChange={setFilteredData} />
-          </div>
-
-          <div className="flex items-center gap-2 md:gap-4">
-              {/* Mobile Search Trigger */}
-              <Dialog>
-                <DialogTrigger asChild>
-                   <Button variant="ghost" size="icon" className="md:hidden">
-                    <Search className="h-6 w-6" />
-                    <span className="sr-only">Search</span>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden">
+                    <Menu className="h-6 w-6" />
+                    <span className="sr-only">Toggle Menu</span>
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="top-[25%]">
-                   <DialogHeader>
-                      <DialogTitle>Global Search</DialogTitle>
-                   </DialogHeader>
-                   <GlobalSearch onSearchChange={setFilteredData} />
-                </DialogContent>
-              </Dialog>
+                </SheetTrigger>
+                <SheetContent side="left" className="flex w-[280px] flex-col p-0">
+                    <VisuallyHidden>
+                      <SheetClose />
+                    </VisuallyHidden>
+                    <MobileSidebarContent />
+                </SheetContent>
+              </Sheet>
+               <h1 className="text-xl font-semibold md:hidden">Student Dashboard</h1>
+            </div>
+          
+            <div className="hidden w-full max-w-lg items-center gap-4 md:flex">
+              <GlobalSearch onSearchChange={setFilteredData} allContent={allContents || []} />
+            </div>
 
-              <p className="hidden text-sm text-muted-foreground sm:block">
-                Welcome back, {user.displayName || 'Student'}!
-              </p>
+            <div className="flex items-center gap-2 md:gap-4">
+              <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user?.displayName || 'Student'}</p>
               <ThemeToggle />
-          </div>
+            </div>
         </header>
 
-        <div className="flex-1 space-y-8 p-4 md:p-8">
-            {filteredData !== null ? (
-              <div className="py-4">
-                <h2 className="text-3xl font-bold tracking-tight">Search Results</h2>
-                {filteredData.length > 0 ? (
-                  <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="flex-1 space-y-12 p-4 md:p-8">
+          {filteredData !== null ? (
+            <div className="py-4">
+              <h2 className="text-3xl font-bold tracking-tight">Search Results</h2>
+              {filteredData.length > 0 ? (
+                 <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {filteredData.map((item) => (
-                       <div key={item.id} className="py-4 flex justify-center">
-                         <ContentCard item={item} />
-                       </div>
+                      <div key={item.id} className="py-4 flex justify-center">
+                        <ContentCard 
+                          item={item} 
+                          onEdit={handleEdit}
+                          onDelete={openDeleteDialog}
+                          isEditable={item.authorId === user?.uid}
+                        />
+                      </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
-                      <h3 className="text-2xl font-bold tracking-tight">No Results Found</h3>
-                      <p className="text-muted-foreground mt-2">Try adjusting your search terms.</p>
-                  </div>
-                )}
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
+                  <h3 className="text-2xl font-bold tracking-tight">No Results Found</h3>
+                  <p className="text-muted-foreground mt-2">Try adjusting your search terms.</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div id="notes">
+                <ContentRow
+                  title="Class Notes"
+                  items={notes}
+                  isLoading={isLoadingAllContent}
+                  onEdit={handleEdit}
+                  onDelete={openDeleteDialog}
+                  currentUserId={user?.uid}
+                />
               </div>
-            ) : selectedCategory !== null && categoryContent ? (
-                 <div className="py-4">
-                    <h2 className="text-3xl font-bold tracking-tight">{categoryTitle}</h2>
-                    {categoryContent.length > 0 ? (
-                      <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {categoryContent.map((item) => (
-                          <div key={item.id} className="py-4 flex justify-center">
-                            <ContentCard item={item} />
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 py-24 text-center">
-                          <h3 className="text-2xl font-bold tracking-tight">No Content Yet</h3>
-                          <p className="text-muted-foreground mt-2">There's no content available in this category.</p>
-                      </div>
-                    )}
-                 </div>
-            ) : (
-              <>
-                <DashboardSection title="Newly Added" items={newlyAdded} />
-                <DashboardSection title="Current PYQs" items={currentYearPYQs} />
-                <DashboardSection title="Important" items={mostImportant} />
-                <DashboardSection title="Continue Watching" items={continueWatching} />
-              </>
-            )}
+              <div id="pyqs">
+                <ContentRow 
+                  title="Previous Year Questions"
+                  items={pyqs}
+                  isLoading={isLoadingAllContent}
+                  onEdit={handleEdit}
+                  onDelete={openDeleteDialog}
+                  currentUserId={user?.uid}
+                />
+              </div>
+              <div id="imp-questions">
+                <ContentRow 
+                  title="Important Questions"
+                  items={importantQuestions}
+                  isLoading={isLoadingAllContent}
+                  onEdit={handleEdit}
+                  onDelete={openDeleteDialog}
+                  currentUserId={user?.uid}
+                />
+              </div>
+            </>
+          )}
         </div>
       </main>
+      
+      { user &&
+       <ContentForm 
+          isOpen={isFormOpen}
+          onClose={closeForm}
+          editingContent={editingContent}
+          user={user}
+       />
+      }
+
+       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this piece of content from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isDeleting ? <LoadingSpinner /> : 'Yes, delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
+export default withAuth(StudentDashboard, 'student');
+
+    
