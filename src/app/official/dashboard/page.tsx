@@ -285,9 +285,9 @@ function OfficialDashboard() {
             
             {view === 'content' && (
                 <div className="space-y-12">
-                     <ContentRow title="Class Notes" items={notes} isLoading={isLoadingContent} onEdit={() => {}} onDelete={openDeleteContentDialog} />
-                     <ContentRow title="Previous Year Questions" items={pyqs} isLoading={isLoadingContent} onEdit={() => {}} onDelete={openDeleteContentDialog} />
-                     <ContentRow title="Important Questions" items={importantQuestions} isLoading={isLoadingContent} onEdit={() => {}} onDelete={openDeleteContentDialog} />
+                     <ContentRow title="Class Notes" items={notes} isLoading={isLoadingContent} onEdit={() => {}} onDelete={openDeleteContentDialog} currentUserId={user?.uid} />
+                     <ContentRow title="Previous Year Questions" items={pyqs} isLoading={isLoadingContent} onEdit={() => {}} onDelete={openDeleteContentDialog} currentUserId={user?.uid} />
+                     <ContentRow title="Important Questions" items={importantQuestions} isLoading={isLoadingContent} onEdit={() => {}} onDelete={openDeleteContentDialog} currentUserId={user?.uid} />
                 </div>
             )}
         </div>

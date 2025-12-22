@@ -3,10 +3,10 @@
  *
  * Core Philosophy:
  * The default posture is deny-all. Access is granted explicitly.
- * - User Profiles (/users): Any signed-in user can read any profile to check roles. Only the owner or an admin can write to a profile.
+ * - User Profiles (/users): A user can only read, update, or delete their own profile. Admins/officials have full access.
  * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users.
- * - Content (/content): Any authenticated user can create/read. Only the author, an official, or an admin can update/delete. 
- *   The anonymous CR user has special privileges to create/delete content they authored.
+ * - Content (/content): Any authenticated user can read/create. Only the author, an official, or an admin can update/delete.
+ * - Access Codes (/accessCodes): Codes are only readable during signup and cannot be listed. They are not writable by clients.
  */
 rules_version = '2';
 
@@ -26,42 +26,38 @@ service cloud.firestore {
     // Helper function to securely get the roles of the requesting user.
     // Returns an empty list if the user doc or roles field doesn't exist.
     function getRoles() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles;
+      // Use exists() to prevent errors if the document doesn't exist yet.
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+             ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles
+             : [];
     }
 
     // Helper function to check if the user is an admin or official.
-    // This is safer than checking roles directly in rules where the user doc might not exist.
     function isPrivilegedUser() {
         return isSignedIn() && getRoles().hasAny(['admin', 'official']);
     }
-
-    // Helper function to check if the incoming user is the anonymous CR.
-    // This is determined by checking if their auth token has a 'cr_access' claim.
-    // For the code-based access, we assume an anonymous user is the CR.
-    function isAnonymousCR() {
-        // An anonymous user's token is empty, so we check for that and rely on the authorId match.
-        // This is a simplified check for the code-based access model.
-        return request.auth.token.email == null && request.auth.token.phone_number == null;
-    }
-
-
+    
     // Rules for the 'users' collection.
     match /users/{userId} {
-      // READ: Any authenticated user can read any profile. This is necessary for role-based logic in the app.
-      allow get: if isSignedIn();
+      // A user can read, update, or delete their OWN profile. Admins/officials have full access.
+      allow read, update, delete: if isOwner(userId) || isPrivilegedUser();
       
-      // CREATE: A user can create their own profile, ensuring the ID matches their auth UID.
+      // A user can create their own profile document, ensuring the ID matches their auth UID.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-
-      // UPDATE: An admin/official can modify any profile. A user can modify their own.
-      allow update: if isPrivilegedUser() || isOwner(userId);
-
-      // DELETE: An admin/official can delete any profile. A user can delete their own.
-      allow delete: if isPrivilegedUser() || isOwner(userId);
       
       // LIST: Only admins or officials can list all users.
       allow list: if isPrivilegedUser();
     }
+    
+    // Rules for 'accessCodes' collection.
+    match /accessCodes/{codeId} {
+        // Only allow a user to read a specific access code document. Do not allow listing.
+        // This is to prevent enumeration of codes. The signup logic will attempt to get a specific doc.
+        allow get: if isSignedIn();
+        // Disallow all client-side writes and lists. Codes should be managed via the Firebase Console or a backend.
+        allow list, create, update, delete: if false;
+    }
+
 
     // Rules for academic 'content' collection.
     match /content/{contentId} {
@@ -69,18 +65,15 @@ service cloud.firestore {
       allow get, list: if isSignedIn();
 
       // CREATE: An authenticated user can create content if they set themselves as the author.
-      // The anonymous CR is also allowed to create content.
       allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
 
       // UPDATE: Only the original author, an admin, or an official can update.
-      // The anonymous CR can update content they created.
       // authorId and createdAt fields are immutable to maintain data integrity.
       allow update: if (isOwner(resource.data.authorId) || isPrivilegedUser())
                     && request.resource.data.authorId == resource.data.authorId
                     && request.resource.data.createdAt == resource.data.createdAt;
       
       // DELETE: Only the original author, an admin, or an official can delete.
-      // The anonymous CR can delete content they created.
       allow delete: if isOwner(resource.data.authorId) || isPrivilegedUser();
     }
   }

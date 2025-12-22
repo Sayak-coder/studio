@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, Users, GraduationCap, Briefcase, BrainCircuit, Bot } from 'lucide-react';
+import { BookOpen, Users, GraduationCap, Briefcase, BrainCircuit, Bot, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -34,6 +34,13 @@ export default function Home() {
       description: 'Guide juniors with curated notes and exam-focused insights.',
       cta: 'Enter as Senior',
       href: '/help/senior',
+    },
+    {
+      name: 'Official Portal',
+      icon: <ShieldCheck className="h-10 w-10 text-primary" />,
+      description: 'Admins and officials: Manage users and oversee content.',
+      cta: 'Enter Official Portal',
+      href: '/official/signup',
     },
   ];
 
