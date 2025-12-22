@@ -9,18 +9,16 @@ import {
   CardContent,
   CardFooter,
 } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect }from 'react';
-import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
 import { useUser } from '@/firebase';
-import { Eye, EyeOff } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { getFirestore, doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 
 export default function SignInPage() {
   const params = useParams();
@@ -28,9 +26,6 @@ export default function SignInPage() {
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const category = Array.isArray(params.category)
@@ -39,55 +34,48 @@ export default function SignInPage() {
   const categoryTitle = category.replace(/-/g, ' ');
 
   useEffect(() => {
-    // If the user is already logged in, try to redirect them to the dashboard.
-    // The dashboard's own withAuth guard will handle role verification.
     if (!isUserLoading && user) {
         router.replace(`/${category}/dashboard`);
     }
   }, [user, isUserLoading, router, category]);
 
 
-  const handleSignIn = async () => {
-    if (!email || !password) {
-      toast({
-        variant: 'destructive',
-        title: 'Missing Fields',
-        description: 'Please enter both your email and password.',
-      });
-      return;
-    }
-
+  const handleAnonymousSignIn = async () => {
     setIsLoading(true);
     try {
       const auth = getAuth(firebaseApp);
-      await setPersistence(auth, browserLocalPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
-      
-      // The withAuth HOC on the dashboard will handle role verification.
-      // We no longer need to check it here.
+      const firestore = getFirestore(firebaseApp);
+      const userCredential = await signInAnonymously(auth);
+      const user = userCredential.user;
+
+      // Check if a profile exists, if not, create one.
+      const userRef = doc(firestore, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        await setDoc(userRef, {
+            id: user.uid,
+            email: null,
+            name: `${categoryTitle} Guest`,
+            roles: [category],
+            createdAt: serverTimestamp(),
+            disabled: false,
+        });
+      }
 
       toast({
         title: 'Sign in successful!',
         description: 'Redirecting to your dashboard...',
       });
 
-      // Redirect immediately. The withAuth guard will take care of the rest.
       router.push(`/${category}/dashboard`);
 
     } catch (error) {
-      console.error('Sign in error:', error);
-      let description = 'Invalid credentials.';
+      console.error('Anonymous sign in error:', error);
+      let description = 'Could not start a guest session.';
 
       if (error instanceof FirebaseError) {
-        switch (error.code) {
-          case 'auth/user-not-found':
-          case 'auth/wrong-password':
-          case 'auth/invalid-credential':
-            description = 'Invalid email or password. Please try again.';
-            break;
-          default:
-            description = error.message;
-        }
+        description = error.message;
       }
       toast({
         variant: 'destructive',
@@ -99,7 +87,6 @@ export default function SignInPage() {
     }
   };
 
-  // While checking auth state, or if user is found (and redirection is happening), show loading.
   if (isUserLoading || user) {
      return (
        <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
@@ -109,7 +96,6 @@ export default function SignInPage() {
     );
   }
 
-  // Only render the form if the user is not logged in.
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center p-4 bg-background">
        <div className="absolute top-4 right-4">
@@ -118,85 +104,24 @@ export default function SignInPage() {
       <Card className="w-full max-w-sm bg-card/80 backdrop-blur-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl capitalize">
-            Sign In to {categoryTitle} Portal
+            Enter {categoryTitle} Portal
           </CardTitle>
           <CardDescription>
-            Enter your credentials to access your account.
+            Proceed as a guest to access the dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSignIn();
-            }}
-          >
-            <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Your Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
-                    className="pr-10"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute inset-y-0 right-0 h-full px-3 text-muted-foreground"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    disabled={isLoading}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </Button>
-                </div>
-              </div>
-              <div className="text-sm">
-                <Link
-                  href={`/auth/forgot-password?category=${category}`}
-                  className="font-medium text-primary hover:underline"
-                >
-                  Forgot your password?
-                </Link>
-              </div>
-            </div>
             <Button
-              type="submit"
+              onClick={handleAnonymousSignIn}
               className="w-full mt-4"
               disabled={isLoading}
             >
-              {isLoading ? <LoadingSpinner /> : 'Sign In'}
+              {isLoading ? <LoadingSpinner /> : 'Proceed as Guest'}
             </Button>
-          </form>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 pt-4">
-          <p className="text-sm text-center text-muted-foreground">
-            Don't have an account?{' '}
-            <Link
-              href={`/auth/signup/${category}`}
-              className="font-medium text-primary hover:underline"
-            >
-              Sign Up
-            </Link>
+           <p className="text-sm text-center text-muted-foreground">
+            No account needed for guest access.
           </p>
           <Button
             variant="link"

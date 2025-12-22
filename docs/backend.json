@@ -11,8 +11,8 @@
           "description": "Unique identifier for the User entity."
         },
         "email": {
-          "type": "string",
-          "description": "Email address of the user.",
+          "type": ["string", "null"],
+          "description": "Email address of the user (optional for anonymous users).",
           "format": "email"
         },
         "name": {
@@ -45,7 +45,6 @@
       },
       "required": [
         "id",
-        "email",
         "roles",
         "name"
       ]
