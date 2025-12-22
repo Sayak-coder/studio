@@ -33,7 +33,7 @@ export default function CreatorsPage() {
             <Card
               key={creator.id}
               className="group relative overflow-hidden rounded-xl bg-card/60 backdrop-blur-md border-border/20 shadow-lg transition-all duration-300 transform hover:shadow-primary/20 hover:-translate-y-2 animate-fade-in-up"
-              style={{ animationDelay: `${index * 0.2 + 0.3}s` }}
+              style={{ animationDelay: `${index * 0.2}s`, animationFillMode: 'backwards' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="relative p-6 flex flex-col items-center text-center">
