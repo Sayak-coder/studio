@@ -40,7 +40,7 @@ export default function Home() {
       icon: <ShieldCheck className="h-10 w-10 text-primary" />,
       description: 'Admins and officials: Manage users and oversee content.',
       cta: 'Enter Official Portal',
-      href: '/official/signup',
+      href: '/official/signin',
     },
   ];
 

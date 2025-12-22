@@ -8,14 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { firebaseApp } from '@/firebase/config';
 import { FirebaseError } from 'firebase/app';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Eye, EyeOff } from 'lucide-react';
 
-const OFFICIAL_ACCESS_CODE = 'catalyst2025';
+const OFFICIAL_ACCESS_CODE = 'catalyst2026';
 
 export default function OfficialSignupPage() {
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function OfficialSignupPage() {
       // 2. Create Firebase Auth User
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      await user.updateProfile({ displayName: name });
+      await updateProfile(user, { displayName: name });
 
       // 3. Create User Profile in Firestore
       const userRef = doc(firestore, 'users', user.uid);
@@ -79,8 +79,21 @@ export default function OfficialSignupPage() {
       if (error instanceof FirebaseError) {
         switch(error.code) {
             case 'auth/email-already-in-use':
-                description = 'This email address is already registered.';
-                break;
+                description = 'This email is already registered. Please sign in instead.';
+                toast({
+                    variant: 'destructive',
+                    title: 'Email Already Exists',
+                    description: (
+                        <>
+                            {description}{' '}
+                            <Link href="/official/signin" className="font-bold underline">
+                                Sign In
+                            </Link>
+                        </>
+                    ),
+                });
+                setIsLoading(false);
+                return;
             case 'auth/weak-password':
                 description = 'The password is too weak. Please use at least 6 characters.';
                 break;
@@ -195,6 +208,15 @@ export default function OfficialSignupPage() {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 pt-4">
+          <p className="text-sm text-center text-muted-foreground">
+            Already have an account?{' '}
+            <Link
+              href="/official/signin"
+              className="font-medium text-primary hover:underline"
+            >
+              Sign In
+            </Link>
+          </p>
            <Button
             variant="link"
             asChild
