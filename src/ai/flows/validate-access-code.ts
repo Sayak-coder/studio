@@ -5,7 +5,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getFirestore, doc, getDoc, writeBatch, Timestamp } from 'firebase/admin/firestore';
+import { getFirestore, doc, getDoc, writeBatch, Timestamp } from 'firebase-admin/firestore';
 import { initAdmin } from '@/firebase/server';
 
 // --- Input and Output Schemas ---
