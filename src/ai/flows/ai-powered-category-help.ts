@@ -1,50 +1,57 @@
 /**
- * @fileoverview A flow that generates a detailed, structured prompt for an external LLM like ChatGPT.
+ * @fileoverview A flow that generates a structured, helpful response for an academic topic.
  */
 'use server';
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-const GeneratePromptInputSchema = z.object({
-  category: z.string(),
+const GetTopicHelpInputSchema = z.object({
+  topic: z.string().describe('The academic topic the user wants help with.'),
 });
-export type GeneratePromptInput = z.infer<typeof GeneratePromptInputSchema>;
+export type GetTopicHelpInput = z.infer<typeof GetTopicHelpInputSchema>;
 
-const GeneratePromptOutputSchema = z.object({
-  prompt: z.string().describe('The generated, detailed prompt for the user to copy.'),
+const GetTopicHelpOutputSchema = z.object({
+  description: z.string().describe('A concise, helpful description of the topic.'),
+  relatedTopics: z.array(z.string()).describe('A short list of 3-5 related academic topics.'),
 });
-export type GeneratePromptOutput = z.infer<typeof GeneratePromptOutputSchema>;
+export type GetTopicHelpOutput = z.infer<typeof GetTopicHelpOutputSchema>;
 
 /**
- * Generates a detailed prompt for a given academic topic.
- * @param input The category to generate a prompt for.
- * @returns A promise that resolves to the generated prompt.
+ * Generates a structured help response for a given academic topic.
+ * @param input The topic to get help for.
+ * @returns A promise that resolves to the structured help response.
  */
-export async function generateChatGptPrompt(input: GeneratePromptInput): Promise<GeneratePromptOutput> {
-  return generatePromptFlow(input);
+export async function getTopicHelp(input: GetTopicHelpInput): Promise<GetTopicHelpOutput> {
+  return getTopicHelpFlow(input);
 }
 
-const generatePromptFlow = ai.defineFlow(
+
+const getTopicHelpFlow = ai.defineFlow(
   {
-    name: 'generatePromptFlow',
-    inputSchema: GeneratePromptInputSchema,
-    outputSchema: GeneratePromptOutputSchema,
+    name: 'getTopicHelpFlow',
+    inputSchema: GetTopicHelpInputSchema,
+    outputSchema: GetTopicHelpOutputSchema,
   },
-  async ({ category }) => {
-    const prompt = `
-You are an expert academic assistant. Your task is to provide relevant and up-to-date information about any academic topic.
+  async ({ topic }) => {
+    
+    const llmResponse = await ai.generate({
+      prompt: `
+        You are an expert academic assistant. Your task is to provide relevant and up-to-date information about any academic topic.
 
-The topic is: "${category}".
+        The user's topic is: "${topic}".
 
-Please provide a response in the following format:
+        Please provide a concise, helpful description of this topic and a short list of 3-5 related academic topics.
+      `,
+      model: 'googleai/gemini-1.5-flash',
+      output: {
+        schema: GetTopicHelpOutputSchema,
+      },
+      config: {
+        temperature: 0.5,
+      }
+    });
 
-### Description
-Provide a concise, helpful description of this topic.
-
-### Related Topics
-Provide a short list of 3-5 related academic topics that would be interesting.
-    `;
-    return { prompt: prompt.trim() };
+    return llmResponse.output!;
   }
 );
