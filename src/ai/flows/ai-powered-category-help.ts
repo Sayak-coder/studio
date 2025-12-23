@@ -1,63 +1,50 @@
 /**
- * @fileoverview A flow that provides helpful information about a category by calling the Gemini API directly.
+ * @fileoverview A flow that generates a detailed, structured prompt for an external LLM like ChatGPT.
  */
 'use server';
 
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'zod';
 
-const CategoryHelpInputSchema = z.object({
+const GeneratePromptInputSchema = z.object({
   category: z.string(),
 });
-export type CategoryHelpInput = z.infer<typeof CategoryHelpInputSchema>;
+export type GeneratePromptInput = z.infer<typeof GeneratePromptInputSchema>;
 
-const CategoryHelpOutputSchema = z.object({
-  description: z
-    .string()
-    .describe('A concise, helpful description of the topic.'),
-  relatedTopics: z
-    .array(z.string())
-    .describe('A short list of 3-5 related topics the user might find interesting.'),
+const GeneratePromptOutputSchema = z.object({
+  prompt: z.string().describe('The generated, detailed prompt for the user to copy.'),
 });
-export type CategoryHelpOutput = z.infer<typeof CategoryHelpOutputSchema>;
-
-
-const categoryHelpPrompt = ai.definePrompt({
-  name: 'categoryHelpPrompt',
-  input: { schema: CategoryHelpInputSchema },
-  output: { schema: CategoryHelpOutputSchema },
-  model: googleAI.model('gemini-1.5-pro'),
-  tools: [googleAI.googleSearchTool],
-  prompt: `
-    You are an expert academic assistant. Your task is to provide relevant and up-to-date information about any academic topic the user asks about, sourcing your information from Google Search for accuracy.
-    
-    The user wants to learn about the topic: "{{category}}".
-
-    Please provide a concise, helpful description of this topic.
-    Also, provide a short list of 3-5 related academic topics they might find interesting.
-  `,
-});
-
-
-const categoryHelpGenkitFlow = ai.defineFlow(
-  {
-    name: 'categoryHelpFlow',
-    inputSchema: CategoryHelpInputSchema,
-    outputSchema: CategoryHelpOutputSchema,
-  },
-  async (input) => {
-    const { output } = await categoryHelpPrompt(input);
-    return output!;
-  }
-);
-
+export type GeneratePromptOutput = z.infer<typeof GeneratePromptOutputSchema>;
 
 /**
- * Calls the Google Gemini API directly to get a description and related topics for a given category.
- * @param input The category to get help with.
- * @returns A promise that resolves to the structured output from the AI.
+ * Generates a detailed prompt for a given academic topic.
+ * @param input The category to generate a prompt for.
+ * @returns A promise that resolves to the generated prompt.
  */
-export async function categoryHelpFlow(input: CategoryHelpInput): Promise<CategoryHelpOutput> {
-  return categoryHelpGenkitFlow(input);
+export async function generateChatGptPrompt(input: GeneratePromptInput): Promise<GeneratePromptOutput> {
+  return generatePromptFlow(input);
 }
+
+const generatePromptFlow = ai.defineFlow(
+  {
+    name: 'generatePromptFlow',
+    inputSchema: GeneratePromptInputSchema,
+    outputSchema: GeneratePromptOutputSchema,
+  },
+  async ({ category }) => {
+    const prompt = `
+You are an expert academic assistant. Your task is to provide relevant and up-to-date information about any academic topic.
+
+The topic is: "${category}".
+
+Please provide a response in the following format:
+
+### Description
+Provide a concise, helpful description of this topic.
+
+### Related Topics
+Provide a short list of 3-5 related academic topics that would be interesting.
+    `;
+    return { prompt: prompt.trim() };
+  }
+);
