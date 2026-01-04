@@ -18,7 +18,7 @@ export const creatorsData: Creator[] = [
     photoUrl: '/creators/soumojit-das.jpg',
     socials: {
       linkedin: 'https://www.linkedin.com/in/soumojit-das-66743a309?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
-      github: 'https://github.com/',
+      github: 'https://github.com/Soumojit84',
       instagram: 'https://www.instagram.com/souuumo?igsh=Mm8wMXEzd3VyY285',
     },
   },
@@ -29,7 +29,7 @@ export const creatorsData: Creator[] = [
     photoUrl: '/creators/sayak-biswas.jpeg',
     socials: {
       linkedin: 'https://www.linkedin.com/in/sayak-biswas-a101b3386?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
-      github: 'https://github.com/',
+      github: 'https://github.com/Sayak-coder',
       instagram: 'https://www.instagram.com/_wishmaster__7?igsh=MXAyMWc5eWVhdXp0MA==',
     },
   },
@@ -40,7 +40,7 @@ export const creatorsData: Creator[] = [
     photoUrl: '/creators/kaniska-bose.jpg',
     socials: {
       linkedin: 'https://www.linkedin.com/in/kaniskabose07?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
-      github: 'https://github.com/',
+      github: 'https://github.com/Kaniska07-tech',
       instagram: 'https://www.instagram.com/__kanb__?igsh=OG1mY2ZmaWJycXJn',
     },
   },
@@ -51,7 +51,7 @@ export const creatorsData: Creator[] = [
     photoUrl: '/creators/rahul-bose.jpg',
     socials: {
       linkedin: 'https://www.linkedin.com/in/rahul-bose-b569b4393?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
-      github: 'https://github.com/',
+      github: 'https://github.com/BoseRahul2005',
       instagram: 'https://www.instagram.com/bose_r_rahul?igsh=cGpqc2hkNjAwZng0',
     },
   },

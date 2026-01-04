@@ -28,6 +28,7 @@ import {
   SheetContent,
   SheetTrigger,
   SheetClose,
+  SheetTitle,
 } from '@/components/ui/sheet';
 import {
   Collapsible,
@@ -246,7 +247,7 @@ function StudentDashboard() {
                 </SheetTrigger>
                 <SheetContent side="left" className="flex w-[280px] flex-col p-0">
                     <VisuallyHidden>
-                      <SheetClose />
+                      <SheetTitle>Navigation Menu</SheetTitle>
                     </VisuallyHidden>
                     <MobileSidebarContent />
                 </SheetContent>

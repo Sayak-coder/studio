@@ -50,7 +50,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Content } from '@/app/class-representative/dashboard/types';
 import { deleteContent } from '@/firebase/firestore/content';
 
@@ -369,6 +370,9 @@ export default function OfficialDashboard() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="flex w-[280px] flex-col p-0">
+                <VisuallyHidden>
+                  <SheetTitle>Navigation Menu</SheetTitle>
+                </VisuallyHidden>
                 <div className="flex h-16 items-center border-b px-6">
                   <Link href="/" className="flex items-center gap-2 font-semibold">
                     <ShieldCheck className="h-8 w-8 text-primary" />

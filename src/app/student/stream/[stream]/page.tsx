@@ -20,6 +20,7 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetTitle,
   SheetClose,
 } from '@/components/ui/sheet';
 import {
@@ -301,7 +302,7 @@ export default function StreamPage() {
                 </SheetTrigger>
                 <SheetContent side="left" className="flex w-[280px] flex-col p-0">
                     <VisuallyHidden>
-                      <SheetClose />
+                      <SheetTitle>Navigation Menu</SheetTitle>
                     </VisuallyHidden>
                     <MobileSidebarContent />
                 </SheetContent>
