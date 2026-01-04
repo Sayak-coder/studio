@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Github, Linkedin, Twitter } from 'lucide-react';
+import { ArrowLeft, Github, Linkedin, Instagram } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { creatorsData } from '@/lib/creators-data';
 
@@ -58,8 +58,8 @@ export default function CreatorsPage() {
                   <a href={creator.socials.github} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
                     <Github className="h-6 w-6" />
                   </a>
-                  <a href={creator.socials.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    <Twitter className="h-6 w-6" />
+                  <a href={creator.socials.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                    <Instagram className="h-6 w-6" />
                   </a>
                 </div>
               </div>

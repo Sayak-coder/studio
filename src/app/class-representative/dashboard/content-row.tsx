@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface ContentRowProps {
+export interface ContentRowProps {
   title: string;
   items: Content[] | null;
   isLoading: boolean;
-  onEdit: (content: Content) => void;
-  onDelete: (id: string) => void;
+  onEdit?: (content: Content) => void;
+  onDelete?: (id: string) => void;
   currentUserId?: string;
 }
 
@@ -77,9 +77,9 @@ const ContentRow = ({ title, items, isLoading, onEdit, onDelete, currentUserId }
             <div key={item.id} className="flex-shrink-0 py-4">
             <ContentCard 
               item={item} 
-              onEdit={onEdit} 
+              onEdit={onEdit}
               onDelete={onDelete}
-              isEditable={item.authorId === currentUserId}
+              isEditable={!!onEdit && !!onDelete && item.authorId === currentUserId}
             />
             </div>
         ))}

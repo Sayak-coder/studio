@@ -1,0 +1,42 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for Content Files
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check file size (max 5MB)
+    function isValidFileSize() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+    
+    // Helper function to check if file type is allowed
+    function isValidFileType() {
+      return request.resource.contentType.matches('image/.*') 
+          || request.resource.contentType.matches('application/pdf')
+          || request.resource.contentType.matches('application/msword')
+          || request.resource.contentType.matches('application/vnd.*')
+          || request.resource.contentType.matches('text/.*')
+          || request.resource.contentType == 'application/octet-stream';
+    }
+    
+    // Rules for content files: /content/{userId}/{contentId}/{fileName}
+    match /content/{userId}/{contentId}/{fileName} {
+      // Allow any authenticated user to read files
+      allow read: if isSignedIn();
+      
+      // Allow authenticated users to upload files to their own folder
+      // OR allow any authenticated user to upload (for anonymous CR users)
+      allow write: if isSignedIn() 
+                   && isValidFileSize() 
+                   && isValidFileType();
+      
+      // Allow users to delete their own files
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+    }
+  }
+}

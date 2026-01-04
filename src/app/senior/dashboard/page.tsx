@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -8,9 +8,10 @@ import {
   where,
   doc,
 } from 'firebase/firestore';
-import { PlusCircle, Book, Edit, LogOut, Trash2, BrainCircuit, LayoutDashboard, FilePlus, HelpCircle, FileText } from 'lucide-react';
+import { PlusCircle, Book, Edit, LogOut, Trash2, BrainCircuit, LayoutDashboard, FilePlus, HelpCircle, FileText, ChevronDown } from 'lucide-react';
 import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
+import { signInAnonymously } from 'firebase/auth';
 
 import { Content } from './types';
 import ContentDisplay from './content-display';
@@ -27,20 +28,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { ThemeToggle } from '@/components/theme-toggle';
 import withAuth from '@/hoc/withAuth';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { AcademicCalendar } from '@/components/academic-calendar';
 
 function SeniorDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const { auth } = useFirebase();
   const firestore = useFirestore();
-  const { user } = useUser(); // withAuth ensures user is available
+  const { user, isUserLoading } = useUser(); // withAuth ensures user is available
+
+  useEffect(() => {
+    if (!isUserLoading && !user && auth) {
+      signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
+    }
+  }, [user, isUserLoading, auth]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isYearMenuOpen, setIsYearMenuOpen] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
@@ -51,6 +66,13 @@ function SeniorDashboard() {
   }, [firestore, user?.uid]);
   
   const { data: contents, isLoading: isLoadingContent } = useCollection<Content>(contentQuery);
+  
+  // Filter content by selected year
+  const yearFilteredContent = useMemo(() => {
+    if (!contents) return [];
+    if (selectedYear === null) return contents; // Show all if no year selected
+    return contents.filter(c => c.year === selectedYear);
+  }, [contents, selectedYear]);
   
 
   const handleSignOut = async () => {
@@ -120,10 +142,36 @@ function SeniorDashboard() {
             </Link>
           </div>
           <nav className="flex-1 space-y-2 p-4">
-              <Button variant="ghost" className="w-full justify-start text-base">
-                <LayoutDashboard className="mr-3 h-5 w-5" />
-                Dashboard
-              </Button>
+              <Collapsible open={isYearMenuOpen} onOpenChange={setIsYearMenuOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-between text-base">
+                    <span className="flex items-center">
+                      <LayoutDashboard className="mr-3 h-5 w-5" />
+                      Dashboard
+                    </span>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isYearMenuOpen ? 'rotate-180' : ''}`} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-2 space-y-1">
+                  <Button
+                    variant={selectedYear === null ? 'secondary' : 'ghost'}
+                    className="w-full justify-start pl-10 text-sm"
+                    onClick={() => setSelectedYear(null)}
+                  >
+                    All Years
+                  </Button>
+                  {[1, 2, 3, 4].map((year) => (
+                    <Button
+                      key={year}
+                      variant={selectedYear === year ? 'secondary' : 'ghost'}
+                      className="w-full justify-start pl-10 text-sm"
+                      onClick={() => setSelectedYear(year)}
+                    >
+                      {year === 1 ? '1st' : year === 2 ? '2nd' : year === 3 ? '3rd' : '4th'} Year
+                    </Button>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
                <Button variant="ghost" className="w-full justify-start text-base" onClick={handleAddNew}>
                 <FilePlus className="mr-3 h-5 w-5" />
                 Add Content
@@ -145,6 +193,7 @@ function SeniorDashboard() {
           </h1>
           <div className="flex items-center gap-4">
              <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user.displayName || 'Senior'}!</p>
+             <AcademicCalendar />
              <Button variant="outline" size="sm" onClick={handleAddNew} className="gap-2">
                 <PlusCircle className="h-4 w-4" /> Add New
             </Button>
@@ -154,7 +203,7 @@ function SeniorDashboard() {
 
         <div className="flex-1 space-y-8 p-4 md:p-8">
           <ContentDisplay 
-            contents={contents}
+            contents={yearFilteredContent}
             isLoading={isLoadingContent}
             onEdit={handleEdit}
             onDelete={openDeleteDialog}
@@ -194,4 +243,4 @@ function SeniorDashboard() {
   );
 }
 
-export default withAuth(SeniorDashboard, 'senior');
+export default SeniorDashboard;

@@ -31,6 +31,7 @@ type ContentData = {
   authorId: string;
   authorName: string;
   roles: string[];
+  year?: number;
 };
 
 /**
@@ -108,7 +109,11 @@ export function handleBackgroundUpload(
 ): void {
   const uploadAndLinkFile = async () => {
     try {
+      console.log(`Starting background upload for file: ${file.name}, size: ${file.size}, type: ${file.type}`);
+      console.log(`Upload path: content/${userId}/${docId}/${file.name}`);
+      
       const { downloadURL, fileType } = await uploadFile(userId, docId, file);
+      console.log(`File uploaded successfully. URL: ${downloadURL}`);
 
       const contentDocRef = doc(firestore, CONTENT_COLLECTION, docId);
       const updatePayload = {
@@ -119,16 +124,19 @@ export function handleBackgroundUpload(
         updatedAt: serverTimestamp(),
       };
       
-      // Reliably update the document, but don't block the UI thread for it.
-      // The `await` here is inside an async function that isn't awaited by the caller,
-      // so it correctly runs in the background.
+      console.log('Updating Firestore document with file metadata...');
       await updateDoc(contentDocRef, updatePayload);
+      console.log('Firestore document updated successfully');
 
       onComplete(downloadURL);
 
     } catch (error: any) {
       console.error("Background upload and linking failed:", error);
-      if (error.code && error.code.startsWith('permission-denied')) {
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
+      
+      if (error.code && (error.code.includes('permission-denied') || error.code.includes('storage/unauthorized'))) {
+        console.error('Permission denied. Check Firebase Storage rules.');
         const path = doc(firestore, CONTENT_COLLECTION, docId).path;
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: path,
@@ -157,28 +165,47 @@ export function uploadFile(
   file: File
 ): Promise<{ downloadURL: string; fileType: string }> {
   return new Promise((resolve, reject) => {
-    const filePath = `content/${userId}/${contentId}/${file.name}`;
-    const storageRef: StorageReference = ref(storage, filePath);
-    const uploadTask = uploadBytesResumable(storageRef, file, { contentType: file.type });
+    try {
+      const contentType = file.type || 'application/octet-stream';
+      const filePath = `content/${userId}/${contentId}/${file.name}`;
+      
+      console.log(`Creating storage reference: ${filePath}`);
+      console.log(`File type: ${contentType}`);
+      
+      const storageRef: StorageReference = ref(storage, filePath);
+      const uploadTask = uploadBytesResumable(storageRef, file, { contentType });
 
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        // Progress can be monitored here if needed in the future,
-        // but for a pure background task, it's not necessary for the UI.
-      },
-      (error) => {
-        console.error('Upload failed:', error);
-        reject(error);
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref)
-          .then((downloadURL) => {
-            resolve({ downloadURL, fileType: file.type });
-          })
-          .catch(reject);
-      }
-    );
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Progress monitoring
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log(`Upload is ${progress.toFixed(2)}% done (${snapshot.bytesTransferred}/${snapshot.totalBytes} bytes)`);
+          console.log(`Upload state: ${snapshot.state}`);
+        },
+        (error) => {
+          console.error('Upload failed with error:', error);
+          console.error('Error code:', error.code);
+          console.error('Error message:', error.message);
+          reject(error);
+        },
+        () => {
+          console.log('Upload completed, getting download URL...');
+          getDownloadURL(uploadTask.snapshot.ref)
+            .then((downloadURL) => {
+              console.log('Download URL obtained:', downloadURL);
+              resolve({ downloadURL, fileType: contentType });
+            })
+            .catch((error) => {
+              console.error('Failed to get download URL:', error);
+              reject(error);
+            });
+        }
+      );
+    } catch (error) {
+      console.error('Error initializing upload:', error);
+      reject(error);
+    }
   });
 }
 

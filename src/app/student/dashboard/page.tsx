@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirebase, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { signInAnonymously } from 'firebase/auth';
 import { 
     Book, 
     FileText, 
@@ -18,9 +19,8 @@ import {
     Search,
     Home,
     File,
-    Users,
-    User as UserIcon,
-    FilePlus
+    ChevronDown,
+    GraduationCap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,27 +30,30 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 import { ThemeToggle } from '@/components/theme-toggle';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import withAuth from '@/hoc/withAuth';
+import { AcademicCalendar } from '@/components/academic-calendar';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import GlobalSearch from '@/app/class-representative/dashboard/global-search';
 import { Content } from '@/app/class-representative/dashboard/types';
 import ContentCard from '@/app/class-representative/dashboard/content-card';
-import ContentForm from '@/app/class-representative/dashboard/content-form';
 import ContentRow from '@/app/class-representative/dashboard/content-row';
-import { deleteContent } from '@/firebase/firestore/content';
 import { collection, query } from 'firebase/firestore';
+
+// Stream configuration
+const STREAMS = [
+  { id: 'cse', name: 'CSE', fullName: 'Computer Science & Engineering' },
+  { id: 'cse-aiml', name: 'CSE-AIML', fullName: 'CSE (AI & Machine Learning)' },
+  { id: 'ece', name: 'ECE', fullName: 'Electronics & Communication Engineering' },
+  { id: 'ee', name: 'EE', fullName: 'Electrical Engineering' },
+  { id: 'it', name: 'IT', fullName: 'Information Technology' },
+] as const;
 
 
 function StudentDashboard() {
@@ -60,15 +63,14 @@ function StudentDashboard() {
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingContent, setEditingContent] = useState<Content | null>(null);
+  React.useEffect(() => {
+    if (!isUserLoading && !user && auth) {
+      signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
+    }
+  }, [user, isUserLoading, auth]);
 
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
-  
   const [filteredData, setFilteredData] = useState<Content[] | null>(null);
-  const [view, setView] = useState<'all' | 'my' | 'others'>('all');
+  const [isStreamMenuOpen, setIsStreamMenuOpen] = useState(false);
 
   const allContentQuery = useMemoFirebase(() => {
     // IMPORTANT: Only create the query if the user is authenticated.
@@ -77,20 +79,17 @@ function StudentDashboard() {
   }, [firestore, user]);
 
   const { data: allContents, isLoading: isLoadingAllContent } = useCollection<Content>(allContentQuery);
-  
-  const myContributions = useMemo(() => allContents?.filter(c => c.authorId === user?.uid) || [], [allContents, user]);
-  const othersContributions = useMemo(() => allContents?.filter(c => c.authorId !== user?.uid) || [], [allContents, user]);
 
-  const notes = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'Class Notes') || [], [allContents, myContributions, othersContributions, view]);
-  const pyqs = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'PYQ') || [], [allContents, myContributions, othersContributions, view]);
-  const importantQuestions = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'Important Question') || [], [allContents, myContributions, othersContributions, view]);
+  const notes = useMemo(() => (allContents || []).filter(c => c.type === 'Class Notes'), [allContents]);
+  const pyqs = useMemo(() => (allContents || []).filter(c => c.type === 'PYQ'), [allContents]);
+  const importantQuestions = useMemo(() => (allContents || []).filter(c => c.type === 'Important Question'), [allContents]);
 
   const handleSignOut = async () => {
     if (!auth) return;
     try {
       await auth.signOut();
       toast({ title: 'Session Ended', description: 'You have been signed out.' });
-      router.replace('/help/student');
+      router.replace('/');
     } catch (error) {
       console.error('Sign out error:', error);
       toast({ variant: 'destructive', title: 'Sign Out Failed', description: 'Could not sign you out.' });
@@ -98,43 +97,6 @@ function StudentDashboard() {
   };
 
 
-  const handleAddNew = () => {
-    setEditingContent(null);
-    setIsFormOpen(true);
-  }
-
-  const handleEdit = (content: Content) => {
-    setEditingContent(content);
-    setIsFormOpen(true);
-  };
-
-  const openDeleteDialog = (id: string) => {
-    setDeletingContentId(id);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deletingContentId || !firestore) return;
-    setIsDeleting(true);
-    try {
-      await deleteContent(firestore, deletingContentId);
-      toast({ title: 'Content Deleted', description: 'The selected item has been successfully deleted.' });
-      setIsDeleteDialogOpen(false);
-      setDeletingContentId(null);
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast({ variant: 'destructive', title: 'Deletion Failed', description: 'Could not delete the content. Please try again.' });
-    } finally {
-      setIsDeleting(false);
-    }
-  }
-
-  const closeForm = () => {
-    setIsFormOpen(false);
-    setEditingContent(null);
-  }
-  
-  
   const SidebarContent = () => (
      <>
         <div className="flex h-16 items-center border-b px-6">
@@ -144,16 +106,51 @@ function StudentDashboard() {
           </Link>
         </div>
         <nav className="flex-1 space-y-2 p-4">
-              <Button variant={view === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('all')}><Home />Dashboard</Button>
-              <Button variant="ghost" className="w-full justify-start text-base gap-3" onClick={handleAddNew}>
-                <FilePlus />Add Content
+          <Button variant="secondary" className="w-full justify-start text-base gap-3">
+            <Home />Dashboard
+          </Button>
+
+          <Collapsible open={isStreamMenuOpen} onOpenChange={setIsStreamMenuOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between text-base gap-3">
+                <span className="flex items-center gap-3"><GraduationCap />Select Stream</span>
+                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isStreamMenuOpen ? 'rotate-180' : ''}`} />
               </Button>
-               <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />My Contributions</Button>
-               <Button variant={view === 'others' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('others')}><Users />Others' Contributions</Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2 space-y-1">
+              {STREAMS.map((stream) => (
+                <Collapsible key={stream.id}>
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between pl-8 text-sm gap-2"
+                    >
+                      {stream.name}
+                      <ChevronDown className="h-3 w-3 transition-transform duration-200" />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-1 space-y-1">
+                    <Link href={`/student/stream/${stream.id}`}>
+                      <Button variant="ghost" className="w-full justify-start pl-12 text-xs gap-2">
+                        All Years
+                      </Button>
+                    </Link>
+                    {[1, 2, 3, 4].map((year) => (
+                      <Link key={year} href={`/student/stream/${stream.id}?year=${year}`}>
+                        <Button variant="ghost" className="w-full justify-start pl-12 text-xs gap-2">
+                          {year}{year === 1 ? 'st' : year === 2 ? 'nd' : year === 3 ? 'rd' : 'th'} Year
+                        </Button>
+                      </Link>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
         </nav>
         <div className="mt-auto p-4">
            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-             <LogOut /> End Session
+             <LogOut /> Sign Out
           </Button>
         </div>
       </>
@@ -168,24 +165,55 @@ function StudentDashboard() {
          </Link>
        </div>
        <nav className="flex-1 space-y-2 p-4">
-            <SheetClose asChild>
-               <Button variant={view === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('all')}><Home />Dashboard</Button>
-            </SheetClose>
-            <SheetClose asChild>
-              <Button variant="ghost" className="w-full justify-start text-base gap-3" onClick={handleAddNew}>
-                <FilePlus />Add Content
-              </Button>
-            </SheetClose>
-            <SheetClose asChild>
-              <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />My Contributions</Button>
-            </SheetClose>
-            <SheetClose asChild>
-              <Button variant={view === 'others' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('others')}><Users />Others' Contributions</Button>
-            </SheetClose>
+            <Button variant="secondary" className="w-full justify-start text-base gap-3">
+              <Home />Dashboard
+            </Button>
+
+            <Collapsible open={isStreamMenuOpen} onOpenChange={setIsStreamMenuOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between text-base gap-3">
+                  <span className="flex items-center gap-3"><GraduationCap />Select Stream</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isStreamMenuOpen ? 'rotate-180' : ''}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2 space-y-1">
+                {STREAMS.map((stream) => (
+                  <Collapsible key={stream.id}>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-between pl-8 text-sm gap-2"
+                      >
+                        {stream.name}
+                        <ChevronDown className="h-3 w-3 transition-transform duration-200" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-1 space-y-1">
+                      <SheetClose asChild>
+                        <Link href={`/student/stream/${stream.id}`}>
+                          <Button variant="ghost" className="w-full justify-start pl-12 text-xs gap-2">
+                            All Years
+                          </Button>
+                        </Link>
+                      </SheetClose>
+                      {[1, 2, 3, 4].map((year) => (
+                        <SheetClose asChild key={year}>
+                          <Link href={`/student/stream/${stream.id}?year=${year}`}>
+                            <Button variant="ghost" className="w-full justify-start pl-12 text-xs gap-2">
+                              {year}{year === 1 ? 'st' : year === 2 ? 'nd' : year === 3 ? 'rd' : 'th'} Year
+                            </Button>
+                          </Link>
+                        </SheetClose>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
        </nav>
        <div className="mt-auto p-4">
           <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-             <LogOut /> End Session
+             <LogOut /> Sign Out
           </Button>
        </div>
      </>
@@ -231,6 +259,7 @@ function StudentDashboard() {
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
+              <AcademicCalendar />
               <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user?.displayName || 'Student'}</p>
               <ThemeToggle />
             </div>
@@ -246,9 +275,6 @@ function StudentDashboard() {
                       <div key={item.id} className="py-4 flex justify-center">
                         <ContentCard 
                           item={item} 
-                          onEdit={handleEdit}
-                          onDelete={openDeleteDialog}
-                          isEditable={item.authorId === user?.uid}
                         />
                       </div>
                     ))}
@@ -267,9 +293,6 @@ function StudentDashboard() {
                   title="Class Notes"
                   items={notes}
                   isLoading={isLoadingAllContent}
-                  onEdit={handleEdit}
-                  onDelete={openDeleteDialog}
-                  currentUserId={user?.uid}
                 />
               </div>
               <div id="pyqs">
@@ -277,9 +300,6 @@ function StudentDashboard() {
                   title="Previous Year Questions"
                   items={pyqs}
                   isLoading={isLoadingAllContent}
-                  onEdit={handleEdit}
-                  onDelete={openDeleteDialog}
-                  currentUserId={user?.uid}
                 />
               </div>
               <div id="imp-questions">
@@ -287,47 +307,14 @@ function StudentDashboard() {
                   title="Important Questions"
                   items={importantQuestions}
                   isLoading={isLoadingAllContent}
-                  onEdit={handleEdit}
-                  onDelete={openDeleteDialog}
-                  currentUserId={user?.uid}
                 />
               </div>
             </>
           )}
         </div>
       </main>
-      
-      { user &&
-       <ContentForm 
-          isOpen={isFormOpen}
-          onClose={closeForm}
-          editingContent={editingContent}
-          user={user}
-       />
-      }
-
-       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this piece of content from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {isDeleting ? <LoadingSpinner /> : 'Yes, delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
 
-export default withAuth(StudentDashboard, 'student');
+export default StudentDashboard;

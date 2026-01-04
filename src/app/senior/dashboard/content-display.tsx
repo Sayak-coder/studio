@@ -4,7 +4,7 @@ import { Content } from './types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Edit, Trash2, FileSymlink } from 'lucide-react';
+import { Edit, Trash2, FileSymlink, Download, Eye } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ContentDisplayProps {
@@ -17,6 +17,13 @@ interface ContentDisplayProps {
 const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
 const ContentCard = ({ item, onEdit, onDelete }: { item: Content, onEdit: (content: Content) => void, onDelete: (id: string) => void }) => {
+  const handleViewFile = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (item.fileUrl) {
+      window.open(item.fileUrl, '_blank');
+    }
+  };
+
   const cardContent = (
     <Card className="min-w-[300px] max-w-[300px] h-full flex flex-col group animated-gradient-border transform transition-all duration-300 hover:-translate-y-2">
       <CardHeader>
@@ -25,12 +32,18 @@ const ContentCard = ({ item, onEdit, onDelete }: { item: Content, onEdit: (conte
       </CardHeader>
       <CardContent className="flex-grow">
         <p className="text-sm text-muted-foreground line-clamp-3">{item.content}</p>
+        {item.fileUrl && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-primary">
+            <Download className="h-3 w-3" />
+            <span>File attached</span>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex justify-between items-center">
         {item.fileUrl && (
-          <Button variant="outline" size="sm" className="gap-2">
-            <FileSymlink className="h-4 w-4" />
-            View Attachment
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleViewFile}>
+            <Eye className="h-4 w-4" />
+            View File
           </Button>
         )}
         <div className="flex justify-end gap-2 ml-auto">

@@ -13,9 +13,12 @@ import {
   User as UserIcon,
   Users,
   LogOut,
+  ChevronDown,
+  GraduationCap,
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useFirebase } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
+import { signInAnonymously } from 'firebase/auth';
 
 import { Content } from './types';
 import ContentForm from './content-form';
@@ -32,6 +35,11 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -44,7 +52,17 @@ import {
 import ContentCard from './content-card';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Link from 'next/link';
+import { AcademicCalendar } from '@/components/academic-calendar';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+
+// Stream configuration
+const STREAMS = [
+  { id: 'cse', name: 'CSE', fullName: 'Computer Science & Engineering' },
+  { id: 'cse-aiml', name: 'CSE-AIML', fullName: 'CSE (AI & Machine Learning)' },
+  { id: 'ece', name: 'ECE', fullName: 'Electronics & Communication Engineering' },
+  { id: 'ee', name: 'EE', fullName: 'Electrical Engineering' },
+  { id: 'it', name: 'IT', fullName: 'Information Technology' },
+] as const;
 
 // NOTE: This dashboard now works with an anonymous user session
 // The `withAuth` HOC is removed. Access is controlled by the entry page.
@@ -55,10 +73,19 @@ function CRDashboard() {
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser(); // User will be an anonymous user
 
+  React.useEffect(() => {
+    if (!isUserLoading && !user && auth) {
+      signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
+    }
+  }, [user, isUserLoading, auth]);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isYearMenuOpen, setIsYearMenuOpen] = useState(false);
+  const [isStreamMenuOpen, setIsStreamMenuOpen] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
   
@@ -72,21 +99,28 @@ function CRDashboard() {
 
   const { data: allContents, isLoading: isLoadingAllContent } = useCollection<Content>(allContentQuery);
   
+  // Filter content by selected year first
+  const yearFilteredContent = useMemo(() => {
+    if (!allContents) return [];
+    if (selectedYear === null) return allContents; // Show all if no year selected
+    return allContents.filter(c => c.year === selectedYear);
+  }, [allContents, selectedYear]);
+
   // "My Contributions" for anonymous CR is all contributions made by any anonymous CR.
   // In a real multi-CR scenario, this would need refinement.
-  const myContributions = useMemo(() => allContents?.filter(c => c.authorName === 'Class Representative') || [], [allContents]);
-  const othersContributions = useMemo(() => allContents?.filter(c => c.authorName !== 'Class Representative') || [], [allContents, user]);
+  const myContributions = useMemo(() => yearFilteredContent.filter(c => c.authorName === 'Class Representative'), [yearFilteredContent]);
+  const othersContributions = useMemo(() => yearFilteredContent.filter(c => c.authorName !== 'Class Representative'), [yearFilteredContent]);
 
-  const notes = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'Class Notes') || [], [allContents, myContributions, othersContributions, view]);
-  const pyqs = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'PYQ') || [], [allContents, myContributions, othersContributions, view]);
-  const importantQuestions = useMemo(() => (view === 'all' ? allContents : view === 'my' ? myContributions : othersContributions)?.filter(c => c.type === 'Important Question') || [], [allContents, myContributions, othersContributions, view]);
+  const notes = useMemo(() => (view === 'all' ? yearFilteredContent : view === 'my' ? myContributions : othersContributions).filter(c => c.type === 'Class Notes'), [yearFilteredContent, myContributions, othersContributions, view]);
+  const pyqs = useMemo(() => (view === 'all' ? yearFilteredContent : view === 'my' ? myContributions : othersContributions).filter(c => c.type === 'PYQ'), [yearFilteredContent, myContributions, othersContributions, view]);
+  const importantQuestions = useMemo(() => (view === 'all' ? yearFilteredContent : view === 'my' ? myContributions : othersContributions).filter(c => c.type === 'Important Question'), [yearFilteredContent, myContributions, othersContributions, view]);
 
   const handleSignOut = async () => {
     if (!auth) return;
     try {
       await auth.signOut();
       toast({ title: 'Session Ended', description: 'You have been signed out of the CR portal.' });
-      router.replace('/help/class-representative');
+      router.replace('/');
     } catch (error) {
       console.error('Sign out error:', error);
       toast({ variant: 'destructive', title: 'Sign Out Failed', description: 'Could not sign you out.' });
@@ -148,16 +182,57 @@ function CRDashboard() {
           </Link>
         </div>
         <nav className="flex-1 space-y-2 p-4">
-              <Button variant={view === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('all')}><Home />Dashboard</Button>
-              <Button variant='ghost' className="w-full justify-start text-base gap-3" onClick={handleAddNew}>
-                <FilePlus />Add Content
+          <Button variant={view === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('all')}>
+            <Home />Dashboard
+          </Button>
+          
+          <Collapsible open={isStreamMenuOpen} onOpenChange={setIsStreamMenuOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between text-base gap-3">
+                <span className="flex items-center gap-3"><GraduationCap />Select Stream</span>
+                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isStreamMenuOpen ? 'rotate-180' : ''}`} />
               </Button>
-               <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />CR Contributions</Button>
-               <Button variant={view === 'others' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('others')}><Users />Others' Contributions</Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2 space-y-1">
+              {STREAMS.map((stream) => (
+                <Collapsible key={stream.id}>
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-between pl-8 text-sm gap-2"
+                    >
+                      {stream.name}
+                      <ChevronDown className="h-3 w-3 transition-transform duration-200" />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-1 space-y-1">
+                    <Link href={`/student/stream/${stream.id}`}>
+                      <Button variant="ghost" className="w-full justify-start pl-12 text-xs gap-2">
+                        All Years
+                      </Button>
+                    </Link>
+                    {[1, 2, 3, 4].map((year) => (
+                      <Link key={year} href={`/student/stream/${stream.id}?year=${year}`}>
+                        <Button variant="ghost" className="w-full justify-start pl-12 text-xs gap-2">
+                          {year}{year === 1 ? 'st' : year === 2 ? 'nd' : year === 3 ? 'rd' : 'th'} Year
+                        </Button>
+                      </Link>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
+
+          <Button variant='ghost' className="w-full justify-start text-base gap-3" onClick={handleAddNew}>
+            <FilePlus />Add Content
+          </Button>
+          <Button variant={view === 'my' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('my')}><UserIcon />CR Contributions</Button>
+          <Button variant={view === 'others' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('others')}><Users />Others' Contributions</Button>
         </nav>
         <div className="mt-auto p-4">
            <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-             <LogOut /> End Session
+             <LogOut /> Sign Out
           </Button>
         </div>
       </>
@@ -172,10 +247,53 @@ function CRDashboard() {
          </Link>
        </div>
        <nav className="flex-1 space-y-2 p-4">
+            <Button variant={view === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('all')}>
+              <Home />Dashboard
+            </Button>
+
+            <Collapsible open={isStreamMenuOpen} onOpenChange={setIsStreamMenuOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between text-base gap-3">
+                  <span className="flex items-center gap-3"><GraduationCap />Select Stream</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isStreamMenuOpen ? 'rotate-180' : ''}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-2 space-y-1">
+                {STREAMS.map((stream) => (
+                  <Collapsible key={stream.id}>
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-between pl-8 text-sm gap-2"
+                      >
+                        {stream.name}
+                        <ChevronDown className="h-3 w-3 transition-transform duration-200" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-1 space-y-1">
+                      <SheetClose asChild>
+                        <Link href={`/student/stream/${stream.id}`}>
+                          <Button variant="ghost" className="w-full justify-start pl-12 text-xs gap-2">
+                            All Years
+                          </Button>
+                        </Link>
+                      </SheetClose>
+                      {[1, 2, 3, 4].map((year) => (
+                        <SheetClose asChild key={year}>
+                          <Link href={`/student/stream/${stream.id}?year=${year}`}>
+                            <Button variant="ghost" className="w-full justify-start pl-12 text-xs gap-2">
+                              {year}{year === 1 ? 'st' : year === 2 ? 'nd' : year === 3 ? 'rd' : 'th'} Year
+                            </Button>
+                          </Link>
+                        </SheetClose>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+
             <SheetClose asChild>
-               <Button variant={view === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start text-base gap-3" onClick={() => setView('all')}><Home />Dashboard</Button>
-            </SheetClose>
-             <SheetClose asChild>
                 <Button variant='ghost' className="w-full justify-start text-base gap-3" onClick={handleAddNew}>
                    <FilePlus />Add Content
                  </Button>
@@ -189,7 +307,7 @@ function CRDashboard() {
        </nav>
        <div className="mt-auto p-4">
           <Button variant="ghost" onClick={handleSignOut} className="w-full justify-start text-base gap-3">
-             <LogOut /> End Session
+             <LogOut /> Sign Out
           </Button>
        </div>
      </>
@@ -227,6 +345,7 @@ function CRDashboard() {
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
+              <AcademicCalendar />
               <p className="text-sm text-muted-foreground hidden sm:block">Welcome, Class Rep!</p>
               <ThemeToggle />
             </div>

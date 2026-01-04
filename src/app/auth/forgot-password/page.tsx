@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
       });
 
       setTimeout(() => {
-        router.push(`/auth/signin/${category}`);
+        router.push('/');
       }, 3000);
     } catch (error) {
       console.error('Password reset error:', error);
@@ -92,8 +92,8 @@ export default function ForgotPasswordPage() {
           <Button onClick={handleResetPassword} className="w-full" disabled={isLoading}>
             {isLoading ? 'Sending...' : 'Send Reset Link'}
           </Button>
-          <Button variant="link" onClick={() => router.push(`/auth/signin/${category}`)} className="text-primary" disabled={isLoading}>
-            &larr; Back to Sign In
+          <Button variant="link" onClick={() => router.push('/')} className="text-primary" disabled={isLoading}>
+            &larr; Back to Home
           </Button>
         </CardFooter>
       </Card>

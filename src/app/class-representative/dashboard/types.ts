@@ -9,6 +9,9 @@ export type Content = {
   roles: string[];
   fileUrl?: string;
   fileType?: string;
+  year?: 1 | 2 | 3 | 4; // Year selection
+  category?: string; // Category/department
+  unit?: string; // Unit/chapter
 };
 
 export const initialFormData: Omit<Content, 'id' | 'authorId' | 'authorName' | 'roles'> = {
@@ -18,4 +21,6 @@ export const initialFormData: Omit<Content, 'id' | 'authorId' | 'authorName' | '
   content: '',
   fileUrl: '',
   fileType: '',
+  year: undefined,
+  category: undefined,
 };

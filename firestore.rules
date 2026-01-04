@@ -27,7 +27,7 @@ service cloud.firestore {
     // Returns an empty list if the user doc or roles field doesn't exist.
     function getRoles() {
       // Use exists() to prevent errors if the document doesn't exist yet.
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
              ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles
              : [];
     }
@@ -68,10 +68,9 @@ service cloud.firestore {
       allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
 
       // UPDATE: Only the original author, an admin, or an official can update.
-      // authorId and createdAt fields are immutable to maintain data integrity.
+      // authorId field is immutable to maintain data integrity.
       allow update: if (isOwner(resource.data.authorId) || isPrivilegedUser())
-                    && request.resource.data.authorId == resource.data.authorId
-                    && request.resource.data.createdAt == resource.data.createdAt;
+                    && request.resource.data.authorId == resource.data.authorId;
       
       // DELETE: Only the original author, an admin, or an official can delete.
       allow delete: if isOwner(resource.data.authorId) || isPrivilegedUser();

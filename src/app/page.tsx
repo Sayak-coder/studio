@@ -19,28 +19,28 @@ export default function Home() {
       icon: <BookOpen className="h-10 w-10 text-primary" />,
       description: 'Access notes, PYQs, and important questions before exams.',
       cta: 'Enter as Student',
-      href: '/help/student',
+      href: '/student/dashboard',
     },
     {
       name: 'Class Representative (CR) Portal',
       icon: <Users className="h-10 w-10 text-primary" />,
       description: 'Manage, verify, and upload academic content for your class.',
       cta: 'Enter as CR',
-      href: '/help/class-representative',
+      href: '/class-representative/dashboard',
     },
     {
       name: 'Senior Portal',
       icon: <GraduationCap className="h-10 w-10 text-primary" />,
       description: 'Guide juniors with curated notes and exam-focused insights.',
       cta: 'Enter as Senior',
-      href: '/help/senior',
+      href: '/senior/dashboard',
     },
     {
       name: 'Official Portal',
       icon: <ShieldCheck className="h-10 w-10 text-primary" />,
       description: 'Admins and officials: Manage users and oversee content.',
       cta: 'Enter Official Portal',
-      href: '/help/official',
+      href: '/official',
     },
   ];
 

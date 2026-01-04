@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { useUser, useFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { signInAnonymously } from 'firebase/auth';
 import { 
     Book, 
     FileText, 
@@ -59,14 +60,14 @@ export default function CategoryPage() {
   const { user, isUserLoading } = useUser();
   const [filteredData, setFilteredData] = useState<ImagePlaceholder[] | null>(null);
 
+  React.useEffect(() => {
+    if (!isUserLoading && !user && auth) {
+      signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
+    }
+  }, [user, isUserLoading, auth]);
+
   const categorySlug = Array.isArray(params.category) ? params.category[0] : params.category;
   const categoryInfo = categoryMap[categorySlug] || { title: 'Content', type: 'Class Notes' };
-
-  React.useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/auth/signin/student');
-    }
-  }, [user, isUserLoading, router]);
 
   const handleSignOut = async () => {
     if (!auth) return;
@@ -76,7 +77,7 @@ export default function CategoryPage() {
         title: 'Signed Out',
         description: 'You have been successfully signed out.',
       });
-      router.push('/auth/signin/student');
+      router.push('/');
     } catch (error) {
       console.error('Sign out error:', error);
       toast({

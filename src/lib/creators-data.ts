@@ -6,7 +6,7 @@ export type Creator = {
   socials: {
     linkedin: string;
     github: string;
-    twitter: string;
+    instagram: string;
   };
 };
 
@@ -15,44 +15,44 @@ export const creatorsData: Creator[] = [
     id: '1',
     name: 'Soumojit Das',
     bio: 'The architect of EduBot, crafting seamless user experiences with a passion for clean code and innovative solutions.',
-    photoUrl: 'https://storage.googleapis.com/res-a-dev-team-1/image-49e0c71a-e9d6-444a-952a-30277a064b59.jpeg',
+    photoUrl: '/creators/soumojit-das.jpg',
     socials: {
-      linkedin: 'https://www.linkedin.com/',
+      linkedin: 'https://www.linkedin.com/in/soumojit-das-66743a309?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
       github: 'https://github.com/',
-      twitter: 'https://twitter.com/',
+      instagram: 'https://www.instagram.com/souuumo?igsh=Mm8wMXEzd3VyY285',
     },
   },
   {
     id: '2',
     name: 'Sayak Biswas',
     bio: 'The creative visionary behind EduBot’s stunning visuals, dedicated to making learning beautiful and intuitive.',
-    photoUrl: 'https://storage.googleapis.com/res-a-dev-team-1/image-497945e3-4632-411a-8533-e024226f9038.jpeg',
+    photoUrl: '/creators/sayak-biswas.jpeg',
     socials: {
-      linkedin: 'https://www.linkedin.com/',
+      linkedin: 'https://www.linkedin.com/in/sayak-biswas-a101b3386?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
       github: 'https://github.com/',
-      twitter: 'https://twitter.com/',
+      instagram: 'https://www.instagram.com/_wishmaster__7?igsh=MXAyMWc5eWVhdXp0MA==',
     },
   },
   {
     id: '3',
     name: 'Kaniska Bose',
     bio: 'The powerhouse ensuring EduBot runs smoothly, managing data and infrastructure with precision and skill.',
-    photoUrl: 'https://storage.googleapis.com/res-a-dev-team-1/image-a4178568-b8d0-435e-990a-5b1216a61763.png',
+    photoUrl: '/creators/kaniska-bose.jpg',
     socials: {
-      linkedin: 'https://www.linkedin.com/',
+      linkedin: 'https://www.linkedin.com/in/kaniskabose07?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
       github: 'https://github.com/',
-      twitter: 'https://twitter.com/',
+      instagram: 'https://www.instagram.com/__kanb__?igsh=OG1mY2ZmaWJycXJn',
     },
   },
   {
     id: '4',
     name: 'Rahul Bose',
     bio: 'The strategic leader guiding the EduBot team, ensuring every feature aligns with the vision of smarter education.',
-    photoUrl: 'https://storage.googleapis.com/res-a-dev-team-1/image-e523f545-2f95-46f5-a22c-f6048e986283.png',
+    photoUrl: '/creators/rahul-bose.jpg',
     socials: {
-      linkedin: 'https://www.linkedin.com/',
+      linkedin: 'https://www.linkedin.com/in/rahul-bose-b569b4393?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app',
       github: 'https://github.com/',
-      twitter: 'https://twitter.com/',
+      instagram: 'https://www.instagram.com/bose_r_rahul?igsh=cGpqc2hkNjAwZng0',
     },
   },
 ];

@@ -4,18 +4,25 @@ import { Content } from './types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, FileSymlink } from 'lucide-react';
+import { Edit, Trash2, FileSymlink, Download, Eye } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-interface ContentCardProps {
+export interface ContentCardProps {
   item: Content;
-  onEdit: (content: Content) => void;
-  onDelete: (id: string) => void;
-  isEditable: boolean;
+  onEdit?: (content: Content) => void;
+  onDelete?: (id: string) => void;
+  isEditable?: boolean;
 }
 
-const ContentCard = ({ item, onEdit, onDelete, isEditable }: ContentCardProps) => {
+const ContentCard = ({ item, onEdit, onDelete, isEditable = false }: ContentCardProps) => {
   const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (item.fileUrl) {
+      window.open(item.fileUrl, '_blank');
+    }
+  };
 
   const CardInnerContent = (
     <div
@@ -80,7 +87,29 @@ const ContentCard = ({ item, onEdit, onDelete, isEditable }: ContentCardProps) =
 
         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           {item.fileUrl ? (
-             <FileSymlink className="h-10 w-10 text-white" />
+            <div className="flex flex-col items-center gap-2">
+              <FileSymlink className="h-8 w-8 text-white" />
+              <div className="flex gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="gap-1"
+                        onClick={handleDownload}
+                      >
+                        <Eye className="h-4 w-4" />
+                        View
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>View/Download File</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
           ) : (
              <div className="text-center text-white px-4">
                 <p className="font-semibold">No File Attached</p>
@@ -104,6 +133,12 @@ const ContentCard = ({ item, onEdit, onDelete, isEditable }: ContentCardProps) =
         <div className="mt-4 max-h-0 text-sm text-foreground/80 opacity-0 transition-all duration-300 ease-in-out group-hover:max-h-40 group-hover:opacity-100">
           {item.content}
         </div>
+        {item.fileUrl && (
+          <div className="mt-2 flex items-center gap-2 text-xs text-primary">
+            <Download className="h-3 w-3" />
+            <span>File attached - Click to view/download</span>
+          </div>
+        )}
         <p className="text-xs text-muted-foreground/80 mt-2 pt-2 border-t border-muted-foreground/20">
           By: {item.authorName}
         </p>

@@ -43,7 +43,7 @@ const getTopicHelpFlow = ai.defineFlow(
 
         Please provide a concise, helpful description of this topic and a short list of 3-5 related academic topics.
       `,
-      model: 'googleai/gemini-1.5-flash',
+      model: 'googleai/gemini-2.5-flash',
       output: {
         schema: GetTopicHelpOutputSchema,
       },

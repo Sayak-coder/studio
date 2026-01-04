@@ -8,6 +8,8 @@ export type Content = {
   roles: string[];
   fileUrl?: string;
   fileType?: string;
+  year?: 1 | 2 | 3 | 4;
+  category?: string; // Stream/department
 };
 
 export const initialFormData: Omit<Content, 'id' | 'authorId' | 'roles'> = {
@@ -17,4 +19,6 @@ export const initialFormData: Omit<Content, 'id' | 'authorId' | 'roles'> = {
   content: '',
   fileUrl: '',
   fileType: '',
+  year: undefined,
+  category: undefined,
 };
