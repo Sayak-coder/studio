@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { FirebaseError } from 'firebase/app';
 import { firebaseApp } from '@/firebase/config';
 import { ThemeToggle } from '@/components/theme-toggle';
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const category = searchParams.get('category') || 'student';
@@ -98,5 +98,17 @@ export default function ForgotPasswordPage() {
         </CardFooter>
       </Card>
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    }>
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }

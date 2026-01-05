@@ -192,7 +192,7 @@ function SeniorDashboard() {
             Senior Contributor Dashboard
           </h1>
           <div className="flex items-center gap-4">
-             <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user.displayName || 'Senior'}!</p>
+             <p className="text-sm text-muted-foreground hidden sm:block">Welcome, {user?.displayName || 'Senior'}!</p>
              <AcademicCalendar />
              <Button variant="outline" size="sm" onClick={handleAddNew} className="gap-2">
                 <PlusCircle className="h-4 w-4" /> Add New
