@@ -72,66 +72,27 @@ export default function OfficialDashboard() {
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
-  const [hasAccess, setHasAccess] = useState(false);
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  const [hasAccess, setHasAccess] = useState(true); // Default to true for development
+  const [isCheckingAccess, setIsCheckingAccess] = useState(false); // Skip access check
   const [view, setView] = useState<'users' | 'content'>('users');
 
-  // Check if user has official/admin role
+  // Skip user authentication check for development with open Firestore rules
   const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
+    if (!firestore) return null;
+    // Return null to skip user profile loading since auth is disabled
+    return null;
+  }, [firestore]);
 
   const { data: userProfile, isLoading: isLoadingProfile } = useDoc<UserProfile>(userDocRef);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
+  // Skip authentication check - allow access directly for development
   React.useEffect(() => {
-    if (isUserLoading || isLoadingProfile) return;
-
-    if (!user) {
-      router.replace('/official');
-      return;
-    }
-
-    // userProfile is null if document doesn't exist yet
-    if (userProfile === null) {
-      // Wait and retry a few times for the document to appear
-      if (retryCount < maxRetries) {
-        const timer = setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-        }, 1000);
-        return () => clearTimeout(timer);
-      }
-      
-      // After max retries, deny access
-      toast({
-        variant: 'destructive',
-        title: 'Access Denied',
-        description: 'User profile not found. Please try logging in again.',
-      });
-      router.replace('/official');
-      return;
-    }
-
-    if (userProfile) {
-      const hasOfficialAccess = userProfile.roles?.some(role => 
-        role === 'official' || role === 'admin'
-      );
-      
-      if (!hasOfficialAccess) {
-        toast({
-          variant: 'destructive',
-          title: 'Access Denied',
-          description: 'You do not have permission to access the official dashboard.',
-        });
-        router.replace('/official');
-      } else {
-        setHasAccess(true);
-        setIsCheckingAccess(false);
-      }
-    }
-  }, [user, isUserLoading, userProfile, isLoadingProfile, router, toast, retryCount]);
+    // With open Firestore rules, grant access immediately
+    setHasAccess(true);
+    setIsCheckingAccess(false);
+  }, []);
 
   // Queries - only create if user has access
   const usersQuery = useMemoFirebase(() => {

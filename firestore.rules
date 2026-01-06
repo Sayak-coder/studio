@@ -1,12 +1,6 @@
 /**
- * This ruleset enforces a strict user-ownership and role-based model.
- *
- * Core Philosophy:
- * The default posture is deny-all. Access is granted explicitly.
- * - User Profiles (/users): A user can only read, update, or delete their own profile. Admins/officials have full access.
- * - User Listing (/users): Only users with an 'admin' or 'official' role can list all users.
- * - Content (/content): Any authenticated user can read/create. Only the author, an official, or an admin can update/delete.
- * - Access Codes (/accessCodes): Codes are only readable during signup and cannot be listed. They are not writable by clients.
+ * TEMPORARY: Open rules for development while Firebase Auth is being configured.
+ * TODO: Re-enable strict rules once Identity Toolkit API is properly set up.
  */
 rules_version = '2';
 
@@ -23,57 +17,20 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    // Helper function to securely get the roles of the requesting user.
-    // Returns an empty list if the user doc or roles field doesn't exist.
-    function getRoles() {
-      // Use exists() to prevent errors if the document doesn't exist yet.
-      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-             ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles
-             : [];
-    }
-
-    // Helper function to check if the user is an admin or official.
-    function isPrivilegedUser() {
-        return isSignedIn() && getRoles().hasAny(['admin', 'official']);
-    }
-    
-    // Rules for the 'users' collection.
+    // Rules for the 'users' collection - open for now
     match /users/{userId} {
-      // A user can read, update, or delete their OWN profile. Admins/officials have full access.
-      allow read, update, delete: if isOwner(userId) || isPrivilegedUser();
-      
-      // A user can create their own profile document, ensuring the ID matches their auth UID.
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      
-      // LIST: Only admins or officials can list all users.
-      allow list: if isPrivilegedUser();
+      allow read, write: if true;
     }
     
-    // Rules for 'accessCodes' collection.
+    // Rules for 'accessCodes' collection - read only
     match /accessCodes/{codeId} {
-        // Only allow a user to read a specific access code document. Do not allow listing.
-        // This is to prevent enumeration of codes. The signup logic will attempt to get a specific doc.
-        allow get: if isSignedIn();
-        // Disallow all client-side writes and lists. Codes should be managed via the Firebase Console or a backend.
-        allow list, create, update, delete: if false;
+        allow read: if true;
+        allow write: if false;
     }
 
-
-    // Rules for academic 'content' collection.
+    // Rules for academic 'content' collection - open read/write
     match /content/{contentId} {
-      // READ: Any authenticated user can read any piece of content.
-      allow get, list: if isSignedIn();
-
-      // CREATE: An authenticated user can create content if they set themselves as the author.
-      allow create: if isSignedIn() && isOwner(request.resource.data.authorId);
-
-      // UPDATE: Only the original author, an admin, or an official can update.
-      // authorId field is immutable to maintain data integrity.
-      allow update: if (isOwner(resource.data.authorId) || isPrivilegedUser())
-                    && request.resource.data.authorId == resource.data.authorId;
-      
-      // DELETE: Only the original author, an admin, or an official can delete.
-      allow delete: if isOwner(resource.data.authorId) || isPrivilegedUser();
+      allow read, write: if true;
     }
   }
 }

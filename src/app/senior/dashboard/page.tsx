@@ -11,7 +11,7 @@ import {
 import { PlusCircle, Book, Edit, LogOut, Trash2, BrainCircuit, LayoutDashboard, FilePlus, HelpCircle, FileText, ChevronDown } from 'lucide-react';
 import { useFirebase, useUser, useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
-import { signInAnonymously } from 'firebase/auth';
+// signInAnonymously removed - using open Firestore rules
 
 import { Content } from './types';
 import ContentDisplay from './content-display';
@@ -45,11 +45,7 @@ function SeniorDashboard() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser(); // withAuth ensures user is available
 
-  useEffect(() => {
-    if (!isUserLoading && !user && auth) {
-      signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
-    }
-  }, [user, isUserLoading, auth]);
+  // Authentication skipped - using open Firestore rules for development
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -61,9 +57,10 @@ function SeniorDashboard() {
   const [deletingContentId, setDeletingContentId] = useState<string | null>(null);
   
   const contentQuery = useMemoFirebase(() => {
-    if (!firestore || !user?.uid) return null;
-    return query(collection(firestore, 'content'), where('authorId', '==', user.uid));
-  }, [firestore, user?.uid]);
+    // Show all content - no auth required with open Firestore rules
+    if (!firestore) return null;
+    return query(collection(firestore, 'content'));
+  }, [firestore]);
   
   const { data: contents, isLoading: isLoadingContent } = useCollection<Content>(contentQuery);
   

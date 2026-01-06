@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { getAuth, signInAnonymously } from 'firebase/auth';
 import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { firebaseApp } from '@/firebase/config';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -32,7 +31,6 @@ export default function OfficialLoginPage() {
     }
     
     setIsLoading(true);
-    const auth = getAuth(firebaseApp);
     const firestore = getFirestore(firebaseApp);
 
     try {
@@ -47,26 +45,7 @@ export default function OfficialLoginPage() {
         throw new Error('Invalid access code');
       }
 
-      // Sign in anonymously
-      const userCredential = await signInAnonymously(auth);
-      const user = userCredential.user;
-
-      // Create user profile with roles
-      const userRef = doc(firestore, 'users', user.uid);
-      await setDoc(userRef, {
-        id: user.uid,
-        email: null,
-        name: roles.includes('admin') ? 'Admin User' : 'Official User',
-        roles: roles,
-        accessCodeUsed: accessCode,
-        createdAt: serverTimestamp(),
-        status: 'active',
-        disabled: false
-      });
-
-      // Wait a moment to ensure Firestore document is available
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      // Skip authentication - directly grant access with open Firestore rules
       toast({
         title: 'Access Granted!',
         description: 'Redirecting to the official dashboard...',

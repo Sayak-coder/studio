@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useUser, useFirebase, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { signInAnonymously } from 'firebase/auth';
+// signInAnonymously removed - using open Firestore rules
 import { collection, query, where } from 'firebase/firestore';
 import { 
     LogOut, 
@@ -68,11 +68,7 @@ export default function StreamPage() {
   const yearParam = searchParams.get('year');
   const initialYear = yearParam ? parseInt(yearParam, 10) : null;
 
-  React.useEffect(() => {
-    if (!isUserLoading && !user && auth) {
-      signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
-    }
-  }, [user, isUserLoading, auth]);
+  // Authentication skipped - using open Firestore rules for development
 
   const [filteredData, setFilteredData] = useState<Content[] | null>(null);
   const [isYearMenuOpen, setIsYearMenuOpen] = useState(false);
@@ -87,13 +83,13 @@ export default function StreamPage() {
 
   // Query content filtered by stream/category
   const streamContentQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    // Filter by stream category
+    if (!firestore) return null;
+    // Filter by stream category - no auth required with open Firestore rules
     return query(
       collection(firestore, 'content'),
       where('category', '==', streamInfo.name)
     );
-  }, [firestore, user, streamInfo.name]);
+  }, [firestore, streamInfo.name]);
 
   const { data: streamContents, isLoading: isLoadingContent } = useCollection<Content>(streamContentQuery);
   

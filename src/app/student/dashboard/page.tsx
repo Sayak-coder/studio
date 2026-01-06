@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirebase, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { signInAnonymously } from 'firebase/auth';
+// signInAnonymously removed - using open Firestore rules
 import { 
     Book, 
     FileText, 
@@ -64,20 +64,16 @@ function StudentDashboard() {
   const { auth } = useFirebase();
   const { user, isUserLoading } = useUser();
 
-  React.useEffect(() => {
-    if (!isUserLoading && !user && auth) {
-      signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
-    }
-  }, [user, isUserLoading, auth]);
+  // Authentication skipped - using open Firestore rules for development
 
   const [filteredData, setFilteredData] = useState<Content[] | null>(null);
   const [isStreamMenuOpen, setIsStreamMenuOpen] = useState(false);
 
   const allContentQuery = useMemoFirebase(() => {
-    // IMPORTANT: Only create the query if the user is authenticated.
-    if (!firestore || !user) return null;
+    // Open access - no auth required with open Firestore rules
+    if (!firestore) return null;
     return query(collection(firestore, 'content'));
-  }, [firestore, user]);
+  }, [firestore]);
 
   const { data: allContents, isLoading: isLoadingAllContent } = useCollection<Content>(allContentQuery);
 

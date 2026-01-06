@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useFirebase } from '@/firebase';
 import { deleteContent } from '@/firebase/firestore/content';
-import { signInAnonymously } from 'firebase/auth';
+// Removed signInAnonymously - not needed with open Firestore rules
 
 import { Content } from './types';
 import ContentForm from './content-form';
@@ -64,20 +64,16 @@ const STREAMS = [
   { id: 'it', name: 'IT', fullName: 'Information Technology' },
 ] as const;
 
-// NOTE: This dashboard now works with an anonymous user session
-// The `withAuth` HOC is removed. Access is controlled by the entry page.
+// NOTE: This dashboard now works without authentication
+// Access is controlled by the entry page with open Firestore rules for development
 function CRDashboard() {
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
   const { auth } = useFirebase();
-  const { user, isUserLoading } = useUser(); // User will be an anonymous user
+  const { user, isUserLoading } = useUser();
 
-  React.useEffect(() => {
-    if (!isUserLoading && !user && auth) {
-      signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
-    }
-  }, [user, isUserLoading, auth]);
+  // No longer need anonymous sign-in with open Firestore rules
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);

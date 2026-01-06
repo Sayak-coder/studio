@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { useUser, useFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { signInAnonymously } from 'firebase/auth';
+// signInAnonymously removed - using open Firestore rules
 import { 
     Book, 
     FileText, 
@@ -60,11 +60,7 @@ export default function SubjectPage() {
   const { user, isUserLoading } = useUser();
   const [filteredData, setFilteredData] = React.useState<ImagePlaceholder[] | null>(null);
 
-  React.useEffect(() => {
-    if (!isUserLoading && !user && auth) {
-      signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
-    }
-  }, [user, isUserLoading, auth]);
+  // Authentication skipped - using open Firestore rules for development
 
   const categorySlug = Array.isArray(params.category) ? params.category[0] : params.category;
   const subjectSlug = Array.isArray(params.subject) ? params.subject[0] : params.subject;
