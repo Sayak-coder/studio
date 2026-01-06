@@ -7,7 +7,7 @@ import {googleAI} from '@genkit-ai/google-genai';
 export const ai = genkit({
   plugins: [
     googleAI({
-      apiKey: "AIzaSyBWfVXRP7KC6rhpMPzabZ_gxunZlRQenmM",
+      apiKey: "AIzaSyB35C6uDszDPs6QlX1Lh9SwYAVTV7F2sfk",
     }),
   ],
 });
